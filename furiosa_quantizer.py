@@ -24,19 +24,19 @@ app = typer.Typer(pretty_exceptions_show_locals=False)
 
 @app.command()
 def main(cfg):
-    onnx_path, input_shape, output_path, calib_data_path, num_datas, method = get_params_from_cfg(
+    onnx_path, input_shape, output_path, calib_data_path, num_data, method = get_params_from_cfg(
         cfg
     )
 
     model = onnx.load(onnx_path)
     model = optimize_model(model=model, opset_version=13, input_shapes={"images": input_shape})
 
-    calib_datas = glob.glob(calib_data_path + "/**", recursive=True)
-    calib_datas = random.choices(calib_datas, k=num_datas)
+    calib_data = glob.glob(calib_data_path + "/**", recursive=True)
+    calib_data = random.choices(calib_data, k=num_data)
 
     calibrator = Calibrator(model, CalibrationMethod._member_map_[method])
 
-    for data in tqdm(calib_datas, desc="calibration"):
+    for data in tqdm(calib_data, desc="calibration"):
         if not (data.endswith(".png") or data.endswith(".jpg")):
             continue
         input_, _ = preproc(data, dtype="float32", new_shape=input_shape[2:])
@@ -56,7 +56,7 @@ def main(cfg):
     with open(output_path, "wb") as f:
         f.write(bytes(quantized_model))
 
-    print(f"Completed quantinization >> {output_path}")
+    print(f"Quantization completed >> {output_path}")
     return
 
 
@@ -72,10 +72,10 @@ def get_params_from_cfg(cfg_path):
     output_path = model_info["i8_onnx_path"]
 
     calib_data_path = calib_info["calib_data"]
-    num_datas = calib_info["num_datas"]
+    num_data = calib_info["num_data"]
     method = calib_info["method"]
 
-    return onnx_path, input_shape, output_path, calib_data_path, num_datas, method
+    return onnx_path, input_shape, output_path, calib_data_path, num_data, method
 
 
 if __name__ == "__main__":
