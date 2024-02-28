@@ -21,14 +21,7 @@ class OutProcessor:
         self.output_path = output_path
         self.post_proc = postproc
         self.procs = [
-            mp.Process(
-                target=self.output_to_img,
-                args=(
-                    video_path,
-                    outputQs[idx],
-                    img_to_img,
-                ),
-            )
+            mp.Process(target=self.output_to_img, args=(video_path, outputQs[idx], img_to_img))
             for idx, video_path in enumerate(video_paths)
         ]
 
@@ -56,9 +49,7 @@ class OutProcessor:
         start_time = time.time()
         completed = 0
 
-        fps_info = {
-            "font": cv2.FONT_HERSHEY_PLAIN,
-        }
+        fps_info = {"font": cv2.FONT_HERSHEY_PLAIN}
 
         while True:
             try:

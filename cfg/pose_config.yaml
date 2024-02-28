@@ -17,10 +17,10 @@ app_info:
 - device: warboy(1)*1
 
 runner_info:
-- conf_thres: 0.25
+  conf_thres: 0.25
   iou_thres: 0.65
   input_shape: [640,640]
   class_names:
   - person
   anchors:
-    -
+  -

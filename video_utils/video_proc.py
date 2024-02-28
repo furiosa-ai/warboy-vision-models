@@ -6,7 +6,7 @@ import subprocess
 import cv2
 
 
-class VideoProcessor:
+class VideoPreProcessor:
     def __init__(self, video_paths, output_path, preproc, input_q, img_to_img=False):
         self.video_paths = video_paths
         self.output_path = output_path

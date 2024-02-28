@@ -17,7 +17,8 @@ from utils.mp_queue import *
 from utils.postprocess import ObjDetPostProcess, PoseDetPostProcess
 from utils.preprocess import YOLOPreProcessor, letterbox
 from video_utils.output_proc import OutProcessor
-from video_utils.video_proc import VideoProcessor
+from video_utils.video_proc import VideoPreProcessor
+from video_utils.viewer import WarboyViewer
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
@@ -34,10 +35,7 @@ class FuriosaApplication:
     async def runner(self, inputQ, outputQs):
         async with runtime.create_queue(
             model=self.model_path, worker_num=self.worker_num, device=self.device
-        ) as (
-            submitter,
-            receiver,
-        ):
+        ) as (submitter, receiver):
             submit_task = asyncio.create_task(self.submit_with(submitter, inputQ))
             recv_task = asyncio.create_task(self.recv_with(receiver, outputQs))
             await submit_task
@@ -90,7 +88,7 @@ def set_processor(app_type, model_name, runner_info):
     return pre_processor, post_processor, img_to_img
 
 
-def runner(param):
+def app_runner(param):
     video_paths = param["video_paths"]
     inputQ = MpQueue()
     outputQs = [MpQueue() for _ in range(len(video_paths))]
@@ -108,15 +106,9 @@ def runner(param):
     )
 
     ##### Process Setting #####
-    video_proc = VideoProcessor(video_paths, output_path, pre_processor, inputQ, img_to_img)
+    video_proc = VideoPreProcessor(video_paths, output_path, pre_processor, inputQ, img_to_img)
     output_proc = OutProcessor(video_paths, output_path, post_processor, outputQs, img_to_img)
-    furiosa_proc = mp.Process(
-        target=furiosa_app,
-        args=(
-            inputQ,
-            outputQs,
-        ),
-    )
+    furiosa_proc = mp.Process(target=furiosa_app, args=(inputQ, outputQs))
 
     ##### Processes Run #####
     app_start_time = time.time()
@@ -137,12 +129,11 @@ def runner(param):
 
 
 def get_params_from_cfg(cfg: str):
+    num_channel = 0
     with open(cfg) as f:
         app_infos = yaml.load_all(f, Loader=yaml.FullLoader)
         params = []
-        print(app_infos)
         for app_info in app_infos:
-            print(app_info)
             model_config = open(app_info["model_config"])
             model_info = yaml.load(model_config, Loader=yaml.FullLoader)
             model_config.close()
@@ -166,13 +157,20 @@ def main(cfg):
     params = get_params_from_cfg(cfg)
     app_threads = []
 
+    warboy_viewer = WarboyViewer()
+
     for param in params:
-        app_thread = threading.Thread(target=runner, args=(param,))
+        app_thread = threading.Thread(target=app_runner, args=(param,))
         app_threads.append(app_thread)
         app_thread.start()
 
+    warboy_viewer.start()
+
     for app_thread in app_threads:
         app_thread.join()
+
+    warboy_viewer.state = False
+    warboy_viewer.join()
 
     return
 
