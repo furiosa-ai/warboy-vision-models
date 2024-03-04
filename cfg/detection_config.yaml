@@ -15,7 +15,7 @@ quantization_info:
 
 runner_info:
   conf_thres: 0.25
-  iou_thres: 0.65
+  iou_thres: 0.35
   input_shape: [640,640]
   class_names:
   - person

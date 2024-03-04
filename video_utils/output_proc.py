@@ -5,7 +5,7 @@ import time
 from typing import Sequence
 
 import cv2
-
+from pathlib import Path
 from utils.mp_queue import *
 
 
@@ -16,12 +16,13 @@ class OutProcessor:
         output_path: str,
         postproc,
         outputQs,
+        draw_fps: bool = True,
         img_to_img: bool = False,
     ):
         self.output_path = output_path
         self.post_proc = postproc
         self.procs = [
-            mp.Process(target=self.output_to_img, args=(video_path, outputQs[idx], img_to_img))
+            mp.Process(target=self.output_to_img, args=(video_path, outputQs[idx], draw_fps, img_to_img,))
             for idx, video_path in enumerate(video_paths)
         ]
 
@@ -34,7 +35,7 @@ class OutProcessor:
             proc.join()
 
     def output_to_img(
-        self, video_path: str, outputQ: mp.Queue, img_to_img: bool = False, draw_fps: bool = False
+        self, video_path: str, outputQ: mp.Queue, draw_fps, img_to_img
     ):
         video_name = (video_path.split('/')[-1]).split('.')[0]
 
@@ -48,9 +49,7 @@ class OutProcessor:
         img = None
         start_time = time.time()
         completed = 0
-
-        fps_info = {"font": cv2.FONT_HERSHEY_PLAIN}
-
+                
         while True:
             try:
                 preds, contexts, img_idx = outputQ.get()
@@ -66,11 +65,19 @@ class OutProcessor:
             if draw_fps:
                 FPS = completed / (time.time() - start_time)
                 h, w, _ = out_img.shape
+                org = (int(0.05 * h), int(0.05 * w))
+                scale = int(org[1]*0.07)
 
-                # out_img = cv2.putText(
-                #    out_img,
-                #    f"FPS: {FPS:.2f}",
-                # )
+                out_img = cv2.putText(
+                    out_img,
+                    f"FPS: {FPS:.2f}",
+                    org,
+                    cv2.FONT_HERSHEY_PLAIN,
+                    scale,
+                    (255,0,0),
+                    scale,
+                    cv2.LINE_AA
+                )
 
             tmp_out_img_path = os.path.join(out_dir_path, ".%010d.bmp" % img_idx)
             out_img_path = os.path.join(out_dir_path, "%010d.bmp" % img_idx)
@@ -80,6 +87,8 @@ class OutProcessor:
 
             completed += 1
 
+        end_file = Path(os.path.join(out_dir_path, "%010d.csv" % completed))
+        end_file.touch(exist_ok=True)
         if os.path.exists(in_img_dir_path):
             subprocess.run(["rm", "-rf", in_img_dir_path])
 

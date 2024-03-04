@@ -18,7 +18,7 @@ from utils.postprocess import ObjDetPostProcess, PoseDetPostProcess
 from utils.preprocess import YOLOPreProcessor, letterbox
 from video_utils.output_proc import OutProcessor
 from video_utils.video_proc import VideoPreProcessor
-from video_utils.viewer import WarboyViewer
+from video_utils.viewer import WarboyViewer, ResultViewer
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
@@ -51,7 +51,6 @@ class FuriosaApplication:
 
     async def recv_with(self, receiver, outputQs):
         while True:
-
             async def recv():
                 context, outputs = await receiver.recv()
                 return context, outputs
@@ -82,6 +81,10 @@ def set_processor(app_type, model_name, runner_info):
     elif app_type == "pose":
         pre_processor = YOLOPreProcessor()
         post_processor = PoseDetPostProcess(model_name, runner_info)
+    elif app_type == "tracking":
+        pass
+    elif app_type == "segmentation":
+        pass
     else:
         raise "Unsupported Application!"
 
@@ -94,10 +97,6 @@ def app_runner(param):
     outputQs = [MpQueue() for _ in range(len(video_paths))]
     output_path = param["output_path"]
 
-    if os.path.exists(output_path):
-        subprocess.run(["rm", "-rf", output_path])
-    os.makedirs(output_path)
-
     furiosa_app = FuriosaApplication(
         param["model_path"], param["worker_num"], param["warboy_device"]
     )
@@ -106,8 +105,9 @@ def app_runner(param):
     )
 
     ##### Process Setting #####
+    draw_fps = True
     video_proc = VideoPreProcessor(video_paths, output_path, pre_processor, inputQ, img_to_img)
-    output_proc = OutProcessor(video_paths, output_path, post_processor, outputQs, img_to_img)
+    output_proc = OutProcessor(video_paths, output_path, post_processor, outputQs, draw_fps, img_to_img)
     furiosa_proc = mp.Process(target=furiosa_app, args=(inputQ, outputQs))
 
     ##### Processes Run #####
@@ -133,10 +133,16 @@ def get_params_from_cfg(cfg: str):
     with open(cfg) as f:
         app_infos = yaml.load_all(f, Loader=yaml.FullLoader)
         params = []
+        output_paths = []
         for app_info in app_infos:
             model_config = open(app_info["model_config"])
             model_info = yaml.load(model_config, Loader=yaml.FullLoader)
             model_config.close()
+
+            if os.path.exists(app_info["output_path"]):
+                subprocess.run(["rm", "-rf", app_info["output_path"]])
+            os.makedirs(app_info["output_path"])
+
             params.append(
                 {
                     "app": app_info["app"],
@@ -149,14 +155,21 @@ def get_params_from_cfg(cfg: str):
                     "output_path": app_info["output_path"],
                 }
             )
-    return params
+            for video_path in app_info["video_path"]:
+                video_name = (video_path.split('/')[-1]).split('.')[0]
+                output_paths.append(
+                        os.path.join(app_info["output_path"], "output",video_name)
+                )
+                
+    return params, output_paths
 
 
 @app.command()
 def main(cfg):
-    params = get_params_from_cfg(cfg)
+    params, output_paths = get_params_from_cfg(cfg)
     app_threads = []
 
+    r_viewer = ResultViewer(output_paths, full_grid_shape=(720,1280))
     warboy_viewer = WarboyViewer()
 
     for param in params:
@@ -165,10 +178,12 @@ def main(cfg):
         app_thread.start()
 
     warboy_viewer.start()
+    r_viewer.start()
 
     for app_thread in app_threads:
         app_thread.join()
 
+    r_viewer.join()
     warboy_viewer.state = False
     warboy_viewer.join()
 
