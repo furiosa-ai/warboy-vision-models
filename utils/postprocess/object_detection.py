@@ -17,7 +17,7 @@ class ObjDetPostProcess:
         elif "yolov7" in model_name or "yolov5" in model_name:
             self.postprocess = YOLOv5PostProcessor(**model_cfg)
         else:
-            raise "Unsupported Model (Current Supporting only YOLO)"
+            raise "Unsupported Model (currently, only YOLO models are supported)"
         self.class_names = self.postprocess.class_names
 
     def __call__(
