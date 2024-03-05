@@ -12,7 +12,7 @@ class PoseDetPostProcess:
         if "yolov8" in model_name:
             self.postprocess = YOLOv8PostProcessor(**model_cfg)
         else:
-            raise "Unsupported Model (Current Supporting only YOLO)"
+            raise "Unsupported Model (currently, only YOLO models are supported)"
         self.class_names = self.postprocess.class_names
         self.do_draw_bbox = do_draw_bbox
 

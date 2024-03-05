@@ -10,7 +10,7 @@ model_info:
 
 quantization_info:
   calib_data: "/home/furiosa/Warboy/Benchmark/coco/val2017" # data directory path for calibration
-  num_datas: 100 # number of datas for calibration
+  num_data: 100 # number of data for calibration
   method: MIN_MAX_ASYM # calibration method
 
 app_info:

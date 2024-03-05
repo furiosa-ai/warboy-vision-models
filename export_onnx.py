@@ -41,7 +41,7 @@ def main(cfg):
     model = onnx_extractor(model)
 
     onnx.save(onnx.shape_inference.infer_shapes(model), onnx_path)
-    print(f"Fisnish creating onnx file!!! -> {onnx_path}")
+    print(f"Creating onnx file done! -> {onnx_path}")
     return
 
 
