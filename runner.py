@@ -18,7 +18,7 @@ from utils.postprocess import ObjDetPostProcess, PoseDetPostProcess
 from utils.preprocess import YOLOPreProcessor, letterbox
 from video_utils.output_proc import OutProcessor
 from video_utils.video_proc import VideoPreProcessor
-from video_utils.viewer import WarboyViewer, ResultViewer
+from video_utils.viewer import WarboyViewer
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
@@ -51,6 +51,7 @@ class FuriosaApplication:
 
     async def recv_with(self, receiver, outputQs):
         while True:
+
             async def recv():
                 context, outputs = await receiver.recv()
                 return context, outputs
@@ -107,7 +108,9 @@ def app_runner(param):
     ##### Process Setting #####
     draw_fps = True
     video_proc = VideoPreProcessor(video_paths, output_path, pre_processor, inputQ, img_to_img)
-    output_proc = OutProcessor(video_paths, output_path, post_processor, outputQs, draw_fps, img_to_img)
+    output_proc = OutProcessor(
+        video_paths, output_path, post_processor, outputQs, draw_fps, img_to_img
+    )
     furiosa_proc = mp.Process(target=furiosa_app, args=(inputQ, outputQs))
 
     ##### Processes Run #####
@@ -133,7 +136,6 @@ def get_params_from_cfg(cfg: str):
     with open(cfg) as f:
         app_infos = yaml.load_all(f, Loader=yaml.FullLoader)
         params = []
-        output_paths = []
         for app_info in app_infos:
             model_config = open(app_info["model_config"])
             model_info = yaml.load(model_config, Loader=yaml.FullLoader)
@@ -155,21 +157,15 @@ def get_params_from_cfg(cfg: str):
                     "output_path": app_info["output_path"],
                 }
             )
-            for video_path in app_info["video_path"]:
-                video_name = (video_path.split('/')[-1]).split('.')[0]
-                output_paths.append(
-                        os.path.join(app_info["output_path"], "output",video_name)
-                )
-                
-    return params, output_paths
+
+    return params
 
 
 @app.command()
-def main(cfg):
-    params, output_paths = get_params_from_cfg(cfg)
+def run_demo(cfg):
+    params = get_params_from_cfg(cfg)
     app_threads = []
 
-    r_viewer = ResultViewer(output_paths, full_grid_shape=(720,1280))
     warboy_viewer = WarboyViewer()
 
     for param in params:
@@ -178,15 +174,12 @@ def main(cfg):
         app_thread.start()
 
     warboy_viewer.start()
-    r_viewer.start()
 
     for app_thread in app_threads:
         app_thread.join()
 
-    r_viewer.join()
     warboy_viewer.state = False
     warboy_viewer.join()
-
     return
 
 

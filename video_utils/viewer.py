@@ -1,58 +1,73 @@
 import datetime
+import math
 import multiprocessing as mp
 import os
 import queue
 import subprocess
 import threading
-import cv2
 import time
-import math
-import numpy as np
 from typing import List, Tuple
+
+import cv2
 from furiosa.device.sync import list_devices
+import numpy as np
 
 
 class ResultViewer:
-    def __init__(self, output_paths: List[str], full_grid_shape: Tuple[int,int] = (1080, 1920), window_name:str = 'demo'):
+    def __init__(
+        self,
+        output_paths: List[str],
+        full_grid_shape: Tuple[int, int] = (1080, 1920),
+        viewer: str = 'fastAPI',
+    ):
         self.full_grid_shape = full_grid_shape
         self.output_paths = output_paths
         self.num_grid = math.ceil(math.sqrt(len(output_paths)))
-        self.grid_shape = (int((full_grid_shape[0]-5)/self.num_grid)-5, int((full_grid_shape[1]-5)/self.num_grid)-5)
+        self.grid_shape = (
+            int((full_grid_shape[0] - 5) / self.num_grid) - 5,
+            int((full_grid_shape[1] - 5) / self.num_grid) - 5,
+        )
+        self.viewer = viewer
 
-        self.window_name = window_name
-        self.viewer_proc = mp.Process(target = self.draw_img_to_grid_video)
-
-    def start(self):
-        self.viewer_proc.start()
-
-    def join(self):
-        self.viewer_proc.join()
-
-    def draw_img_to_grid_video(self, ):
-        window_name = self.window_name
+    def draw_img_to_grid_video(self):
         num_channel = len(self.output_paths)
-        end_channel = 0 
-        
+        end_channel = 0
+
         img_idx = 0
         states = [True for _ in range(num_channel)]
         result_path = "result"
+
+        if self.viewer == "file":
+            if os.path.exists(result_path):
+                subprocess.run(["rm", "-rf", result_path])
+            os.makedirs(result_path)
+
         while True:
+            if img_idx == 100:
+                break
+
             if end_channel == num_channel:
                 break
-            
+
             channel_idx = 0
             grid_imgs = []
 
             while True:
                 if channel_idx == num_channel:
                     break
-                    
-                output_img_path = os.path.join(self.output_paths[channel_idx], "%010d.bmp" % img_idx)
+
+                output_img_path = os.path.join(
+                    self.output_paths[channel_idx], "%010d.bmp" % img_idx
+                )
                 last_file_path = os.path.join(self.output_paths[channel_idx], "%010d.csv" % img_idx)
 
                 if os.path.exists(output_img_path) and states[channel_idx]:
                     channel_img = cv2.imread(output_img_path)
-                    grid_img = cv2.resize(channel_img, (self.grid_shape[1], self.grid_shape[0]), interpolation=cv2.INTER_NEAREST)
+                    grid_img = cv2.resize(
+                        channel_img,
+                        (self.grid_shape[1], self.grid_shape[0]),
+                        interpolation=cv2.INTER_NEAREST,
+                    )
                     grid_imgs.append(grid_img)
                     channel_idx += 1
                     os.remove(output_img_path)
@@ -63,13 +78,22 @@ class ResultViewer:
                     grid_imgs.append(None)
                     channel_idx += 1
             out_img = self.make_img_grid(grid_imgs)
-            out_frame = out_img.tobytes()
-            yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
-               bytearray(frame) + b'\r\n')
+
+            if self.viewer == "file":
+                result_img_path = os.path.join(result_path, "%010d.bmp" % img_idx)
+                cv2.imwrite(result_img_path, out_img)
+            elif self.viewer == "open-cv":
+                cv2.imshow(self.viewer, out_img)
+                if cv2.waitKey(33) & 0xFF == ord('q'):
+                    break
+            elif self.viewer == "fastAPI":
+                out_img = cv2.imencode('.jpg', out_img)
+                out_frame = out_img.tobytes()
+                yield_frame(out_frame)
+            else:
+                pass
+
             img_idx += 1
-
-        return
-
 
     def make_img_grid(self, grid_imgs):
         full_grid = np.zeros((self.full_grid_shape[0], self.full_grid_shape[1], 3), np.uint8)
@@ -85,9 +109,8 @@ class ResultViewer:
             y1 = c * self.grid_shape[1] + (c + 1) * 5
             y2 = (c + 1) * self.grid_shape[1] + (c + 1) * 5
             full_grid[x1:x2, y1:y2] = grid
-            
-        return full_grid
 
+        return full_grid
 
 
 class WarboyViewer:
@@ -164,3 +187,7 @@ class WarboyViewer:
             io = "% 6.2f" % (io_ratio * 100)
 
         return graph, util, comp, io
+
+
+def yield_frame(frame):
+    yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(out_frame) + b'\r\n')
