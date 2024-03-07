@@ -8,9 +8,17 @@ def load_pose_model(model_name, weight):
     if "yolov8" in model_name:
         return YOLO(weight).model
     elif "yolov7" in model_name:
-        return torch.hub.load("WongKinYiu/yolov7", "custom", weight)
+        import sys, os
+        sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "yolov7"))
+        from yolov7.models.experimental import attempt_load
+        model = attempt_load(weight, map_location="cpu")
+        return model
     elif "yolov5" in model_name:
-        return torch.hub.load("ultralytics/yolov5", "custom", weight)
+        import sys, os
+        sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "edgeai_yolov5"))
+        from edgeai_yolov5.models.experimental import attempt_load
+        model = attempt_load(weight, map_location="cpu")
+        return model
     else:
         raise "Unsupported Model!!"
 
@@ -41,59 +49,67 @@ class Pose_Estimation_YOLO_Extractor(YOLO_ONNX_Extractor):
                     f"/model.22/cv3.{idx}/cv3.{idx}.2/Conv_output_0",
                     (
                         1,
-                        nc,
+                        1,
                         int(input_shape[2] / (8 * (1 << idx))),
                         int(input_shape[3] / (8 * (1 << idx))),
                     ),
+                )
+                skeleton_layer = (
+                    f"/model.22/cv4.{idx}/cv4.{idx}.2/Conv_output_0",
+                    (
+                        1,
+                        17 * 3,
+                        int(input_shape[2] / (8 * (1 << idx))),
+                        int(input_shape[3] / (8 * (1 << idx))),
+                    )
                 )
                 output_to_shape.append(box_layer)
                 output_to_shape.append(cls_layer)
+                output_to_shape.append(skeleton_layer)
         elif "yolov7" in model_name:
             info = {
-                "yolv7": "/model/model.105",
-                "yolov7x": "/model/model.121",
-                "yolov7-w6": "/model/model.118",
-                "yolov7-e6": "/model/model.140",
-                "yolov7-d6": "/model/model.162",
-                "yolov7-e6e": "/model/model.261",
+                "yolov7-w6": "/model.118",
             }
-            output_to_shape = [
-                (
-                    f"{info[model_name]}/m.{idx}/Conv_output_0",
+            for idx in range(num_anchors):
+                if idx == 0:
+                    layer_name = f"{info[model_name]}/Reshape_output_0"
+                else:
+                    layer_name = f"{info[model_name]}/Reshape_{6*idx}_output_0"
+                pose_layer = (
+                    layer_name,
                     (
                         1,
-                        3 * (nc + 5),
+                        3,
+                        (6 + 3 * 17),
                         int(input_shape[2] / (8 * (1 << idx))),
                         int(input_shape[3] / (8 * (1 << idx))),
-                    ),
+                    )
                 )
-                for idx in range(num_anchors)
-            ]
+                output_to_shape.append(pose_layer)
+
         elif "yolov5" in model_name:
             info = {
-                "yolov5n": "/model/model/model.24",
-                "yolov5s": "/model/model/model.24",
-                "yolov5m": "/model/model/model.24",
-                "yolov5l": "/model/model/model.24",
-                "yolov5x": "/model/model/model.24",
-                "yolov5n6": "/model/model/model.33",
-                "yolov5s6": "/model/model/model.33",
-                "yolov5m6": "/model/model/model.33",
-                "yolov5l6": "/model/model/model.33",
+                "yolov5s6": "/model.33",
             }
-            output_to_shape = [
-                (
-                    f"{info[model_name]}/m.{idx}/Conv_output_0",
+            for idx in range(num_anchors):
+                if idx == 0:
+                    layer_name = f"{info[model_name]}/Reshape_output_0"
+                else:
+                    layer_name = f"{info[model_name]}/Reshape_{6*idx}_output_0"
+
+                pose_layer = (
+                    layer_name,
                     (
                         1,
-                        3 * (nc + 5),
+                        3,
+                        (6 + 3 * 17),
                         int(input_shape[2] / (8 * (1 << idx))),
                         int(input_shape[3] / (8 * (1 << idx))),
-                    ),
+                    )
                 )
-                for idx in range(num_anchors)
-            ]
+                output_to_shape.append(pose_layer)
         else:
-            raise "Unsupported Object Detection Model!!"
+            raise "Unsupported Pose Estimation Model!!"
+
 
         return output_to_shape

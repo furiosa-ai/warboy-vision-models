@@ -1,11 +1,11 @@
-app: pose
+app: detection
 model_name: "yolov8n"
-model_config: "/home/furiosa/warboy-vision-models/cfg/pose_config.yaml"
-model_path: "yolov8n-pose_i8.onnx"
+model_config: "./cfg/detection_config.yaml"
+model_path: "model_i8.onnx"
 worker_num: 4
 device: "warboy(1)*1"
-output_path: "output_pose"
+output_path: "output_detection"
 video_path:
-  - "/home/furiosa/input_videos/Basket_2.mp4"
-  - "/home/furiosa/input_videos/Basket_4.mp4"
-  - "/home/furiosa/input_videos/Basket_5.mp4"
+  - "../../input_videos/Basket_2.mp4"
+  - "../../input_videos/Basket_4.mp4"
+  - "../../input_videos/Basket_5.mp4"

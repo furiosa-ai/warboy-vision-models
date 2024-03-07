@@ -166,20 +166,20 @@ def run_demo(cfg):
     params = get_params_from_cfg(cfg)
     app_threads = []
 
-    warboy_viewer = WarboyViewer()
+    #warboy_viewer = WarboyViewer()
 
     for param in params:
         app_thread = threading.Thread(target=app_runner, args=(param,))
         app_threads.append(app_thread)
         app_thread.start()
 
-    warboy_viewer.start()
+    #warboy_viewer.start()
 
     for app_thread in app_threads:
         app_thread.join()
 
-    warboy_viewer.state = False
-    warboy_viewer.join()
+    #warboy_viewer.state = False
+    #warboy_viewer.join()
     return
 
 

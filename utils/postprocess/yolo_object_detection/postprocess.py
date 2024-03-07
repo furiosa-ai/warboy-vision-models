@@ -80,13 +80,13 @@ class YOLOv5PostProcessor:
         self.classes = [i for i in range(1, self.nc + 1)]
         self.input_shape = input_shape
         self.num_layers = len(anchors)
-        self.anchors, self.stride = get_anchors(anchors)
+        self.anchors, self.stride = self.get_anchors(anchors)
         self.anchor_per_layer_count = self.anchors.shape[1]
         self.box_decoder = BoxDecoderYOLOv5(
             stride=self.stride, conf_thres=conf_thres, anchors=self.anchors
         )
 
-    def __call(self, model_outputs: Sequence[np.ndarray], contexts):
+    def __call__(self, model_outputs: Sequence[np.ndarray], contexts):
         boxes_dec = self.box_decoder(model_outputs)
         boxes = non_max_suppression(boxes_dec, self.iou_thres)
 
@@ -97,8 +97,7 @@ class YOLOv5PostProcessor:
 
         return boxes
 
-    @staticmethod
-    def get_anchors(anchors):
+    def get_anchors(self, anchors):
         num_layers = len(anchors)
         anchors = np.reshape(np.array(anchors, dtype=np.float32), (num_layers, -1, 2))
         stride = np.array([2 ** (i + 3) for i in range(num_layers)], dtype=np.float32)

@@ -41,6 +41,23 @@ def _init():
     ]
     _clib.yolov8_pose_decode_feat.restype = None
 
+    _clib.yolov5_pose_decode_feat.argtypes = [
+            f32p,  # anchor
+            u32,  # na
+            f32,  # stride
+            f32,
+            u32,
+            f32p,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            f32p,
+            u32p,
+    ]
+    _clib.yolov5_pose_decode_feat.restype = None
+
 
 def sigmoid(x: np.ndarray) -> np.ndarray:
     # pylint: disable=invalid-name
@@ -113,11 +130,67 @@ def yolov8_pose_decode(stride, conf_thres, reg_max, num_pose, feats_box, feats_c
             out_batch_pos,
         )
 
-    out_boxes_batched = [
+    out_poses_batched = [
         boxes[: (pos // (5 + num_pose * 17))] for boxes, pos in zip(out_batch, out_batch_pos)
     ]
 
-    return out_boxes_batched
+    return out_poses_batched
+
+def _yolov5_pose_decode_feat(
+    anchor,
+    stride,
+    conf_thres,
+    num_pose,
+    max_poses,
+    feat,
+    out_batch,
+    out_batch_pos,
+):
+    bs, na, ny, nx, no = feat.shape
+    if isinstance(feat, np.ndarray):
+        _clib.yolov5_pose_decode_feat(
+            anchor,
+            na,
+            stride,
+            conf_thres,
+            max_poses,
+            np.ascontiguousarray(feat),
+            bs,
+            ny,
+            nx,
+            no,
+            num_pose,
+            out_batch,
+            out_batch_pos,
+        )
+    else:
+        raise Exception(type(feat))
+
+
+def yolov5_pose_decode(anchors, stride, conf_thres, num_pose, feats):
+    bs = feats[0].shape[0]
+    max_poses = int(1e4)
+
+    out_batch = np.empty((bs, max_poses, (6 + num_pose * 3)), dtype=np.float32)
+    out_batch_pos = np.zeros(bs, dtype=np.uint32)
+    #feats = feats.transpose(0,1,3,4,2)
+
+    for l, feat in enumerate(feats):
+        _yolov5_pose_decode_feat(
+            anchors[l],
+            stride[l],
+            conf_thres,
+            num_pose,
+            max_poses,
+            feat.transpose(0,1,3,4,2),
+            out_batch,
+            out_batch_pos
+        )
+    out_poses_batched = [
+        boxes[: (pos // (6 + 3 * num_pose))] for boxes, pos in zip(out_batch, out_batch_pos)
+    ]
+
+    return out_poses_batched
 
 
 _init()

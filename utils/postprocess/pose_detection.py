@@ -4,13 +4,17 @@ import cv2
 import numpy as np
 
 from utils.postprocess.settings import *
-from utils.postprocess.yolo_pose_detection.postprocess import YOLOv8PostProcessor
+from utils.postprocess.yolo_pose_detection.postprocess import YOLOv8PostProcessor, YOLOv5PostProcessor
 
 
 class PoseDetPostProcess:
     def __init__(self, model_name, model_cfg, do_draw_bbox=False):
         if "yolov8" in model_name:
+            self.start_idx = 5
             self.postprocess = YOLOv8PostProcessor(**model_cfg)
+        elif "yolov5" in model_name or "yolov7" in model_name:
+            self.start_idx = 6
+            self.postprocess = YOLOv5PostProcessor(**model_cfg)
         else:
             raise "Unsupported Model (currently, only YOLO models are supported)"
         self.class_names = self.postprocess.class_names
@@ -43,7 +47,7 @@ class PoseDetPostProcess:
             mbox = np.array([x0, y0, x1, y1])
             mbox = mbox.round().astype(np.int32).tolist()
             score = box[4]
-            class_id = int(box[5])
+            class_id = 0
 
             color = COLORS[class_id % len(COLORS)]
             label = f"{self.class_names[class_id]} ({score:.2f})"
@@ -77,7 +81,7 @@ class PoseDetPostProcess:
 
         for i, result in enumerate(predictions):
             k_idx = 0
-            for idx in range(5, len(result) - 1, 3):
+            for idx in range(self.start_idx, len(result) - 1, 3):
                 x, y, score = result[idx : idx + 3]
                 color = POSE_KPT_COLOR[k_idx].tolist()
                 cv2.circle(img, (int(x), int(y)), radius=3, color=color, thickness=-1)
@@ -88,10 +92,10 @@ class PoseDetPostProcess:
                 skeleton = SKELETONS[idx]
 
                 (pos_x_1, pos_y_1, _) = result[
-                    (skeleton[0] - 1) * 3 + 5 : (skeleton[0] - 1) * 3 + 5 + 3
+                    (skeleton[0] - 1) * 3 + self.start_idx : (skeleton[0] - 1) * 3 + self.start_idx + 3
                 ]
                 (pos_x_2, pos_y_2, _) = result[
-                    (skeleton[1] - 1) * 3 + 5 : (skeleton[1] - 1) * 3 + 5 + 3
+                    (skeleton[1] - 1) * 3 + self.start_idx : (skeleton[1] - 1) * 3 + self.start_idx + 3
                 ]
                 cv2.line(
                     img,

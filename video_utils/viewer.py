@@ -43,9 +43,6 @@ class ResultViewer:
             os.makedirs(result_path)
 
         while True:
-            if img_idx == 100:
-                break
-
             if end_channel == num_channel:
                 break
 
@@ -87,9 +84,11 @@ class ResultViewer:
                 if cv2.waitKey(33) & 0xFF == ord('q'):
                     break
             elif self.viewer == "fastAPI":
-                out_img = cv2.imencode('.jpg', out_img)
+                ret, out_img = cv2.imencode('.jpg', out_img)
                 out_frame = out_img.tobytes()
                 yield_frame(out_frame)
+                #yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
+                #    bytearray(out_frame) + b'\r\n')
             else:
                 pass
 
@@ -190,4 +189,4 @@ class WarboyViewer:
 
 
 def yield_frame(frame):
-    yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(out_frame) + b'\r\n')
+    yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(frame) + b'\r\n')

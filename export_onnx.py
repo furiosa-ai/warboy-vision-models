@@ -32,8 +32,7 @@ def main(cfg):
         opset_version=13,
         input_names=["images"],
         output_names=["outputs"],
-    )
-
+    )    
     onnx_extractor = load_onnx_extractor(
         model_type, model_name, nc, "images", input_shape, num_anchors
     )

@@ -33,3 +33,9 @@ class YOLOPreProcessor:
         img = img.transpose([2, 0, 1])  # HWC -> CHW
         preproc_params = {"ratio": ratio, "pad": (padw, padh)}
         return np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.uint8), preproc_params
+
+def preproc(images, new_shape = (640, 640)):
+    images = cv2.imread(images)
+    img, ratio, (padw, padh) = letterbox(images, new_shape)
+    img = img.transpose([2, 0, 1]) # HWC -> CHW
+    return np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.float32) / 255.0

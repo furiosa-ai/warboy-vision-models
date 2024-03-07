@@ -39,7 +39,7 @@ def main(cfg):
     for data in tqdm(calib_data, desc="calibration"):
         if not (data.endswith(".png") or data.endswith(".jpg")):
             continue
-        input_, _ = preproc(data, dtype="float32", new_shape=input_shape[2:])
+        input_ = preproc(data, new_shape=(int(input_shape[2:][0]),int(input_shape[2:][1])))
         calibrator.collect_data([[input_]])
 
     ranges = calibrator.compute_range()

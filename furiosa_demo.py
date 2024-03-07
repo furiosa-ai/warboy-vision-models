@@ -4,7 +4,7 @@ import subprocess
 import time
 
 import cv2
-from demo import run_demo
+from runner import run_demo
 import psutil
 import typer
 

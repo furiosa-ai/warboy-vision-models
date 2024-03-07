@@ -11,7 +11,6 @@ def non_max_suppression(
     assert 0 <= iou_thres <= 1, f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 
     output = []
-
     for x in prediction:
         i = _nms(x[:, :5], iou_thres)
         output.append(x[i])
