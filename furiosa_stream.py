@@ -2,6 +2,7 @@ import multiprocessing as mp
 import os
 import sys
 
+import cv2
 import fastapi
 from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse
@@ -31,14 +32,19 @@ def get_params_from_cfg(cfg: str):
 
 
 VIEWER = ResultViewer(
-    get_params_from_cfg(sys.argv[1]), full_grid_shape=(720, 1280), viewer=sys.argv[2]
+    get_params_from_cfg(sys.argv[1]), full_grid_shape=(1080, 1280), viewer=sys.argv[2]
 )
-
 
 @app.get("/")
 def stream():
+    def getByteFrame():
+        for frame in VIEWER.draw_img_to_grid_video():
+            ret, out_img = cv2.imencode('.jpg', frame)
+            out_frame = out_img.tobytes()
+            yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(out_frame) + b'\r\n')
+
     return StreamingResponse(
-        VIEWER.draw_img_to_grid_video(), media_type="multipart/x-mixed-replace; boundary=frame"
+        getByteFrame(), media_type="multipart/x-mixed-replace; boundary=frame"
     )
 
 
@@ -51,4 +57,17 @@ if __name__ == "__main__":
             reload=False,
         )
     else:
-        VIEWER.draw_img_to_grid_video()
+        result_path = "result"
+        if sys.argv[2] == "file":
+            if os.path.exists(result_path):
+                subprocess.run(["rm", "-rf", result_path])
+            os.makedirs(result_path)
+
+        for i, frame in enumerate(VIEWER.draw_img_to_grid_video()):
+            if sys.argv[2] == "file":
+                result_img_path = os.path.join(result_path, "%010d.bmp" % i)
+                cv2.imwrite(result_img_path, frame)
+            elif sys.argv[2] == "open-cv":
+                cv2.imshow("demo", frame)
+                if cv2.waitKey(33) & 0xFF == ord('q'):
+                    break

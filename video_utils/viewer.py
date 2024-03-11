@@ -75,23 +75,7 @@ class ResultViewer:
                     grid_imgs.append(None)
                     channel_idx += 1
             out_img = self.make_img_grid(grid_imgs)
-
-            if self.viewer == "file":
-                result_img_path = os.path.join(result_path, "%010d.bmp" % img_idx)
-                cv2.imwrite(result_img_path, out_img)
-            elif self.viewer == "open-cv":
-                cv2.imshow(self.viewer, out_img)
-                if cv2.waitKey(33) & 0xFF == ord('q'):
-                    break
-            elif self.viewer == "fastAPI":
-                ret, out_img = cv2.imencode('.jpg', out_img)
-                out_frame = out_img.tobytes()
-                yield_frame(out_frame)
-                #yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
-                #    bytearray(out_frame) + b'\r\n')
-            else:
-                pass
-
+            yield (out_img)
             img_idx += 1
 
     def make_img_grid(self, grid_imgs):
@@ -189,4 +173,4 @@ class WarboyViewer:
 
 
 def yield_frame(frame):
-    yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(frame) + b'\r\n')
+    return (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(frame) + b'\r\n')
