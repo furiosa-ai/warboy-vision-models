@@ -1,21 +1,21 @@
 model_info:
-  model_type: detection
-  model_name: yolov8n
-  weight: ./weights/yolov8n.pt
-  onnx_path: yolov8n.onnx # output onnx path
-  i8_onnx_path: yolov8n_i8.onnx # quantized onnx model path
+  model_type: instance_seg
+  model_name: yolov8x
+  weight: ./weights/yolov8x-seg.pt
+  onnx_path: yolov8x-seg.onnx # output onnx path
+  i8_onnx_path: yolov8x-seg_i8.onnx # quantized onnx model path
   input_shape: [1,3,640,640] # input shape for model
   nc: 80 # number of classes
   num_anchors: 3
 
 quantization_info:
-  calib_data: "../datas/val2017" # data directory path for calibration
+  calib_data: "../val2017" # data directory path for calibration
   num_data: 300 # number of data for calibration
   method: SQNR_ASYM # calibration method
 
 runner_info:
   conf_thres: 0.25
-  iou_thres: 0.7
+  iou_thres: 0.65
   input_shape: [640,640]
   class_names:
   - person

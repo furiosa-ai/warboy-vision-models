@@ -1,24 +1,21 @@
 model_info:
   model_type: pose
   model_name: yolov8n
-  weight: ./weights/yolov8n.pt
-  onnx_path: model.onnx # output onnx path
-  i8_onnx_path: yolov8n-pose_i8.onnx # quantized onnx model path
+  weight: ../model_informations/weights/yolov8n-pose.pt
+  onnx_path: ../model_informations/models/yolov8n-pose.onnx # output onnx path
+  i8_onnx_path: ../model_informations/models/yolov8n-pose.onnx # quantized onnx model path
   input_shape: [1,3,640,640] # input shape for model
   nc: 1 # number of classes
   num_anchors: 3
 
 quantization_info:
-  calib_data: "/home/furiosa/Warboy/Benchmark/coco/val2017" # data directory path for calibration
-  num_data: 100 # number of data for calibration
-  method: MIN_MAX_ASYM # calibration method
-
-app_info:
-- device: warboy(1)*1
-
+  calib_data: "../datas/pose_data" # data directory path for calibration
+  num_data: 300 # number of data for calibration
+  method: SQNR_ASYM # calibration method
+  
 runner_info:
   conf_thres: 0.25
-  iou_thres: 0.65
+  iou_thres: 0.7
   input_shape: [640,640]
   class_names:
   - person

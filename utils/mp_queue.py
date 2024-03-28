@@ -1,14 +1,11 @@
 from multiprocessing import Lock as _MPLock
 from multiprocessing import Queue as _MPQueue
 
-
 class QueueStopEle:
     pass
 
-
 class QueueClosedError(Exception):
     pass
-
 
 class MpQueue:
     def __init__(self, max_size: int = 0) -> None:

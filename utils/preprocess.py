@@ -1,10 +1,8 @@
-from typing import Any, Dict, List, Tuple
-
 import cv2
 import numpy as np
+from typing import Any, Dict, List, Tuple
 
-
-def letterbox(img, new_shape, color=(114, 114, 114), auto=True, scaleup=True, stride=32):
+def letterbox(img: np.ndarray, new_shape: Tuple[int,int], color=(114, 114, 114), auto=True, scaleup=True, stride=32):
     h, w = img.shape[:2]
     ratio = min(new_shape[0] / h, new_shape[1] / w)
     if not scaleup:
@@ -14,7 +12,7 @@ def letterbox(img, new_shape, color=(114, 114, 114), auto=True, scaleup=True, st
     dw /= 2
     dh /= 2
 
-    if (w, h) != new_unpad:
+    if ratio != 1.0:
         interpolation = cv2.INTER_LINEAR if ratio > 1 else cv2.INTER_AREA
         img = cv2.resize(img, new_unpad, interpolation=interpolation)
 
@@ -27,15 +25,13 @@ def letterbox(img, new_shape, color=(114, 114, 114), auto=True, scaleup=True, st
 class YOLOPreProcessor:
     @staticmethod
     def __call__(
-        images, new_shape: Tuple[int, int] = (640, 640), with_scaling: bool = False
+        images:np.ndarray, new_shape: Tuple[int, int] = (640, 640), tensor_type = "uint8", with_scaling: bool = False
     ) -> Tuple[np.ndarray, List[Dict[str, Any]]]:
         img, ratio, (padw, padh) = letterbox(images, new_shape)
-        img = img.transpose([2, 0, 1])  # HWC -> CHW
+        img = img.transpose([2, 0, 1])[::-1] # HWC -> CHW
         preproc_params = {"ratio": ratio, "pad": (padw, padh)}
-        return np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.uint8), preproc_params
-
-def preproc(images, new_shape = (640, 640)):
-    images = cv2.imread(images)
-    img, ratio, (padw, padh) = letterbox(images, new_shape)
-    img = img.transpose([2, 0, 1]) # HWC -> CHW
-    return np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.float32) / 255.0
+        if tensor_type == "uint8":
+            input_ = np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.uint8)
+        else:
+            input_ = np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.float32) / 255.0
+        return input_, preproc_params
