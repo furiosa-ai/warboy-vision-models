@@ -1,11 +1,14 @@
 import os
 import cv2
 import queue
+import time
 import subprocess
 import multiprocessing as mp
+import numpy as np
 
 from pathlib import Path
-from utils.mp_queue import MpQueue
+from typing import List, Dict, Tuple
+from utils_.mp_queue import MpQueue, QueueClosedError
 
 class JobHandler:
     def __init__(self, handlers):
@@ -44,7 +47,7 @@ class InputHandler(JobHandler):
         cap = cv2.VideoCapture(input_video_path, cv2.CAP_FFMPEG)
         img_idx = 0
         
-        while True:그래
+        while True:
             hasFrame, frame = cap.read()
             if not hasFrame:
                 make_ending_signal(output_path, img_idx)
@@ -66,7 +69,6 @@ class InputHandler(JobHandler):
 
         if cap.isOpened():
             cap.release()
-
         return
 
 class OutputHandler(JobHandler):
@@ -78,7 +80,7 @@ class OutputHandler(JobHandler):
             mp.Process(target=self.output_to_img, args=(input_video_path, output_queues[video_idx]))
             for video_idx, input_video_path in enumerate(input_video_paths)
         ]
-        super().__init__(self.video_handlers)
+        super().__init__(self.output_handlers)
         self.output_dir = output_dir 
         self.postprocessor = postprocessor
         self.draw_fps = draw_fps

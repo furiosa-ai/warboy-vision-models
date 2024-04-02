@@ -5,23 +5,21 @@ import torch
 import typer
 import yaml
 
-from model_utils import load_onnx_extractor, load_torch_model
-from model_utils.extractor import *
+from typing import Tuple
+HOME_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+sys.path.append(HOME_DIR)
+from utils_.parse_params import get_model_params_from_cfg
+from tools.model_utils import load_onnx_extractor, load_torch_model
+from tools.model_utils.extractor import *
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
-
-@app.command()
-def main(cfg):
-
-    model_type, model_name, weight, onnx_path, _, input_shape, nc, num_anchors = (
-        get_params_from_cfg(cfg)
-    )
-    model = load_torch_model(model_type, weight, model_name)
+def export_onnx_file(application: str, model_name: str, weight: str, onnx_path: str, input_shape: Tuple[int,int], num_classes: int, num_anchors: int):
+    model = load_torch_model(application, weight, model_name)
     assert model is not None, "Fail to load model!!!"
 
     model.eval()
-    dummy_input = torch.zeros(*input_shape).to(torch.device("cpu"))
+    dummy_input = torch.zeros(1,3,*input_shape).to(torch.device("cpu"))
 
     print("Start creating onnx file....")
     torch.onnx.export(
@@ -33,7 +31,7 @@ def main(cfg):
         output_names=["outputs"],
     )    
     onnx_extractor = load_onnx_extractor(
-        model_type, model_name, nc, "images", input_shape, num_anchors
+        application, model_name, num_classes, "images", [1,3, *input_shape], num_anchors
     )
     model = onnx.load(onnx_path)
     model = onnx_extractor(model)
@@ -42,13 +40,19 @@ def main(cfg):
     print(f"Creating onnx file done! -> {onnx_path}")
     return
 
+
+@app.command()
+def main(cfg):
+    params = get_model_params_from_cfg(cfg, mode="export_onnx")
+    export_onnx_file(**params)
+    return
+
 def get_params_from_cfg(cfg_path):
     with open(cfg_path) as f:
         cfg_info = yaml.full_load(f)
 
     model_info = cfg_info["model_info"]
     return model_info.values()
-
 
 if __name__ == "__main__":
     app()

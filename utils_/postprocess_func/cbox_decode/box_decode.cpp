@@ -118,7 +118,7 @@ void yolov5_box_decode_feat(
 
     const uint32_t max_out_batch_pos = output_params_per_box * max_boxes;
 
-    const float *feat_cur = feat;
+    uint32_t pos = 0;
     const uint32_t no = nc + 5;
 
     for (uint32_t b = 0; b < batch_size; b++)
@@ -136,7 +136,9 @@ void yolov5_box_decode_feat(
             {
                 for (uint32_t x = 0; x < nx; x++)
                 {
+                    const float* const feat_cur = &feat[pos];
                     const float obj_conf = feat_cur[4];
+                
                     if (obj_conf > conf_thres)
                     {
                         assertm(out_pos + output_params_per_box <= max_out_batch_pos, "Reached max number of boxes");
@@ -189,7 +191,7 @@ void yolov5_box_decode_feat(
                             out_pos += output_params_per_box;
                         }
                     }
-                    feat_cur += no;
+                    pos += no;
                 }
             }
         }

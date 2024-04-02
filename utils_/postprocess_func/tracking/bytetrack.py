@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from utils.postprocess_func.tracking.cbytetrack import CByteTrack
+from utils_.postprocess_func.tracking.cbytetrack import CByteTrack
 
 class ByteTrack:
     def __init__(self, track_thresh=0.5, track_buffer=30, match_thresh=0.8, clear_track_interval=30):

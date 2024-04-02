@@ -1,7 +1,7 @@
 import os
 import ctypes
 import numpy as np
-
+from typing import List, Union
 
 _clib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), "cbox_decode.so"))
 
@@ -58,6 +58,11 @@ def _init():
     ]
     _clib.yolov5_box_decode_feat.restype = None
 
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    # pylint: disable=invalid-name
+    return 1 / (1 + np.exp(-x))
+
+
 def _yolov8_box_decode_feat(
     stride, conf_thres, reg_max, max_boxes, feat_box, feat_cls, feat_extra, out_batch, out_batch_pos
 ):
@@ -112,7 +117,7 @@ def yolov8_box_decode(stride: np.ndarray, conf_thres: float, reg_max: int, feats
             reg_max,
             max_boxes,
             feat_box,
-            feat_cls,
+            sigmoid(feat_cls),
             feats_extra[l] if feats_extra is not None else None,
             out_batch,
             out_batch_pos,
@@ -124,24 +129,22 @@ def yolov8_box_decode(stride: np.ndarray, conf_thres: float, reg_max: int, feats
 
 
 
-
-
 def _yolov5_box_decode_feat(anchors, stride, conf_thres, max_boxes, feat, out_batch, out_batch_pos):
     bs, na, ny, nx, no = feat.shape
     
     if isinstance(feat, np.ndarray):
-        _clib.box_decode_feat(
-            anchors.reshape(-1),
+        _clib.yolov5_box_decode_feat(
+            np.ascontiguousarray(anchors),
             na,
             stride,
             conf_thres,
             max_boxes,
-            feat.reshape(-1),
+            np.ascontiguousarray(sigmoid(feat)),
             bs,
             ny,
             nx,
-            no,
-            out_batch.reshape(-1),
+            no-5,
+            out_batch,
             out_batch_pos,
         )
     else:
@@ -154,8 +157,10 @@ def yolov5_box_decode(anchors: np.ndarray, stride: np.ndarray, conf_thres:float,
 
     out_batch = np.empty((bs, max_boxes, 6), dtype=np.float32)
     out_batch_pos = np.zeros(bs, dtype=np.uint32)
-
+    na = len(anchors)
     for l, feat in enumerate(feats):
+        bs, _, ny, nx = feat.shape
+        feat = feat.reshape(bs, na, -1, ny, nx).transpose(0,1,3,4,2)
         _yolov5_box_decode_feat(
             anchors[l], stride[l], conf_thres, max_boxes, feat, out_batch, out_batch_pos
         )

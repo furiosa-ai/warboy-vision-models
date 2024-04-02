@@ -1,36 +1,37 @@
 import cv2
 import numpy as np
-from typing import List, Sequence, Tuple
+from typing import List, Sequence, Tuple, Dict
 
-from utils.info import *
-from utils.postprocess_func import ObjDetDecoder, PoseEstDecoder, InsSegDecoder
+from utils_.info import *
+from utils_.postprocess_func.output_decoder import ObjDetDecoder, PoseEstDecoder, InsSegDecoder
 
-def getPostProcesser(model_name, model_cfg, app_type):
+def getPostProcesser(app_type, model_name, model_cfg, class_names):
     assert app_type in ["object_detection", "pose_estimation", "instance_segmentation"], "sdfasd"
     if app_type == "object_detection":
-        postproc = ObjDetPostprocess(model_name, model_cfg)
+        postproc = ObjDetPostprocess(model_name, model_cfg, class_names)
     elif app_type == "pose_estimation":
-        postproc = PoseEstPostprocess(model_name, model_cfg)
+        postproc = PoseEstPostprocess(model_name, model_cfg, class_names)
     elif app_type == "instance_segmentation":
-        postproc = InsSegPostProcess(model_name, model_cfg)
+        postproc = InsSegPostProcess(model_name, model_cfg, class_names)
     return postproc
 
 # Postprocess for Object Detection
 class ObjDetPostprocess:
-    def __init__(self, model_name: str, model_cfg, use_traking:bool = True):
-        self.postprocess_func = ObjDetDecoder(**model_cfg, use_traking)
-        self.class_names = model_cfg["class_names"]
+    def __init__(self, model_name: str, model_cfg, class_names, use_traking:bool = True):
+        model_cfg.update({"use_tracker": use_traking})
+        self.postprocess_func = ObjDetDecoder(model_name, **model_cfg)
+        self.class_names = class_names
 
     def __call__(self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray) -> np.ndarray:
         ## Consider batch 1
 
-        predictions = self.postprocess_func(outputs, contexts)
+        predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
         assert len(predictions) == 1, f"{len(predictions)}!=1"
         
         predictions = predictions[0]
         num_prediction = predictions.shape[0]
 
-        if num_predictions == 0:
+        if num_prediction == 0:
             return img
 
         bboxed_img = draw_bbox(img, predictions, self.class_names)
@@ -38,14 +39,15 @@ class ObjDetPostprocess:
 
 # Postprocess for Pose Estimation
 class PoseEstPostprocess:
-    def __init__(self, model_name: str, model_cfg, use_traking:bool = True):
-        self.postprocess_func = PoseEstDecoder(**model_cfg, use_traking)
-        self.class_names = model_cfg["class_names"]
+    def __init__(self, model_name: str, model_cfg, class_names, use_traking:bool = True):
+        model_cfg.update({"use_tracker": use_traking})
+        self.postprocess_func = PoseEstDecoder(model_name, **model_cfg)
+        self.class_names = class_names
         self.s_idx = 5 if model_name in "yolov8" else 6
 
     def __call__(self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray) -> np.ndarray:
         ## Consider batch 1
-        predictions = self.postprocess_func(outputs, contexts)
+        predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
         assert len(predictions) == 1, f"{len(predictions)}!=1"
         
         predictions = predictions[0]
@@ -60,14 +62,15 @@ class PoseEstPostprocess:
 
 # Postprocess for Instance Segmentation
 class InsSegPostProcess:
-    def __init__(self, model_name: str, model_cfg, use_traking:bool = True):
-        self.postprocess_func = InsSegDecoder(**model_cfg, use_traking)
-        self.class_names = model_cfg["class_names"]
+    def __init__(self, model_name: str, model_cfg, class_names, use_traking:bool = True):
+        model_cfg.update({"use_tracker": use_traking})
+        self.postprocess_func = InsSegDecoder(model_name, **model_cfg)
+        self.class_names = class_names
 
     def __call__(self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray) -> np.ndarray:
         ## Consider batch 1
 
-        predictions = self.postprocess_func(outputs, contexts)
+        predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
         assert len(predictions) == 1, f"{len(predictions)}!=1"
         
         predictions = predictions[0]
@@ -103,7 +106,7 @@ def plot_onx_box(box: List[int], img: np.ndarray, color: Tuple[int,int,int], lab
     tl = line_thickness or round(0.0005 * max(img.shape[0:2])) + 1 
     tf = max(tl-1, 1)
     c1, c2 = (box[0], box[1]), (box[2], box[3])
-    cv2.rectangle(img, c1, c2, thickness=tl)
+    cv2.rectangle(img, c1, c2, color, thickness=tl)
     t_size = cv2.getTextSize(label, 0, fontScale = tl / 3, thickness = tf)[0]
     c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
     cv2.rectangle(img, c1, c2, color, -1)  # filled
@@ -132,7 +135,6 @@ def draw_instance_mask(img: np.ndarray, masks: np.ndarray, bbox:np.ndarray, clas
         img[:, :, :][mask] = (
             img[:, :, :][mask] * beta + np.array(color)*alpha
         )
-        
     return img
 
 def draw_pose(img: np.ndarray, predictions: np.ndarray, line_thickness: int = None) -> np.ndarray:

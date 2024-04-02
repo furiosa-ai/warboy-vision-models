@@ -1,7 +1,7 @@
 import torch
 from ultralytics import YOLO
 
-from model_utils import YOLO_ONNX_Extractor
+from tools.model_utils import YOLO_ONNX_Extractor
 
 
 def load_od_model(model_name, weight):
@@ -50,7 +50,7 @@ class ObjDet_YOLO_Extractor(YOLO_ONNX_Extractor):
                 output_to_shape.append(cls_layer)
         elif "yolov7" in model_name:
             info = {
-                "yolv7": "/model/model.105",
+                "yolov7": "/model/model.105",
                 "yolov7x": "/model/model.121",
                 "yolov7-w6": "/model/model.118",
                 "yolov7-e6": "/model/model.140",

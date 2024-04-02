@@ -3,11 +3,12 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-from utils.postprocess_func.nms import non_max_suppression
-from utils.postprocess_func.tracking.bytetrack import ByteTrack
-from utils.postprocess_func.cseg_decode import yolov8_seg_decode
-from utils.postprocess_func.cbox_decode import yolov8_box_decode, yolov5_box_decode
-from utils.postprocess_func.cpose_decode import yolov8_pose_decode, yolov5_pose_decode
+from typing import List, Tuple, Union
+from utils_.postprocess_func.nms import non_max_suppression
+from utils_.postprocess_func.tracking.bytetrack import ByteTrack
+from utils_.postprocess_func.cseg_decode import yolov8_segmentation_decode
+from utils_.postprocess_func.cbox_decode import yolov8_box_decode, yolov5_box_decode
+from utils_.postprocess_func.cpose_decode import yolov8_pose_decode, yolov5_pose_decode
 
 ## Base YOLO Decoder
 class YOLO_Decoder:
@@ -21,12 +22,12 @@ class YOLO_Decoder:
         anchors (list | none) : anchor values (anchor for yolov8 or yolov9 is None).
         stride (list) : stride values for yolo.
     """
-    def __init__(self, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_traker: bool = True
+    def __init__(self, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_tracker: bool = True
     ):
         self.iou_thres = float(iou_thres)
         self.conf_thres = float(conf_thres)
         self.tracker = ByteTrack() if use_tracker else None
-        self.anchors, self.stride = get_anchors(anchors) if anchors is not None else (None, np.array([(2 ** (i+3)) for i in range(3)], dtype=np.float32))
+        self.anchors, self.stride = get_anchors(anchors) if anchors[0] is not None else (None, np.array([(2 ** (i+3)) for i in range(3)], dtype=np.float32))
 
 
 ## YOLO Object Detection Decoder 
@@ -49,9 +50,9 @@ class ObjDetDecoder(YOLO_Decoder):
         output = decoder(model_outputs, contexts, org_input_shape)
     """
     def __init__(
-        self, model_name: str, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_traker: bool = True
+        self, model_name: str, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_tracker: bool = True
     ):
-        super().__init__(conf_thres, iou_thres, anchors, use_traker)
+        super().__init__(conf_thres, iou_thres, anchors, use_tracker)
         self.box_decoder = BoxDecoderYOLOv8(self.stride, self.conf_thres) if check_model(model_name) else BoxDecoderYOLOv5(self.stride, self.conf_thres, self.anchors)
 
     
@@ -89,7 +90,7 @@ def PoseEstDecoder(YOLO_Decoder):
         output = decoder(model_outputs, contexts, org_input_shape)
     """
     def __init__(
-        self,  model_name: str, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_traker: bool = False
+        self,  model_name: str, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_tracker: bool = False
     ): 
         super().__init__(conf_thres, iou_thres, anchors, use_tracker)
         self.pose_decoder = PoseDecoderYOLOv8(self.stride, self.conf_thres) if check_model(model_name) else PoseDecoderYOLOv5(self.stride, self.conf_thres, self.anchors)
@@ -125,7 +126,7 @@ def InsSegDecoder(YOLO_Decoder):
         output = decoder(model_outputs, contexts, org_input_shape)
     """
     def __init__(
-        self,  model_name: str, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_traker: bool = True
+        self,  model_name: str, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_tracker: bool = True
     ):
         super().__init__(conf_thres, iou_thres, anchors, use_tracker)
         self.box_decoder = BoxDecoderYOLOv8(self.stride, self.conf_thres)
@@ -186,7 +187,7 @@ class BoxDecoderYOLOv8(CDecoderBase):
             feats_extra = feats[2::step]
 
         out_boxes_batched = yolov8_box_decode(
-            self.stride, self.conf_thres, self.reg_max, feats_box, sigmoid(feats_cls), feats_extra
+            self.stride, self.conf_thres, self.reg_max, feats_box, feats_cls, feats_extra
         )
         return out_boxes_batched
 
@@ -212,7 +213,7 @@ class PoseDecoderYOLOv8(CDecoderBase):
             self.reg_max,
             self.num_pose,
             feats_box,
-            sigmoid(feats_cls),
+            feats_cls,
             feats_pose,
         )
         return out_boxes_batched 
@@ -235,9 +236,6 @@ class PoseDecoderYOLOv5(CDecoderBase):
 
 
 ## Useful functions for output decoder
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    # pylint: disable=invalid-name
-    return 1 / (1 + np.exp(-x))
 
 def check_model(model_name:str) -> bool:
     if "yolov8" in model_name or "yolov9" in model_name:
@@ -250,7 +248,7 @@ def scale_coords(coords: List[np.ndarray], ratio: float, pad: Tuple[float, float
     coords[:, 1::step] = (1 / ratio) * (coords[:, 1::step] - pad[1])
 
     ## Clip out-of-bounds values
-    coords[:, 0::step] = np.clip(coords[:, 0::step], 0, org_input_shape[0])
+    coords[:, 0::step] = np.clip(coords[:, 0::step], 0, org_input_shape[1])
     coords[:, 1::step] = np.clip(coords[:, 1::step], 0, org_input_shape[0])
 
     return coords

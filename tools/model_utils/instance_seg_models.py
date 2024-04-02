@@ -1,7 +1,7 @@
 import torch
 from ultralytics import YOLO
 
-from model_utils import YOLO_ONNX_Extractor
+from tools.model_utils import YOLO_ONNX_Extractor
 
 def load_instance_seg_model(model_name, weight):
     if "yolov8" in model_name:

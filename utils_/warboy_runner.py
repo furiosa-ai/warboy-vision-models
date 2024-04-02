@@ -1,13 +1,18 @@
 import os
 import time
-import yaml
+import queue
 import asyncio
 import subprocess
 import threading
 
+from typing import List
+from utils_.mp_queue import MpQueue, QueueClosedError
+from furiosa import runtime
+
+
 class WarboyRunner:
     '''
-
+    
     '''
     def __init__(self, model_path: str, worker_num: int = 8, device: str = "warboy(2)*1"):
         self.model_path = model_path
@@ -15,7 +20,7 @@ class WarboyRunner:
         self.device = device
 
     def __call__(self, input_queue: MpQueue, output_queues: List[MpQueue]):
-        asyncio.run(self.runner(input_qeuue, output_queues))
+        asyncio.run(self.runner(input_queue, output_queues))
 
     async def runner(self, input_queue: MpQueue, output_queues: List[MpQueue]):
         async with runtime.create_queue(
