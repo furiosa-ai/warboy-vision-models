@@ -1,27 +1,27 @@
-import os, sys
-import cv2
+import os
 import subprocess
-import numpy as np
-
-from tqdm import tqdm
+import sys
 from pathlib import Path
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
-from typing import Callable, Dict, Iterator, List, Mapping, Optional, Tuple, Any
+from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Tuple
 
+import cv2
+import numpy as np
 from furiosa.runtime.profiler import profile
 from furiosa.runtime.sync import create_runner
+from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
+from tqdm import tqdm
 
 HOME_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(HOME_DIR)
 from tools.export_onnx import export_onnx_file
 from tools.furiosa_quantizer import quantize_model
-from utils_.preprocess import YOLOPreProcessor
 from utils_.postprocess_func.output_decoder import (
+    InsSegDecoder,
     ObjDetDecoder,
     PoseEstDecoder,
-    InsSegDecoder,
 )
+from utils_.preprocess import YOLOPreProcessor
 
 ANCHORS = {
     "yolov8": None,
@@ -50,7 +50,7 @@ ANCHORS = {
 }
 
 # Model list
-'''
+"""
         "yolov8n": {
             "input_shape": [ 640, 640],
             "anchors": ANCHORS["yolov8"],
@@ -71,13 +71,13 @@ ANCHORS = {
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
-        
+
         "yolov8x": {
             "input_shape": [ 640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
-        '''
+        """
 
 MODEL_LIST = {
     "object_detection": {
@@ -87,72 +87,72 @@ MODEL_LIST = {
             "num_anchors": 3,
         },
         "yolov7x": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov7"],
             "num_anchors": 3,
         },
         "yolov7-w6": {
-            "input_shape": [ 1280, 1280],
+            "input_shape": [1280, 1280],
             "anchors": ANCHORS["yolov7_6"],
             "num_anchors": 4,
         },
         "yolov7-e6": {
-            "input_shape": [ 1280, 1280],
+            "input_shape": [1280, 1280],
             "anchors": ANCHORS["yolov7_6"],
             "num_anchors": 4,
         },
         "yolov7-d6": {
-            "input_shape": [ 1280, 1280],
+            "input_shape": [1280, 1280],
             "anchors": ANCHORS["yolov7_6"],
             "num_anchors": 4,
         },
         "yolov7-e6e": {
-            "input_shape": [ 1280, 1280],
+            "input_shape": [1280, 1280],
             "anchors": ANCHORS["yolov7_6"],
             "num_anchors": 4,
         },
         "yolov5n": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov5"],
             "num_anchors": 3,
         },
         "yolov5s": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov5"],
             "num_anchors": 3,
         },
         "yolov5m": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov5"],
             "num_anchors": 3,
         },
         "yolov5l": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov5"],
             "num_anchors": 3,
         },
         "yolov5x": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov5"],
             "num_anchors": 3,
         },
         "yolov5n6": {
-            "input_shape": [ 1280, 1280],
+            "input_shape": [1280, 1280],
             "anchors": ANCHORS["yolov5_6"],
             "num_anchors": 4,
         },
         "yolov5s6": {
-            "input_shape": [ 1280, 1280],
+            "input_shape": [1280, 1280],
             "anchors": ANCHORS["yolov5_6"],
             "num_anchors": 4,
         },
         "yolov5m6": {
-            "input_shape": [ 1280, 1280],
+            "input_shape": [1280, 1280],
             "anchors": ANCHORS["yolov5_6"],
             "num_anchors": 4,
         },
         "yolov5l6": {
-            "input_shape": [ 1280, 1280],
+            "input_shape": [1280, 1280],
             "anchors": ANCHORS["yolov5_6"],
             "num_anchors": 4,
         },
@@ -293,7 +293,8 @@ def warboy_test(
     data_path,
     anno_path,
     device,
-    mode="test"
+    compiler_config=None,
+    mode="test",
 ):
     conf_thres = 0.001
     iou_thres = 0.7
@@ -310,11 +311,12 @@ def warboy_test(
     ## Performance Test
     with open(trace_file, "w") as output:
         with profile(file=output) as profiler:
-            with create_runner(onnx_i8_path, device=device) as runner:
+            with create_runner(
+                onnx_i8_path, device=device, compiler_config=compiler_config
+            ) as runner:
                 with profiler.record("trace") as record:
                     for _ in range(0, 30):
                         runner.run([dummy_input])
-
     if mode != "test":
         return
 
@@ -354,7 +356,7 @@ def warboy_test(
 
         with open(log_file, mode="a") as log_file:
             log_file.write(
-                f"{model_name}, {input_shape[2]}, {mAP_50_95}, {mAP_50}, {mAP_75}\n"
+                f"{model_name}, {input_shape[0]}, {mAP_50_95}, {mAP_50}, {mAP_75}\n"
             )
     return
 
@@ -364,9 +366,9 @@ def object_detection_test(data_path, anno_path):
     model_list = MODEL_LIST["object_detection"]
 
     """
-    Output Files 
-    - warboy-vision-models/result/object_detection/onnx_files : ONNX Files 
-    - warboy-vision-models/result/object_detection/traces : tracing (.json) files 
+    Output Files
+    - warboy-vision-models/result/object_detection/onnx_files : ONNX Files
+    - warboy-vision-models/result/object_detection/traces : tracing (.json) files
     - warboy-vision-models/result/object_detection/accuracy.log : log file for accuracy of models
     """
 
@@ -374,7 +376,7 @@ def object_detection_test(data_path, anno_path):
     onnx_dir_path = os.path.join(result_path, "object_detection", "onnx_files")
     trace_dir_path = os.path.join(result_path, "object_detection", "traces")
     accuracy_log = os.path.join(result_path, "object_detection", "accuracy.log")
-    '''
+    """
     if os.path.exists(onnx_dir_path):
         subprocess.run(["rm", "-rf", onnx_dir_path])
 
@@ -383,7 +385,7 @@ def object_detection_test(data_path, anno_path):
 
     os.makedirs(onnx_dir_path)
     os.makedirs(trace_dir_path)
-    '''
+    """
     for model_name in model_list:
         model_info = model_list[model_name]
         input_shape = model_info["input_shape"]
@@ -395,33 +397,37 @@ def object_detection_test(data_path, anno_path):
 
         # 1. Export Onnx from torch model
         onnx_path = os.path.join(onnx_dir_path, model_name + ".onnx")
-        export_onnx_file(
-            "object_detection",
-            model_name,
-            weight_file,
-            onnx_path,
-            input_shape,
-            num_classes,
-            num_anchors,
-        )
-
+        if not os.path.exists(onnx_path):
+            export_onnx_file(
+                "object_detection",
+                model_name,
+                weight_file,
+                onnx_path,
+                input_shape,
+                num_classes,
+                num_anchors,
+            )
         # 2. Quantization using Furiosa SDK
         onnx_i8_path = os.path.join(onnx_dir_path, model_name + "_i8.onnx")
         num_calidataion_data = 200
-        quantize_model(
-            onnx_path,
-            input_shape,
-            onnx_i8_path,
-            data_path,
-            num_calidataion_data,
-            "SQNR_ASYM",
-        )
-
+        if not os.path.exists(onnx_i8_path):
+            quantize_model(
+                onnx_path,
+                input_shape,
+                onnx_i8_path,
+                data_path,
+                num_calidataion_data,
+                "SQNR_ASYM",
+            )
         # 3. Inference using Furiosa SDK Runtime (Accuracy Test)
         trace_path = os.path.join(trace_dir_path, "tracing_" + model_name + ".json")
         trace_single_path = os.path.join(
             trace_dir_path, "tracing_single_" + model_name + ".json"
         )
+        if input_shape[0] != 640:
+            compiler_config = {"use_program_loading": True}
+        else:
+            compiler_config = None
         try:
             warboy_test(
                 accuracy_log,
@@ -433,8 +439,10 @@ def object_detection_test(data_path, anno_path):
                 data_path,
                 anno_path,
                 "npu0pe0-1",
+                compiler_config,
             )
         except Exception as e:
+            print(e)
             with open(accuracy_log, mode="a") as log_file:
                 log_file.write(f"{model_name} -> Compile Fail! (Fusion)\n")
         try:
@@ -448,11 +456,13 @@ def object_detection_test(data_path, anno_path):
                 data_path,
                 anno_path,
                 "npu0pe0",
-                "not-test"
+                compiler_config,
+                "not-test",
             )
         except Exception as e:
             with open(accuracy_log, mode="a") as log_file:
                 log_file.write(f"{model_name} -> Compile Fail! (Single PE)\n")
+
 
 def pose_estimation_test(data_path, anno_path):
     return
