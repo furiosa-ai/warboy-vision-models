@@ -150,19 +150,18 @@ def _yolov5_box_decode_feat(
     anchors, stride, conf_thres, max_boxes, feat, out_batch, out_batch_pos
 ):
     bs, na, ny, nx, no = feat.shape
-
     if isinstance(feat, np.ndarray):
         _clib.yolov5_box_decode_feat(
-            np.ascontiguousarray(anchors),
+            anchors.reshape(-1),
             na,
             stride,
             conf_thres,
             max_boxes,
-            np.ascontiguousarray(sigmoid(feat)),
+            feat.reshape(-1),
             bs,
             ny,
             nx,
-            no - 5,
+            no,
             out_batch,
             out_batch_pos,
         )
@@ -174,15 +173,20 @@ def yolov5_box_decode(
     anchors: np.ndarray, stride: np.ndarray, conf_thres: float, feats: np.ndarray
 ) -> List[np.ndarray]:
     bs = feats[0].shape[0]
-    max_boxes = int(1e4)
-
+    max_boxes = int(2e4)
     out_batch = np.empty((bs, max_boxes, 6), dtype=np.float32)
     out_batch_pos = np.zeros(bs, dtype=np.uint32)
     for l, feat in enumerate(feats):
         bs, _, ny, nx = feat.shape
         feat = feat.reshape(bs, 3, -1, ny, nx).transpose(0, 1, 3, 4, 2)
         _yolov5_box_decode_feat(
-            anchors[l], stride[l], conf_thres, max_boxes, feat, out_batch, out_batch_pos
+            anchors[l],
+            stride[l],
+            conf_thres,
+            max_boxes,
+            sigmoid(feat),
+            out_batch,
+            out_batch_pos,
         )
 
     out_boxes_batched = [

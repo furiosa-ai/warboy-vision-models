@@ -109,17 +109,17 @@ void yolov8_box_decode_feat(
     }
 }
 
+
 void yolov5_box_decode_feat(
     const float *const anchors, const uint32_t num_anchors, const float stride, const float conf_thres, const uint32_t max_boxes,
-    const float *const feat, const uint32_t batch_size, const uint32_t ny, const uint32_t nx, const uint32_t nc,
+    const float *const feat, const uint32_t batch_size, const uint32_t ny, const uint32_t nx, const uint32_t no,
     float *const out_batch, uint32_t *out_batch_pos)
 {
     const uint32_t output_params_per_box = 6;
-
     const uint32_t max_out_batch_pos = output_params_per_box * max_boxes;
+    const uint32_t nc = no - 5;
 
-    uint32_t pos = 0;
-    const uint32_t no = nc + 5;
+    const float* cell = feat;
 
     for (uint32_t b = 0; b < batch_size; b++)
     {
@@ -127,28 +127,22 @@ void yolov5_box_decode_feat(
         uint32_t* const out_pos_ptr = out_batch_pos + b;
         uint32_t out_pos = *out_pos_ptr;
 
-        for (uint32_t a = 0; a < num_anchors; a++)
-        {
+        for (uint32_t a = 0; a < num_anchors; a++) {
             const float ax = anchors[2 * a + 0] * stride;
             const float ay = anchors[2 * a + 1] * stride;
 
-            for (uint32_t y = 0; y < ny; y++)
-            {
-                for (uint32_t x = 0; x < nx; x++)
-                {
-                    const float* const feat_cur = &feat[pos];
-                    const float obj_conf = feat_cur[4];
-                
-                    if (obj_conf > conf_thres)
-                    {
-                        assertm(out_pos + output_params_per_box <= max_out_batch_pos, "Reached max number of boxes");
+            for (uint32_t y = 0; y < ny; y++) {
+                for (uint32_t x = 0; x < nx; x++) {
+                    const float obj_conf = cell[4];
+
+                    if (obj_conf > conf_thres) {
+                        assertm(out_pos + params_per_box <= max_out_batch_pos, "Reached max number of boxes");
 
                         float conf = 0.0;
-                        uint32_t cls_idx = 0;
-
+                        uint32_t cls_idx = -1;
                         for (uint32_t c = 0; c < nc; c++)
                         {
-                            float conf_cur = feat_cur[5 + c];
+                            float conf_cur = cell[5 + c];
                             if (conf_cur > conf)
                             {
                                 conf = conf_cur;
@@ -157,14 +151,13 @@ void yolov5_box_decode_feat(
                         }
 
                         conf *= obj_conf;
-                        if (conf > conf_thres)
-                        {
+                        if (conf > conf_thres){
                             // (feat[..., 0:2] * 2. - 0.5 + self.grid[i]) * self.stride[i]  # xy
                             // (feat[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-                            float bx = feat_cur[0];
-                            float by = feat_cur[1];
-                            float bw = feat_cur[2];
-                            float bh = feat_cur[3];
+                            float bx = cell[0];
+                            float by = cell[1];
+                            float bw = cell[2];
+                            float bh = cell[3];
 
                             bx = (bx * 2.0f - 0.5f + x) * stride;
                             by = (by * 2.0f - 0.5f + y) * stride;
@@ -191,7 +184,7 @@ void yolov5_box_decode_feat(
                             out_pos += output_params_per_box;
                         }
                     }
-                    pos += no;
+                    cell += no;
                 }
             }
         }
