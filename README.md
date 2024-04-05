@@ -1,15 +1,15 @@
 # Warboy-Vsion-Models
-`warboy-vision-models` is a project, designed to assist users execute various deep learning vision models on [FuriosaAI](https://furiosa.ai/)’s first generation NPU(Neural Processing Unit) Warboy. 
-Users can follow the steps outlined in the project to execute various vision applications, such as Object Detection, Pose Estimation, Instance Segmentation, etc., alongside Warboy.
+The `warboy-vision-models` project is desinged to assist users in running various deep learning vision models on [FuriosaAI](https://furiosa.ai/)’s first generation NPU (Neural Processing Unit), Warboy. 
+Users can follow the outlined steps in the project to execute various vision applications, such as Object Detection, Pose Estimation, Instance Segmentation, etc., alongside Warboy.
 
-We hope that the resources here will help you use the FuriosaAI Warboy on your applications.
+We hope that the resources here will help you utilize the FuriosaAI Warboy in your applications.
 
 # <div align="center">Model List</div>
 
-Currently, the project supports all vision applications provided by YOLO series ([YOLOv9](https://github.com/WongKinYiu/yolov9), [YOLOv8](https://github.com/ultralytics/ultralytics), [YOLOv7](https://github.com/WongKinYiu/yolov7) and [YOLOv5](https://github.com/ultralytics/yolov5)). If you want to know all models available in `warboy-vision-models` and detailed performance of Warboy, please see the followings:
+Currently, the project supports all vision applications provided by YOLO series ([YOLOv9](https://github.com/WongKinYiu/yolov9), [YOLOv8](https://github.com/ultralytics/ultralytics), [YOLOv7](https://github.com/WongKinYiu/yolov7) and [YOLOv5](https://github.com/ultralytics/yolov5)). If you want to explore all available models in the `warboy-vision-models` repository and detailed performance on Warboy, please refer to the following:
 
 ### Object Detection
-Object detection is a computer vision technique that identifies the presence of specific objects in images or videos and determines their locations. It involves classifying objects in videos or photos (classification) and pinpointing their locations through bounding boxes, thus detecting objects through this process.
+Object detection is a computer vision technique used to identify the presence of specific objects in images or videos and determines their locations. It entails classifying objects in videos or photos (classification) and precisely locating them using bounding boxes, thereby detecting objects through this process.
 
 <div align="center"><img width="1024" height="360" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/object_detection.png"></div>
 
@@ -60,7 +60,7 @@ Object detection is a computer vision technique that identifies the presence of 
 </details>
 
 ### Pose Estimation
-Pose estimation is a technology that identifies and estimates the pose of a person or object by detecting body parts (typically joints) and using them to estimate the pose of the respective object.
+Pose estimation is a technology that identifies and estimates the posture of a person or object by detecting body parts (typically joints) and using them to estimate the pose of the respective object.
 
 <div align="center"><img width="720" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/pose_estimation.png"></div>
 
@@ -69,7 +69,7 @@ Pose estimation is a technology that identifies and estimates the pose of a pers
 </details>
 
 ### Instance Segmentation 
-Instance segmentation is a technology that identifies multiple objects in an image or video and segments the boundaries of each object. In other words, it combines Object Detection and Semantic Segmentation techniques to individually identify multiple objects belonging to the same class and estimate their boundaries.
+Instance segmentation is a technology that identifies multiple objects in an image or video and delineates the boundaries of each object. In essence, it combines Object Detection and Semantic Segmentation techniques to individually identify multiple objects belonging to the same class and estimate their boundaries.
 
 <div align="center"><img width="720" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/instance_segmentation.png"></div>
 
@@ -79,10 +79,10 @@ Instance segmentation is a technology that identifies multiple objects in an ima
 </details>
 
 # <div align="center">Documentation</div>
-Please see below for a installation adn usage example. 
+Please refer below for a installation and usage example. 
 
 ## Installation
-For the project, it is necessary to install various software componenets provided by FuriosaAI. If you want to learn more about the installation of package, driver and furiosa-sdk, please refer to the followings:
+To use this project, it's essential to install various software components provided by FuriosaAI. For detailed instructions on installing packages, drivers, and the Furiosa SDK, please see the following:
 
 - **Driver, Firmeware and Runtime Installation** ([English](https://furiosa-ai.github.io/docs/latest/en/software/installation.html) | [한국어](https://furiosa-ai.github.io/docs/latest/ko/software/installation.html))
 
@@ -118,8 +118,8 @@ calibration_params:
   calibration_data: calibration_data          # calibration data path
   num_calibration_data: 10                    # number of calibration data
 
-conf_thres: 0.25
-iou_thres: 0.7
+confidence_threshold: 0.25
+iou_threshold: 0.7
 input_shape: [640, 640]         # model input shape (Height, Width)
 anchors:                        # anchor information
   - 
@@ -134,7 +134,7 @@ application: object_detection
 model_config: ./cfg/model_config.yaml
 model_path: yolov8n_i8.onnx
 output_path: output_detection
-num_worker: 8
+num_workers: 8
 device: warboy(2)*1
 video_path: 
   - ...
@@ -154,8 +154,8 @@ Next, it is necessary to export the model to the ONNX format.
 </details>
 
 <details open>
-<summary> Quantize ONNX using Furiosa SDK </summary>
-If you have proceeded with the conversion of the model from its original format to an ONNX model, the next step is the model quantization process. Since FuriosaAI's Warboy only supports models in 8-bit integer format (int8), it is necessary to quantize the float32-based model into an int8 data type model. 
+<summary> Quantizing an ONNX model using Furiosa SDK </summary>
+If you have already exported the model from its original format to an ONNX model, the next step is the model quantization process. Since FuriosaAI's Warboy only supports models in 8-bit integer format (int8), it is necessary to quantize the float32-based model into an int8 data type model. 
 
 - **command**
   ```sh
@@ -164,8 +164,8 @@ If you have proceeded with the conversion of the model from its original format 
 </details>
 
 <details open>
-<summary> Run project using Furiosa Runtime </summary>
-In the project, vision applications are executed for videos from multiple channels. To do this effectively, optimization tasks such as Python parallel programming, asynchronous processing, and post processing using C++ have been included. If you want to know detailed project structure, see the following image:
+<summary> Running the project using Furiosa Runtime </summary>
+In the project, vision applications are executed for videos from multiple channels. To accomplish this effectively, optimization tasks such as Python parallel programming, asynchronous processing, and post-processing using C++ have been included. For a detailed understanding of the project structure, please refer to the following image:
 
 
 <div align="center"><img width="960" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/structure.png"></div>
