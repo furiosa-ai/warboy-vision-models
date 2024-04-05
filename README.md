@@ -165,12 +165,16 @@ If you have proceeded with the conversion of the model from its original format 
 
 <details open>
 <summary> Run project using Furiosa Runtime </summary>
-In the project, vision applications are executed for videos from multiple channels. To do this effectively, optimization tasks such as Python parallel programming, asynchronous processing, and post processing using C++ have been included.
+In the project, vision applications are executed for videos from multiple channels. To do this effectively, optimization tasks such as Python parallel programming, asynchronous processing, and post processing using C++ have been included. If you want to know detailed project structure, see the following image:
+
+
+<div align="center"><img width="960" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/structure.png"></div>
   
 - **command**
   
   ```sh
-  python warboy_demo.py cfg/demo.config.yaml file
+  python warboy_demo.py cfg/demo_config.yaml file    # save the result as image file
+  python warboy_demo.py cfg/demo_config.yaml fastAPI # see the result on webpage using fastAPI (http://[ip_address]:20001)
   ```
 </details>
 
