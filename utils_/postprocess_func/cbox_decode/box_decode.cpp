@@ -109,7 +109,6 @@ void yolov8_box_decode_feat(
     }
 }
 
-
 void yolov5_box_decode_feat(
     const float *const anchors, const uint32_t num_anchors, const float stride, const float conf_thres, const uint32_t max_boxes,
     const float *const feat, const uint32_t batch_size, const uint32_t ny, const uint32_t nx, const uint32_t no,
@@ -119,23 +118,27 @@ void yolov5_box_decode_feat(
     const uint32_t max_out_batch_pos = output_params_per_box * max_boxes;
     const uint32_t nc = no - 5;
 
-    const float* cell = feat;
+    const float *cell = feat;
 
     for (uint32_t b = 0; b < batch_size; b++)
     {
-        float* const out = out_batch + (b * max_out_batch_pos);
-        uint32_t* const out_pos_ptr = out_batch_pos + b;
+        float *const out = out_batch + (b * max_out_batch_pos);
+        uint32_t *const out_pos_ptr = out_batch_pos + b;
         uint32_t out_pos = *out_pos_ptr;
 
-        for (uint32_t a = 0; a < num_anchors; a++) {
+        for (uint32_t a = 0; a < num_anchors; a++)
+        {
             const float ax = anchors[2 * a + 0] * stride;
             const float ay = anchors[2 * a + 1] * stride;
 
-            for (uint32_t y = 0; y < ny; y++) {
-                for (uint32_t x = 0; x < nx; x++) {
+            for (uint32_t y = 0; y < ny; y++)
+            {
+                for (uint32_t x = 0; x < nx; x++)
+                {
                     const float obj_conf = cell[4];
 
-                    if (obj_conf > conf_thres) {
+                    if (obj_conf > conf_thres)
+                    {
                         assertm(out_pos + params_per_box <= max_out_batch_pos, "Reached max number of boxes");
 
                         float conf = 0.0;
@@ -151,7 +154,8 @@ void yolov5_box_decode_feat(
                         }
 
                         conf *= obj_conf;
-                        if (conf > conf_thres){
+                        if (conf > conf_thres)
+                        {
                             // (feat[..., 0:2] * 2. - 0.5 + self.grid[i]) * self.stride[i]  # xy
                             // (feat[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                             float bx = cell[0];
