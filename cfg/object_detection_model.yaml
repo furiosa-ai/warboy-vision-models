@@ -1,20 +1,20 @@
 application: object_detection   #
-model_name: yolov8n
+model_name: yolov8l
 weight: ../../model_informations/weights/yolov8n.pt                       # weight file path
 onnx_path: yolov8n.onnx                  # onnx model path
-onnx_i8_path: yolov8n_i8.onnx            # quantized onnx model path
+onnx_i8_path: ./result/object_detection/onnx_files/yolov8l_i8.onnx # quantized onnx model path
 
 calibration_params:
   calibration_method: SQNR_ASYM # calibration method
   calibration_data: ../../datas/val2017          # calibration data path
-  num_calibration_data: 10     # number of calibration data
+  num_calibration_data: 200     # number of calibration data
 
-conf_thres: 0.25
+conf_thres: 0.001
 iou_thres: 0.7
 input_shape: [640, 640]         # model input shape (Height, Width)
 anchors:                        # anchor information
-  - 
-class_names: 
+  -
+class_names:
   - person
   - bicycle
   - car
@@ -94,4 +94,4 @@ class_names:
   - scissors
   - teddy bear
   - hair drier
-  - toothbrush 
+  - toothbrush
