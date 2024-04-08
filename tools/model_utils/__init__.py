@@ -12,17 +12,25 @@ def load_torch_model(model_type, weight, model_name):
     elif model_type == "pose_estimation":
         return load_pose_model(model_name, weight)
     elif model_type == "instance_segmentation":
-        return load_instance_seg_model(model_name ,weight)
+        return load_instance_seg_model(model_name, weight)
     else:
         raise "Unsupported Application"
 
 
-def load_onnx_extractor(model_type, model_name, nc, input_name, input_shape, num_anchors):
+def load_onnx_extractor(
+    model_type, model_name, nc, input_name, input_shape, num_anchors
+):
     if model_type == "object_detection":
-        return ObjDet_YOLO_Extractor(model_name, nc, input_name, input_shape, num_anchors)
+        return ObjDet_YOLO_Extractor(
+            model_name, nc, input_name, input_shape, num_anchors
+        )
     elif model_type == "pose_estimation":
-        return Pose_Estimation_YOLO_Extractor(model_name, nc, input_name, input_shape, num_anchors)
+        return Pose_Estimation_YOLO_Extractor(
+            model_name, nc, input_name, input_shape, num_anchors
+        )
     elif model_type == "instance_segmentation":
-        return Instance_Seg_YOLO_Extractor(model_name, nc, input_name, input_shape, num_anchors)
+        return Instance_Seg_YOLO_Extractor(
+            model_name, nc, input_name, input_shape, num_anchors
+        )
     else:
         raise "Unsupported Application"

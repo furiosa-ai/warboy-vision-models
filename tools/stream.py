@@ -37,12 +37,7 @@ async def stream():
 
 if __name__ == "__main__":
     if VIEWER == "fastAPI":
-        uvicorn.run(
-            app="stream:app",
-            host="0.0.0.0",
-            port=20001,
-            reload=False,
-        )
+        uvicorn.run(app="stream:app", host="0.0.0.0", port=20001, reload=False)
     else:
         result_path = "output_"
         if VIEWER == "file":

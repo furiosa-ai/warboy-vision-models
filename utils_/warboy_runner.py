@@ -11,10 +11,13 @@ from furiosa import runtime
 
 
 class WarboyRunner:
-    '''
+    """
     
-    '''
-    def __init__(self, model_path: str, worker_num: int = 8, device: str = "warboy(2)*1"):
+    """
+
+    def __init__(
+        self, model_path: str, worker_num: int = 8, device: str = "warboy(2)*1"
+    ):
         self.model_path = model_path
         self.worker_num = worker_num
         self.device = device
@@ -24,7 +27,7 @@ class WarboyRunner:
 
     async def runner(self, input_queue: MpQueue, output_queues: List[MpQueue]):
         async with runtime.create_queue(
-            model = self.model_path, worker_num = self.worker_num, device = self.device
+            model=self.model_path, worker_num=self.worker_num, device=self.device
         ) as (submitter, receiver):
             submit_task = asyncio.create_task(self.submit_with(submitter, input_queue))
             recv_task = asyncio.create_task(self.recv_with(receiver, output_queues))
@@ -41,6 +44,7 @@ class WarboyRunner:
 
     async def recv_with(self, receiver, output_queues):
         while True:
+
             async def recv():
                 context, outputs = await receiver.recv()
                 return context, outputs
@@ -58,6 +62,3 @@ class WarboyRunner:
             except queue.Full:
                 time.sleep(0.001)
                 output_queues[video_idx].put((outputs, contexts, img_idx))
-
-            
-

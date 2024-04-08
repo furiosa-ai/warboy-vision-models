@@ -3,6 +3,7 @@ from ultralytics import YOLO
 
 from tools.model_utils import YOLO_ONNX_Extractor
 
+
 def load_instance_seg_model(model_name, weight):
     if "yolov8" in model_name:
         return YOLO(weight).model
@@ -22,11 +23,7 @@ class Instance_Seg_YOLO_Extractor(YOLO_ONNX_Extractor):
     def get_output_to_shape(self, model_name, nc, input_shape, num_anchors):
         output_to_shape = []
         if "yolov8" in model_name:
-            proto_layer_names = {
-                "yolov8n": "755",
-                "yolov8m": "961",
-                "yolov8x": "1167",
-            }
+            proto_layer_names = {"yolov8n": "755", "yolov8m": "961", "yolov8x": "1167"}
             for idx in range(num_anchors):
                 box_layer = (
                     f"/model.22/cv2.{idx}/cv2.{idx}.2/Conv_output_0",
@@ -60,12 +57,7 @@ class Instance_Seg_YOLO_Extractor(YOLO_ONNX_Extractor):
                 output_to_shape.append(instance_layer)
             proto_layer = (
                 proto_layer_names[model_name],
-                (
-                    1,
-                    32,
-                    int(input_shape[2] / 8) * 2,
-                    int(input_shape[3] / 8) * 2,
-                )
+                (1, 32, int(input_shape[2] / 8) * 2, int(input_shape[3] / 8) * 2),
             )
             output_to_shape.append(proto_layer)
         else:

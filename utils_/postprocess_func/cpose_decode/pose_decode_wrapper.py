@@ -24,18 +24,18 @@ def _init():
     """
 
     _clib.yolov8_pose_decode_feat.argtypes = [
-        f32,   # stride
-        f32,   # conf_thres
-        u32,   # max_poses
+        f32,  # stride
+        f32,  # conf_thres
+        u32,  # max_poses
         f32p,  # feat_box
         f32p,  # feat_cls
         f32p,  # feat_pose
-        u32,   # batch_size
-        u32,   # ny
-        u32,   # nx
-        u32,   # nc
-        u32,   # reg_max
-        u32,   # npose
+        u32,  # batch_size
+        u32,  # ny
+        u32,  # nx
+        u32,  # nc
+        u32,  # reg_max
+        u32,  # npose
         f32p,  # out_batch
         u32p,  # out_batch_pos
     ]
@@ -43,16 +43,16 @@ def _init():
 
     _clib.yolov5_pose_decode_feat.argtypes = [
         f32p,  # anchors
-        u32,   # num_anchors
-        f32,   # stride
-        f32,   # conf_thres
-        u32,   # max_poses
+        u32,  # num_anchors
+        f32,  # stride
+        f32,  # conf_thres
+        u32,  # max_poses
         f32p,  # feat
-        u32,   # batch_size
-        u32,   # ny
-        u32,   # nx
-        u32,   # no
-        u32,   # npose
+        u32,  # batch_size
+        u32,  # ny
+        u32,  # nx
+        u32,  # no
+        u32,  # npose
         f32p,  # out_batch
         u32p,  # out_batch_pos
     ]
@@ -80,7 +80,10 @@ def _yolov8_pose_decode_feat(
     feat_cls = feat_cls.transpose(0, 2, 3, 1)
     feat_pose = feat_pose.transpose(0, 2, 3, 1)
     feat_pose[..., 2::3] = sigmoid(feat_pose[..., 2::3])
-    assert feat_box.shape[:3] == feat_cls.shape[:3] and feat_pose.shape[:3] == feat_cls.shape[:3]
+    assert (
+        feat_box.shape[:3] == feat_cls.shape[:3]
+        and feat_pose.shape[:3] == feat_cls.shape[:3]
+    )
     bs, ny, nx, num_box_params = feat_box.shape
     bs, ny, nx, num_pose_params = feat_pose.shape
 
@@ -108,14 +111,18 @@ def _yolov8_pose_decode_feat(
         raise Exception(type(feat_box))
 
 
-def yolov8_pose_decode(stride, conf_thres, reg_max, num_pose, feats_box, feats_cls, feats_pose):
+def yolov8_pose_decode(
+    stride, conf_thres, reg_max, num_pose, feats_box, feats_cls, feats_pose
+):
     bs = feats_box[0].shape[0]
     max_poses = int(1e4)
 
     out_batch = np.empty((bs, max_poses, (5 + num_pose * 3)), dtype=np.float32)
     out_batch_pos = np.zeros(bs, dtype=np.uint32)
 
-    for l, (feat_box, feat_cls, feat_pose) in enumerate(zip(feats_box, feats_cls, feats_pose)):
+    for l, (feat_box, feat_cls, feat_pose) in enumerate(
+        zip(feats_box, feats_cls, feats_pose)
+    ):
         _yolov8_pose_decode_feat(
             stride[l],
             conf_thres,
@@ -130,20 +137,15 @@ def yolov8_pose_decode(stride, conf_thres, reg_max, num_pose, feats_box, feats_c
         )
 
     out_poses_batched = [
-        boxes[: (pos // (5 + num_pose * 3))] for boxes, pos in zip(out_batch, out_batch_pos)
+        boxes[: (pos // (5 + num_pose * 3))]
+        for boxes, pos in zip(out_batch, out_batch_pos)
     ]
 
     return out_poses_batched
 
+
 def _yolov5_pose_decode_feat(
-    anchor,
-    stride,
-    conf_thres,
-    num_pose,
-    max_poses,
-    feat,
-    out_batch,
-    out_batch_pos,
+    anchor, stride, conf_thres, num_pose, max_poses, feat, out_batch, out_batch_pos
 ):
     bs, na, ny, nx, no = feat.shape
     if isinstance(feat, np.ndarray):
@@ -165,15 +167,12 @@ def _yolov5_pose_decode_feat(
     else:
         raise Exception(type(feat))
 
+
 def _reshape_output(i, num_pose, y_det, y_kpt):
-    shape = (
-        y_det.shape[0],
-        3,
-        6 + num_pose * 3,
-        y_det.shape[2],
-        y_det.shape[3],
+    shape = (y_det.shape[0], 3, 6 + num_pose * 3, y_det.shape[2], y_det.shape[3])
+    return (
+        np.concatenate((y_det, y_kpt), axis=1).reshape(shape).transpose(0, 1, 3, 4, 2)
     )
-    return np.concatenate((y_det, y_kpt), axis=1).reshape(shape).transpose(0, 1, 3, 4, 2)
 
 
 def yolov5_pose_decode(anchors, stride, conf_thres, num_pose, feats):
@@ -197,10 +196,11 @@ def yolov5_pose_decode(anchors, stride, conf_thres, num_pose, feats):
             max_poses,
             feat,
             out_batch,
-            out_batch_pos
+            out_batch_pos,
         )
     out_poses_batched = [
-        boxes[: (pos // (6 + 3 * num_pose))] for boxes, pos in zip(out_batch, out_batch_pos)
+        boxes[: (pos // (6 + 3 * num_pose))]
+        for boxes, pos in zip(out_batch, out_batch_pos)
     ]
 
     return out_poses_batched

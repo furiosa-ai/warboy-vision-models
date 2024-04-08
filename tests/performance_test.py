@@ -51,28 +51,27 @@ ANCHORS = {
 MODEL_LIST = {
     "object_detection": {
         "yolov8n": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
         "yolov8s": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
         "yolov8m": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
         "yolov8l": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
-
         "yolov8x": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
@@ -106,7 +105,6 @@ MODEL_LIST = {
             "anchors": ANCHORS["yolov7_6"],
             "num_anchors": 4,
         },
-
         "yolov5n": {
             "input_shape": [640, 640],
             "anchors": ANCHORS["yolov5"],
@@ -155,28 +153,27 @@ MODEL_LIST = {
     },
     "pose_estimation": {
         "yolov8n-pose": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
         "yolov8s-pose": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
         "yolov8m-pose": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
         "yolov8l-pose": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
-
         "yolov8x-pose": {
-            "input_shape": [ 640, 640],
+            "input_shape": [640, 640],
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
@@ -267,7 +264,8 @@ YOLO_CATEGORY_TO_COCO_CATEGORY = [
     90,
 ]
 
-TEST_TARGET = {"object_detection":"bbox", "pose_estimation":"keypoints"}
+TEST_TARGET = {"object_detection": "bbox", "pose_estimation": "keypoints"}
+
 
 class MSCOCODataLoader:
     """Data loader for MSCOCO dataset"""
@@ -306,6 +304,7 @@ def xyxy2xywh(x: np.ndarray) -> np.ndarray:
     y[:, 3] = x[:, 3] - x[:, 1]
     return y
 
+
 def speed_test(trace_file, onnx_i8_path, device, input_shape, compiler_config=None):
     # Performance Test
     dummy_input = np.uint8(np.random.rand(1, 3, *input_shape))
@@ -339,8 +338,10 @@ def accuracy_test(
 
     preprocessor = YOLOPreProcessor()
 
-    cfg = {'conf_thres': conf_thres, 'iou_thres': iou_thres, 'anchors': anchors}
-    postprocess_func = getPostProcesser(application, model_name, cfg, class_names=["None"], use_tracking=False).postprocess_func
+    cfg = {"conf_thres": conf_thres, "iou_thres": iou_thres, "anchors": anchors}
+    postprocess_func = getPostProcesser(
+        application, model_name, cfg, class_names=["None"], use_tracking=False
+    ).postprocess_func
 
     data_loader = MSCOCODataLoader(
         Path(data_path), Path(anno_path), preprocessor, input_shape
@@ -373,7 +374,7 @@ def accuracy_test(
                             "score": round(prediction[4], 5),
                         }
                     )
-            elif application  == "pose_estimation":
+            elif application == "pose_estimation":
                 for prediction in predictions:
                     keypoint = prediction[5:]
                     results.append(
@@ -388,8 +389,10 @@ def accuracy_test(
                 pass
 
         coco_detections = data_loader.coco.loadRes(results)
-        
-        coco_eval = COCOeval(data_loader.coco, coco_detections, TEST_TARGET[application])
+
+        coco_eval = COCOeval(
+            data_loader.coco, coco_detections, TEST_TARGET[application]
+        )
         coco_eval.evaluate()
         coco_eval.accumulate()
         coco_eval.summarize()
@@ -430,7 +433,7 @@ def warboy_performance_test(data_path, anno_path, application):
     for model_name in model_list:
         model_info = model_list[model_name]
         input_shape = model_info["input_shape"]
-        num_classes = 1 if application=="pose_estimation" else 80  # COCO Category
+        num_classes = 1 if application == "pose_estimation" else 80  # COCO Category
         anchors = model_info["anchors"]
         num_anchors = model_info["num_anchors"]
 
@@ -472,13 +475,21 @@ def warboy_performance_test(data_path, anno_path, application):
 
         try:
             ## Fusion Speed Test
-            speed_test(trace_path, onnx_i8_path, "warboy(2)*1", input_shape, compiler_config)
+            speed_test(
+                trace_path, onnx_i8_path, "warboy(2)*1", input_shape, compiler_config
+            )
         except Exception as e:
             pass
 
         try:
             ## Single PE Speed Test
-            speed_test(trace_single_path, onnx_i8_path, "warboy(1)*1", input_shape, compiler_config)
+            speed_test(
+                trace_single_path,
+                onnx_i8_path,
+                "warboy(1)*1",
+                input_shape,
+                compiler_config,
+            )
         except Exception as e:
             pass
 
@@ -500,14 +511,15 @@ def warboy_performance_test(data_path, anno_path, application):
             with open(accuracy_log, mode="a") as log_file:
                 log_file.write(f"{model_name} -> Compile Fail! (Fusion)\n")
 
+
 warboy_performance_test(
     "/home/furiosa/data/val2017",
     "/home/furiosa/data/annotations/person_keypoints_val2017.json",
-    "pose_estimation"
+    "pose_estimation",
 )
 
 warboy_performance_test(
     "/home/furiosa/data/val2017",
     "/home/furiosa/data/annotations/instances_val2017.json",
-    "object_detection"
+    "object_detection",
 )

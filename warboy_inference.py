@@ -16,8 +16,8 @@ app = typer.Typer(pretty_exceptions_show_locals=False)
 
 @app.command()
 def main(cfg, input_path):
-    runner_info, app_type, model_name, model_path, input_shape, class_names = (
-        get_model_params_from_cfg(cfg, mode="inference")
+    runner_info, app_type, model_name, model_path, input_shape, class_names = get_model_params_from_cfg(
+        cfg, mode="inference"
     )
 
     result_path = "output"

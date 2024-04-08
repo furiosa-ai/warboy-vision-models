@@ -6,6 +6,7 @@ import onnx
 import typer
 
 from tqdm import tqdm
+
 HOME_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(HOME_DIR)
 from utils_.preprocess import YOLOPreProcessor
@@ -23,9 +24,14 @@ from furiosa.quantizer import (
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
-def quantize_model(onnx_path: str, input_shape, output_path, calib_data_path, num_data, method):
+
+def quantize_model(
+    onnx_path: str, input_shape, output_path, calib_data_path, num_data, method
+):
     model = onnx.load(onnx_path)
-    model = optimize_model(model=model, opset_version=13, input_shapes={"images": [1,3, *input_shape]})
+    model = optimize_model(
+        model=model, opset_version=13, input_shapes={"images": [1, 3, *input_shape]}
+    )
 
     calib_data = glob.glob(calib_data_path + "/**", recursive=True)
     calib_data = random.choices(calib_data, k=min(num_data, len(calib_data)))
@@ -36,7 +42,11 @@ def quantize_model(onnx_path: str, input_shape, output_path, calib_data_path, nu
         if not (data.endswith(".png") or data.endswith(".jpg")):
             continue
         img = cv2.imread(data)
-        input_, _ = preprocess(img, new_shape=(int(input_shape[0]),int(input_shape[1])), tensor_type = "float32")
+        input_, _ = preprocess(
+            img,
+            new_shape=(int(input_shape[0]), int(input_shape[1])),
+            tensor_type="float32",
+        )
         calibrator.collect_data([[input_]])
 
     ranges = calibrator.compute_range()
@@ -56,13 +66,13 @@ def quantize_model(onnx_path: str, input_shape, output_path, calib_data_path, nu
     print(f"Quantization completed >> {output_path}")
     return
 
+
 @app.command()
 def main(cfg):
-    params = get_model_params_from_cfg(
-        cfg, mode="quantization"
-    )
+    params = get_model_params_from_cfg(cfg, mode="quantization")
     quantize_model(**params)
     return
+
 
 if __name__ == "__main__":
     app()

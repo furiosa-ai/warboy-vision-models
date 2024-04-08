@@ -14,8 +14,8 @@ def get_demo_params_from_cfg(cfg: str):
         demo_params = yaml.load_all(f, Loader=yaml.FullLoader)
         params = []
         for demo_param in demo_params:
-            runtime_params, model_name, input_shape, class_names = (
-                get_model_params_from_cfg(demo_param["model_config"])
+            runtime_params, model_name, input_shape, class_names = get_model_params_from_cfg(
+                demo_param["model_config"]
             )
             if os.path.exists(demo_param["output_path"]):
                 subprocess.run(["rm", "-rf", demo_param["output_path"]])
@@ -86,11 +86,7 @@ def get_model_params_from_cfg(cfg: str, mode: str = "runtime") -> List[Any]:
         }
     elif mode == "inference":
         params = [
-            {
-                "conf_thres": conf_thres,
-                "iou_thres": iou_thres,
-                "anchors": anchors,
-            },
+            {"conf_thres": conf_thres, "iou_thres": iou_thres, "anchors": anchors},
             application,
             model_name,
             onnx_i8_path,
@@ -99,11 +95,7 @@ def get_model_params_from_cfg(cfg: str, mode: str = "runtime") -> List[Any]:
         ]
     else:
         params = [
-            {
-                "conf_thres": conf_thres,
-                "iou_thres": iou_thres,
-                "anchors": anchors,
-            },
+            {"conf_thres": conf_thres, "iou_thres": iou_thres, "anchors": anchors},
             model_name,
             input_shape,
             class_names,

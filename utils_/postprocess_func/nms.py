@@ -2,10 +2,13 @@ from typing import List
 import numpy as np
 import torch
 
+
 def non_max_suppression(
     prediction: List[np.ndarray], iou_thres: float = 0.45, class_agnostic=True
 ) -> List[np.ndarray]:
-    assert 0 <= iou_thres <= 1, f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
+    assert (
+        0 <= iou_thres <= 1
+    ), f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 
     output = []
     for x in prediction:

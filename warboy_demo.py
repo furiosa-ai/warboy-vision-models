@@ -82,9 +82,7 @@ class DemoApplication:
         ]
         self.viewer = viewer
 
-    def run(
-        self,
-    ):
+    def run(self,):
         for app_thread in self.app_threads:
             app_thread.start()
 

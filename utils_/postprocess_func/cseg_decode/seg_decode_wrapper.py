@@ -5,6 +5,7 @@ import numpy as np
 
 _clib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), "cseg_decode.so"))
 
+
 def _init():
     u8 = ctypes.c_uint8
     i32 = ctypes.c_int32
@@ -36,6 +37,7 @@ def _init():
     ]
     _clib.yolov8_seg_decode.restype = None
 
+
 def yolov8_segmentation_decode(mask_in, proto):
     c, mh, mw = proto.shape
     proto = proto.reshape(c, -1)
@@ -52,13 +54,13 @@ def yolov8_segmentation_decode(mask_in, proto):
             mw,
             num_out,
             output,
-            out_pos
+            out_pos,
         )
 
-    out_result = np.array([boxes[: pos].reshape(mh, mw) for boxes, pos in zip(output, out_pos)])
+    out_result = np.array(
+        [boxes[:pos].reshape(mh, mw) for boxes, pos in zip(output, out_pos)]
+    )
     return out_result
-
-
 
 
 _init()

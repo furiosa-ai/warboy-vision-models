@@ -26,14 +26,19 @@ class YOLO_ONNX_Extractor:
 
     def __call__(self, model):
         extracted_model = Extractor(model).extract_model(
-            input_names=list(self.input_to_shape), output_names=list(self.output_to_shape)
+            input_names=list(self.input_to_shape),
+            output_names=list(self.output_to_shape),
         )
 
         for value_info in extracted_model.graph.input:
             del value_info.type.tensor_type.shape.dim[:]
-            value_info.type.tensor_type.shape.dim.extend(self.input_to_shape[value_info.name])
+            value_info.type.tensor_type.shape.dim.extend(
+                self.input_to_shape[value_info.name]
+            )
         for value_info in extracted_model.graph.output:
             del value_info.type.tensor_type.shape.dim[:]
-            value_info.type.tensor_type.shape.dim.extend(self.output_to_shape[value_info.name])
+            value_info.type.tensor_type.shape.dim.extend(
+                self.output_to_shape[value_info.name]
+            )
 
         return extracted_model

@@ -28,7 +28,9 @@ setup(
     version="1.0.0",
     ext_modules=[
         CTypesExtension(
-            "cpose_decode", ["pose_decode.cpp"], extra_compile_args=["-ffast-math", "-O3"]
+            "cpose_decode",
+            ["pose_decode.cpp"],
+            extra_compile_args=["-ffast-math", "-O3"],
         )
     ],
     cmdclass={"build_ext": build_ext},
