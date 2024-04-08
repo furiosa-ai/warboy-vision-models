@@ -1,4 +1,4 @@
-# Warboy-Vsion-Models
+# Warboy-Vision-Models
 The `warboy-vision-models` project is desinged to assist users in running various deep learning vision models on [FuriosaAI](https://furiosa.ai/)’s first generation NPU (Neural Processing Unit), Warboy. 
 Users can follow the outlined steps in the project to execute various vision applications, such as Object Detection, Pose Estimation, Instance Segmentation, etc., alongside Warboy.
 
