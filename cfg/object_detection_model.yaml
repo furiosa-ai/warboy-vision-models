@@ -1,6 +1,6 @@
 application: object_detection   #
 model_name: yolov8l
-weight: weights/yolov8n.pt                       # weight file path
+weight: yolov8n.pt                       # weight file path
 onnx_path: yolov8n.onnx                  # onnx model path
 onnx_i8_path: yolov8l_i8.onnx # quantized onnx model path
 

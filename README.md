@@ -11,7 +11,7 @@ Currently, the project supports all vision applications provided by YOLO series 
 ### Object Detection
 Object detection is a computer vision technique used to identify the presence of specific objects in images or videos and determines their locations. It entails classifying objects in videos or photos (classification) and precisely locating them using bounding boxes, thereby detecting objects through this process.
 
-<div align="center"><img width="1024" height="360" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/object_detection.png"></div>
+<div align="center"><img width="1024" height="360" src="./data/images/object_detection.png"></div>
 
 <details><summary>Performance on Warboy</summary>
 
@@ -62,7 +62,7 @@ Object detection is a computer vision technique used to identify the presence of
 ### Pose Estimation
 Pose estimation is a technology that identifies and estimates the posture of a person or object by detecting body parts (typically joints) and using them to estimate the pose of the respective object.
 
-<div align="center"><img width="720" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/pose_estimation.png"></div>
+<div align="center"><img width="720" src="./data/images/pose_estimation.png"></div>
 
 <details><summary>Performance on Warboy</summary>
 
@@ -71,7 +71,7 @@ Pose estimation is a technology that identifies and estimates the posture of a p
 ### Instance Segmentation 
 Instance segmentation is a technology that identifies multiple objects in an image or video and delineates the boundaries of each object. In essence, it combines Object Detection and Semantic Segmentation techniques to individually identify multiple objects belonging to the same class and estimate their boundaries.
 
-<div align="center"><img width="720" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/instance_segmentation.png"></div>
+<div align="center"><img width="720" src="./data/images/instance_segmentation.png"></div>
 
 <details><summary>Performance on Warboy</summary>
 
@@ -102,8 +102,13 @@ sudo apt-get install cmake libeigen3-dev
 
 <details open>
 <summary> Set config files for project </summary>
-  
-Before running the project, you need to set up configuration files for model and demo.
+First, download the weight file from [yolov8](https://github.com/ultralytics/ultralytics) for example execution.
+```sh
+cd warboy-vision-models
+wget https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt
+```    
+
+Before running the project, you need to set up configuration files for model and demo. 
 
 - **Model config file** : it contains parameters about the model and quantization. 
 ```yaml
@@ -168,13 +173,13 @@ If you have already exported the model from its original format to an ONNX model
 In the project, vision applications are executed for videos from multiple channels. To accomplish this effectively, optimization tasks such as Python parallel programming, asynchronous processing, and post-processing using C++ have been included. For a detailed understanding of the project structure, please refer to the following image:
 
 
-<div align="center"><img width="960" src="https://github.com/furiosa-ai/warboy-vision-models/blob/jongwook/data/images/structure.png"></div>
+<div align="center"><img width="960" src="./data/images/structure.png"></div>
   
 - **command**
   
   ```sh
   python warboy_demo.py cfg/demo_config.yaml file    # save the result as image file
-  python warboy_demo.py cfg/demo_config.yaml fastAPI # see the result on webpage using fastAPI (http://[ip_address]:20001)
+  python warboy_demo.py cfg/demo_config.yaml fastAPI # see the result on webpage using fastAPI (http://0.0.0.0:20001)
   ```
 </details>
 
