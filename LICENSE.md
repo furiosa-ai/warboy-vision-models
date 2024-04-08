@@ -204,10 +204,3 @@
 This product bundles various third-party components under other open source licenses.
 This section summarizes those components and their licenses. See licenses/
 for text of these licenses.
-
-MLCOMMONS ASSOCIATION LICENSE
-------------------------------------------------------------------------------------
-(see licenses/MLCOMMONS)
-
-furiosa/artifacts/vision/models/mlcommons
-------------------------------------------------------------------------------------
