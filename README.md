@@ -102,7 +102,9 @@ sudo apt-get install cmake libeigen3-dev
 
 <details open>
 <summary> Set config files for project </summary>
-First, download the weight file from [yolov8](https://github.com/ultralytics/ultralytics) for example execution.
+  
+First, download the weight file from [YOLOv8](https://github.com/ultralytics/ultralytics) for example execution.
+  
 ```sh
 cd warboy-vision-models
 wget https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt
@@ -132,17 +134,17 @@ class_names:                    # class names
   - ...
 ```
 
-- **Demo config file** : 
+- **Demo config file** : it contains device informations and video paths for the project.
 
 ```yaml
 application: object_detection
-model_config: ./cfg/model_config.yaml
+model_config: ./cfg/object_detection_model.yaml
 model_path: yolov8n_i8.onnx
 output_path: output_detection
 num_workers: 8
 device: warboy(2)*1
 video_path: 
-  - ...
+  - [set your test video file path]
 ```
 
 </details>
@@ -153,7 +155,7 @@ Next, it is necessary to export the model to the ONNX format.
 
 - **command**
   ```sh
-  python tools/export_onnx.py cfg/model_config.yaml
+  python tools/export_onnx.py cfg/object_detection_model.yaml
   ```
 
 </details>
@@ -164,7 +166,7 @@ If you have already exported the model from its original format to an ONNX model
 
 - **command**
   ```sh
-  python tools/furiosa_quantizer.py cfg/model_config.yaml
+  python tools/furiosa_quantizer.py cfg/object_detection_model.yaml
   ```
 </details>
 
@@ -178,8 +180,8 @@ In the project, vision applications are executed for videos from multiple channe
 - **command**
   
   ```sh
-  python warboy_demo.py cfg/demo_config.yaml file    # save the result as image file
-  python warboy_demo.py cfg/demo_config.yaml fastAPI # see the result on webpage using fastAPI (http://0.0.0.0:20001)
+  python warboy_demo.py cfg/demo.yaml file    # save the result as image file
+  python warboy_demo.py cfg/demo.yaml fastAPI # see the result on webpage using fastAPI (http://0.0.0.0:20001)
   ```
 </details>
 
