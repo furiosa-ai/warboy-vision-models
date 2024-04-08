@@ -134,7 +134,7 @@ class_names:                    # class names
   - ...
 ```
 
-- **Demo config file** : 
+- **Demo config file** : it contains device informations and video paths for the project.
 
 ```yaml
 application: object_detection
