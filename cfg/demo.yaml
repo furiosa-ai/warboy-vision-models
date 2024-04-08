@@ -1,8 +1,8 @@
 application: object_detection
 model_config: ./cfg/object_detection_model.yaml
-model_path: ./result/object_detection/onnx_files/yolov8n_i8.onnx
+model_path: yolov8n_i8.onnx
 output_path: output_detection
 num_worker: 8
 device: npu1pe0
 video_path:
-  - /home/ubuntu/videos/input_videos/Car_1.mp4
+  - input_videos/Car_1.mp4

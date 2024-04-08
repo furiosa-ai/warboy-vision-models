@@ -5,14 +5,14 @@ from typing import List, Sequence, Tuple, Dict
 from utils_.info import *
 from utils_.postprocess_func.output_decoder import ObjDetDecoder, PoseEstDecoder, InsSegDecoder
 
-def getPostProcesser(app_type, model_name, model_cfg, class_names):
+def getPostProcesser(app_type, model_name, model_cfg, class_names, use_tracking=True):
     assert app_type in ["object_detection", "pose_estimation", "instance_segmentation"], "sdfasd"
     if app_type == "object_detection":
-        postproc = ObjDetPostprocess(model_name, model_cfg, class_names)
+        postproc = ObjDetPostprocess(model_name, model_cfg, class_names, use_tracking)
     elif app_type == "pose_estimation":
-        postproc = PoseEstPostprocess(model_name, model_cfg, class_names)
+        postproc = PoseEstPostprocess(model_name, model_cfg, class_names, use_tracking)
     elif app_type == "instance_segmentation":
-        postproc = InsSegPostProcess(model_name, model_cfg, class_names)
+        postproc = InsSegPostProcess(model_name, model_cfg, class_names, use_tracking)
     return postproc
 
 # Postprocess for Object Detection

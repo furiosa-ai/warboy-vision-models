@@ -70,6 +70,10 @@ void yolov8_box_decode_feat(
                 if (conf > conf_thres)
                 {
                     assertm(out_pos + output_params_per_box <= max_out_batch_pos, "Reached max number of boxes");
+                    if (out_pos + output_params_per_box > max_out_batch_pos)
+                    {
+                        break;
+                    }
                     const float ax = x + 0.5f;
                     const float ay = y + 0.5f;
 
@@ -139,8 +143,11 @@ void yolov5_box_decode_feat(
 
                     if (obj_conf > conf_thres)
                     {
-                        assertm(out_pos + params_per_box <= max_out_batch_pos, "Reached max number of boxes");
-
+                        assertm(out_pos + output_params_per_box <= max_out_batch_pos, "Reached max number of boxes");
+                        if (out_pos + output_params_per_box > max_out_batch_pos)
+                        {
+                            break;
+                        }
                         float conf = 0.0;
                         uint32_t cls_idx = -1;
                         for (uint32_t c = 0; c < nc; c++)

@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Sequence
 from utils_.postprocess_func.nms import non_max_suppression
 from utils_.postprocess_func.tracking.bytetrack import ByteTrack
 from utils_.postprocess_func.cseg_decode import yolov8_segmentation_decode
@@ -71,7 +71,7 @@ class ObjDetDecoder(YOLO_Decoder):
         return predictions
 
 ## YOLO Pose Estimation Decoder 
-def PoseEstDecoder(YOLO_Decoder):
+class PoseEstDecoder(YOLO_Decoder):
     """
     A integrated version of the pose estimation decoder class for YOLO, adding nms operator and scaling operators.
 
@@ -90,13 +90,13 @@ def PoseEstDecoder(YOLO_Decoder):
         output = decoder(model_outputs, contexts, org_input_shape)
     """
     def __init__(
-        self,  model_name: str, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_tracker: bool = False
-    ): 
+        self, model_name: str, conf_thres: float = 0.25, iou_thres: float = 0.7, anchors: Union[List[List[int]], None] = None, use_tracker: bool = True
+    ):  
         super().__init__(conf_thres, iou_thres, anchors, use_tracker)
         self.pose_decoder = PoseDecoderYOLOv8(self.stride, self.conf_thres) if check_model(model_name) else PoseDecoderYOLOv5(self.stride, self.conf_thres, self.anchors)
 
     def __call__(self, model_outputs: List[np.ndarray], contexts, org_input_shape:Tuple[int,int]):
-        poses_dec = self.pose_decoder(model_outputs[0::3], model_outputs[1::3], model_outputs[2::3])
+        poses_dec = self.pose_decoder(model_outputs)
         predictions = non_max_suppression(poses_dec, self.iou_thres)
 
         ratio, dwdh = contexts["ratio"], contexts["pad"]
@@ -107,7 +107,7 @@ def PoseEstDecoder(YOLO_Decoder):
         return predictions
 
 ## YOLO Instance Segmentation Decoder 
-def InsSegDecoder(YOLO_Decoder):
+class InsSegDecoder(YOLO_Decoder):
     """
     A integrated version of the instance segmentation decoder class for YOLO, adding nms operator and scaling operators.
 

@@ -16,15 +16,12 @@ HOME_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(HOME_DIR)
 from tools.export_onnx import export_onnx_file
 from tools.furiosa_quantizer import quantize_model
-from utils_.postprocess_func.output_decoder import (
-    InsSegDecoder,
-    ObjDetDecoder,
-    PoseEstDecoder,
-)
+
+from utils_.postprocess import getPostProcesser
 from utils_.preprocess import YOLOPreProcessor
 
 ANCHORS = {
-    "yolov8": None,
+    "yolov8": [None],
     "yolov7": [
         [12, 16, 19, 36, 40, 28],
         [36, 75, 76, 55, 72, 146],
@@ -50,7 +47,9 @@ ANCHORS = {
 }
 
 # Model list
-"""
+
+MODEL_LIST = {
+    "object_detection": {
         "yolov8n": {
             "input_shape": [ 640, 640],
             "anchors": ANCHORS["yolov8"],
@@ -77,10 +76,6 @@ ANCHORS = {
             "anchors": ANCHORS["yolov8"],
             "num_anchors": 3,
         },
-        """
-
-MODEL_LIST = {
-    "object_detection": {
         "yolov7": {
             "input_shape": [640, 640],
             "anchors": ANCHORS["yolov7"],
@@ -111,6 +106,7 @@ MODEL_LIST = {
             "anchors": ANCHORS["yolov7_6"],
             "num_anchors": 4,
         },
+
         "yolov5n": {
             "input_shape": [640, 640],
             "anchors": ANCHORS["yolov5"],
@@ -157,7 +153,34 @@ MODEL_LIST = {
             "num_anchors": 4,
         },
     },
-    "pose_estimation": {},
+    "pose_estimation": {
+        "yolov8n-pose": {
+            "input_shape": [ 640, 640],
+            "anchors": ANCHORS["yolov8"],
+            "num_anchors": 3,
+        },
+        "yolov8s-pose": {
+            "input_shape": [ 640, 640],
+            "anchors": ANCHORS["yolov8"],
+            "num_anchors": 3,
+        },
+        "yolov8m-pose": {
+            "input_shape": [ 640, 640],
+            "anchors": ANCHORS["yolov8"],
+            "num_anchors": 3,
+        },
+        "yolov8l-pose": {
+            "input_shape": [ 640, 640],
+            "anchors": ANCHORS["yolov8"],
+            "num_anchors": 3,
+        },
+
+        "yolov8x-pose": {
+            "input_shape": [ 640, 640],
+            "anchors": ANCHORS["yolov8"],
+            "num_anchors": 3,
+        },
+    },
     "instance_segmentation": {},
 }
 
@@ -244,6 +267,7 @@ YOLO_CATEGORY_TO_COCO_CATEGORY = [
     90,
 ]
 
+TEST_TARGET = {"object_detection":"bbox", "pose_estimation":"keypoints"}
 
 class MSCOCODataLoader:
     """Data loader for MSCOCO dataset"""
@@ -282,33 +306,10 @@ def xyxy2xywh(x: np.ndarray) -> np.ndarray:
     y[:, 3] = x[:, 3] - x[:, 1]
     return y
 
-
-def warboy_test(
-    log_file,
-    trace_file,
-    model_name,
-    onnx_i8_path,
-    input_shape,
-    anchors,
-    data_path,
-    anno_path,
-    device,
-    compiler_config=None,
-    mode="test",
-):
-    conf_thres = 0.001
-    iou_thres = 0.7
-
-    preprocessor = YOLOPreProcessor()
-    postprocess_func = ObjDetDecoder(
-        model_name, conf_thres, iou_thres, anchors, use_tracker=False
-    )
-
+def speed_test(trace_file, onnx_i8_path, device, input_shape, compiler_config=None):
+    # Performance Test
     dummy_input = np.uint8(np.random.rand(1, 3, *input_shape))
-    data_loader = MSCOCODataLoader(
-        Path(data_path), Path(anno_path), preprocessor, input_shape
-    )
-    ## Performance Test
+
     with open(trace_file, "w") as output:
         with profile(file=output) as profiler:
             with create_runner(
@@ -317,8 +318,33 @@ def warboy_test(
                 with profiler.record("trace") as record:
                     for _ in range(0, 30):
                         runner.run([dummy_input])
-    if mode != "test":
-        return
+
+    return
+
+
+def accuracy_test(
+    application,
+    log_file,
+    model_name,
+    onnx_i8_path,
+    input_shape,
+    anchors,
+    data_path,
+    anno_path,
+    device,
+    compiler_config=None,
+):
+    conf_thres = 0.001
+    iou_thres = 0.7
+
+    preprocessor = YOLOPreProcessor()
+
+    cfg = {'conf_thres': conf_thres, 'iou_thres': iou_thres, 'anchors': anchors}
+    postprocess_func = getPostProcesser(application, model_name, cfg, class_names=["None"], use_tracking=False).postprocess_func
+
+    data_loader = MSCOCODataLoader(
+        Path(data_path), Path(anno_path), preprocessor, input_shape
+    )
 
     results = []
     # Accuracy Test
@@ -333,22 +359,37 @@ def warboy_test(
             outputs = runner.run([input_data])
             predictions = postprocess_func(outputs, shapes, img0shape)[0]
 
-            boxes = xyxy2xywh(predictions[:, :4])
-            boxes[:, :2] -= boxes[:, 2:] / 2
-            for prediction, box in zip(predictions, boxes):
-                results.append(
-                    {
-                        "image_id": annotation["id"],
-                        "category_id": YOLO_CATEGORY_TO_COCO_CATEGORY[
-                            int(prediction[5])
-                        ],
-                        "bbox": [round(x, 3) for x in box],
-                        "score": round(prediction[4], 5),
-                    }
-                )
+            if application == "object_detection":
+                boxes = xyxy2xywh(predictions[:, :4])
+                boxes[:, :2] -= boxes[:, 2:] / 2
+                for prediction, box in zip(predictions, boxes):
+                    results.append(
+                        {
+                            "image_id": annotation["id"],
+                            "category_id": YOLO_CATEGORY_TO_COCO_CATEGORY[
+                                int(prediction[5])
+                            ],
+                            "bbox": [round(x, 3) for x in box],
+                            "score": round(prediction[4], 5),
+                        }
+                    )
+            elif application  == "pose_estimation":
+                for prediction in predictions:
+                    keypoint = prediction[5:]
+                    results.append(
+                        {
+                            "image_id": annotation["id"],
+                            "category_id": 1,
+                            "keypoints": keypoint,
+                            "score": round(prediction[4], 5),
+                        }
+                    )
+            else:
+                pass
 
         coco_detections = data_loader.coco.loadRes(results)
-        coco_eval = COCOeval(data_loader.coco, coco_detections, "bbox")
+        
+        coco_eval = COCOeval(data_loader.coco, coco_detections, TEST_TARGET[application])
         coco_eval.evaluate()
         coco_eval.accumulate()
         coco_eval.summarize()
@@ -362,8 +403,8 @@ def warboy_test(
 
 
 # Project Test for Object Detection Models
-def object_detection_test(data_path, anno_path):
-    model_list = MODEL_LIST["object_detection"]
+def warboy_performance_test(data_path, anno_path, application):
+    model_list = MODEL_LIST[application]
 
     """
     Output Files
@@ -373,10 +414,10 @@ def object_detection_test(data_path, anno_path):
     """
 
     result_path = os.path.join(HOME_DIR, "result")
-    onnx_dir_path = os.path.join(result_path, "object_detection", "onnx_files")
-    trace_dir_path = os.path.join(result_path, "object_detection", "traces")
-    accuracy_log = os.path.join(result_path, "object_detection", "accuracy.log")
-    """
+    onnx_dir_path = os.path.join(result_path, application, "onnx_files")
+    trace_dir_path = os.path.join(result_path, application, "traces")
+    accuracy_log = os.path.join(result_path, application, "accuracy.log")
+
     if os.path.exists(onnx_dir_path):
         subprocess.run(["rm", "-rf", onnx_dir_path])
 
@@ -385,11 +426,11 @@ def object_detection_test(data_path, anno_path):
 
     os.makedirs(onnx_dir_path)
     os.makedirs(trace_dir_path)
-    """
+
     for model_name in model_list:
         model_info = model_list[model_name]
         input_shape = model_info["input_shape"]
-        num_classes = 80  # COCO Category
+        num_classes = 1 if application=="pose_estimation" else 80  # COCO Category
         anchors = model_info["anchors"]
         num_anchors = model_info["num_anchors"]
 
@@ -399,7 +440,7 @@ def object_detection_test(data_path, anno_path):
         onnx_path = os.path.join(onnx_dir_path, model_name + ".onnx")
         if not os.path.exists(onnx_path):
             export_onnx_file(
-                "object_detection",
+                application,
                 model_name,
                 weight_file,
                 onnx_path,
@@ -428,51 +469,45 @@ def object_detection_test(data_path, anno_path):
             compiler_config = {"use_program_loading": True}
         else:
             compiler_config = None
+
         try:
-            warboy_test(
+            ## Fusion Speed Test
+            speed_test(trace_path, onnx_i8_path, "warboy(2)*1", input_shape, compiler_config)
+        except Exception as e:
+            pass
+
+        try:
+            ## Single PE Speed Test
+            speed_test(trace_single_path, onnx_i8_path, "warboy(1)*1", input_shape, compiler_config)
+        except Exception as e:
+            pass
+
+        try:
+            accuracy_test(
+                application,
                 accuracy_log,
-                trace_path,
                 model_name,
                 onnx_i8_path,
                 input_shape,
                 anchors,
                 data_path,
                 anno_path,
-                "npu0pe0-1",
+                "warboy(2)*1",
                 compiler_config,
             )
         except Exception as e:
             print(e)
             with open(accuracy_log, mode="a") as log_file:
                 log_file.write(f"{model_name} -> Compile Fail! (Fusion)\n")
-        try:
-            warboy_test(
-                accuracy_log,
-                trace_single_path,
-                model_name,
-                onnx_i8_path,
-                input_shape,
-                anchors,
-                data_path,
-                anno_path,
-                "npu0pe0",
-                compiler_config,
-                "not-test",
-            )
-        except Exception as e:
-            with open(accuracy_log, mode="a") as log_file:
-                log_file.write(f"{model_name} -> Compile Fail! (Single PE)\n")
 
+warboy_performance_test(
+    "/home/furiosa/data/val2017",
+    "/home/furiosa/data/annotations/person_keypoints_val2017.json",
+    "pose_estimation"
+)
 
-def pose_estimation_test(data_path, anno_path):
-    return
-
-
-def instance_segmentation_test(data_path, anno_path):
-    return
-
-
-object_detection_test(
-    "/home/ubuntu/.jongwook/datas/val2017",
-    "/home/ubuntu/.jongwook/test/annotations/instances_val2017.json",
+warboy_performance_test(
+    "/home/furiosa/data/val2017",
+    "/home/furiosa/data/annotations/instances_val2017.json",
+    "object_detection"
 )

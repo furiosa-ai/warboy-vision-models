@@ -173,7 +173,7 @@ def yolov5_box_decode(
     anchors: np.ndarray, stride: np.ndarray, conf_thres: float, feats: np.ndarray
 ) -> List[np.ndarray]:
     bs = feats[0].shape[0]
-    max_boxes = int(2e4)
+    max_boxes = int(1e4)
     out_batch = np.empty((bs, max_boxes, 6), dtype=np.float32)
     out_batch_pos = np.zeros(bs, dtype=np.uint32)
     for l, feat in enumerate(feats):

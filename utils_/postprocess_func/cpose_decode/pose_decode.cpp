@@ -7,15 +7,15 @@
 
 #define assertm(exp, msg) assert(((void)msg, exp))
 
-
-inline float sigmoid(const float x) {
+inline float sigmoid(const float x)
+{
     return (1.0f / (1.0f + exp(-x)));
 }
 
-inline float sigmoid_inv(const float x) {
+inline float sigmoid_inv(const float x)
+{
     return -log(1.0f / x - 1.0f);
 }
-
 
 // Integral module of Distribution Focal Loss (DFL)
 // Proposed in Generalized Focal Loss https://ieeexplore.ieee.org/document/9792391
@@ -80,7 +80,10 @@ void yolov8_pose_decode_feat(
                 if (conf > conf_thres)
                 {
                     assertm(out_pos + output_params_per_box <= max_out_batch_pos, "Reached max number of boxes");
-
+                    if (out_pos + output_params_per_box > max_out_batch_pos)
+                    {
+                        break;
+                    }
                     // anchors
                     const float ax = x + 0.5f;
                     const float ay = y + 0.5f;
@@ -125,9 +128,10 @@ void yolov8_pose_decode_feat(
 }
 
 void yolov5_pose_decode_feat(
-    const float* const anchors, const uint32_t num_anchors, const float stride, const float conf_thres, const uint32_t max_boxes,
-    const float* const feat, const uint32_t batch_size, const uint32_t ny, const uint32_t nx, const uint32_t no, const uint32_t npose,
-    float* const out_batch, uint32_t* out_batch_pos) {
+    const float *const anchors, const uint32_t num_anchors, const float stride, const float conf_thres, const uint32_t max_boxes,
+    const float *const feat, const uint32_t batch_size, const uint32_t ny, const uint32_t nx, const uint32_t no, const uint32_t npose,
+    float *const out_batch, uint32_t *out_batch_pos)
+{
 
     const uint32_t params_per_lm = 3;
     const uint32_t params_per_box = 6 + npose * params_per_lm;
@@ -135,25 +139,33 @@ void yolov5_pose_decode_feat(
 
     uint32_t pos = 0;
     const float conf_thres_logit = sigmoid_inv(conf_thres);
-    
-    for (uint32_t b = 0; b < batch_size; b++) {
+
+    for (uint32_t b = 0; b < batch_size; b++)
+    {
         float *const out = out_batch + (b * max_out_batch_pos);
         uint32_t *const out_pos_ptr = out_batch_pos + b;
         uint32_t out_pos = *out_pos_ptr;
 
-        for (uint32_t a = 0; a < num_anchors; a++) {
+        for (uint32_t a = 0; a < num_anchors; a++)
+        {
             const float ax = anchors[2 * a + 0] * stride;
             const float ay = anchors[2 * a + 1] * stride;
 
-            for (uint32_t y = 0; y < ny; y++) {
-                for (uint32_t x = 0; x < nx; x++) {
+            for (uint32_t y = 0; y < ny; y++)
+            {
+                for (uint32_t x = 0; x < nx; x++)
+                {
 
-                    const float* const feat_cur = &feat[pos];
+                    const float *const feat_cur = &feat[pos];
                     const float conf_obj_logit = feat_cur[4];
 
                     // early stopping
-                    if (conf_obj_logit >= conf_thres_logit) {
-
+                    if (conf_obj_logit >= conf_thres_logit)
+                    {
+                        if (out_pos + params_per_box > max_out_batch_pos)
+                        {
+                            break;
+                        }
                         float conf = sigmoid(feat_cur[5]);
                         conf *= sigmoid(conf_obj_logit);
 
@@ -168,7 +180,7 @@ void yolov5_pose_decode_feat(
 
                             bx = (bx * 2.0f - 0.5f + x) * stride;
                             by = (by * 2.0f - 0.5f + y) * stride;
-                            
+
                             bw *= 2.0f;
                             bh *= 2.0f;
                             bw = (bw * bw) * ax;
@@ -189,9 +201,10 @@ void yolov5_pose_decode_feat(
                             out[out_pos + 3] = by2;
                             out[out_pos + 4] = conf;
                             out[out_pos + 5] = 0;
-                       
+
                             // lm
-                            for (uint32_t k = 0; k < npose; k++) {
+                            for (uint32_t k = 0; k < npose; k++)
+                            {
                                 const uint32_t kidx = 6 + k * 3;
                                 float kx = feat_cur[kidx + 0];
                                 float ky = feat_cur[kidx + 1];
@@ -211,7 +224,6 @@ void yolov5_pose_decode_feat(
                         }
                     }
                     pos += no;
-
                 }
             }
         }
@@ -219,4 +231,3 @@ void yolov5_pose_decode_feat(
         *out_pos_ptr = out_pos;
     }
 }
-
