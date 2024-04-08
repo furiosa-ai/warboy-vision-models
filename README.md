@@ -102,7 +102,9 @@ sudo apt-get install cmake libeigen3-dev
 
 <details open>
 <summary> Set config files for project </summary>
-First, download the weight file from [yolov8](https://github.com/ultralytics/ultralytics) for example execution.
+  
+First, download the weight file from [YOLOv8](https://github.com/ultralytics/ultralytics) for example execution.
+  
 ```sh
 cd warboy-vision-models
 wget https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt
@@ -142,7 +144,7 @@ output_path: output_detection
 num_workers: 8
 device: warboy(2)*1
 video_path: 
-  - ...
+  - [set your test video file path]
 ```
 
 </details>
