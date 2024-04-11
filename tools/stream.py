@@ -9,8 +9,8 @@ from fastapi.responses import StreamingResponse
 
 HOME_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(HOME_DIR)
-from utils_.parse_params import get_output_paths
-from utils_.result_img_process import ImageMerger
+from utils.parse_params import get_output_paths
+from utils.result_img_process import ImageMerger
 
 app = FastAPI()
 CFG = sys.argv[1]

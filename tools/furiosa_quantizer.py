@@ -1,16 +1,15 @@
-import os, sys
-import cv2
 import glob
+import os
 import random
+import sys
+
+import cv2
 import onnx
 import typer
-
 from tqdm import tqdm
 
 HOME_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(HOME_DIR)
-from utils_.preprocess import YOLOPreProcessor
-from utils_.parse_params import get_model_params_from_cfg
 from furiosa.optimizer import optimize_model
 from furiosa.quantizer import (
     CalibrationMethod,
@@ -21,6 +20,8 @@ from furiosa.quantizer import (
     quantize,
 )
 
+from utils.parse_params import get_model_params_from_cfg
+from utils.preprocess import YOLOPreProcessor
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 

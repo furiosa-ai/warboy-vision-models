@@ -7,17 +7,17 @@ import typer
 import yaml
 from furiosa.runtime.sync import create_runner
 
-from utils_.parse_params import get_model_params_from_cfg
-from utils_.postprocess import getPostProcesser
-from utils_.preprocess import YOLOPreProcessor, letterbox
+from utils.parse_params import get_model_params_from_cfg
+from utils.postprocess import getPostProcesser
+from utils.preprocess import YOLOPreProcessor, letterbox
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
 
 @app.command()
 def main(cfg, input_path):
-    runner_info, app_type, model_name, model_path, input_shape, class_names = get_model_params_from_cfg(
-        cfg, mode="inference"
+    runner_info, app_type, model_name, model_path, input_shape, class_names = (
+        get_model_params_from_cfg(cfg, mode="inference")
     )
 
     result_path = "output"
