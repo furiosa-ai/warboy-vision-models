@@ -61,7 +61,7 @@ class PoseEstPostprocess:
         model_cfg.update({"use_tracker": use_traking})
         self.postprocess_func = PoseEstDecoder(model_name, **model_cfg)
         self.class_names = class_names
-        self.s_idx = 5 if model_name in "yolov8" else 6
+        self.s_idx = 5 if "yolov8" in model_name else 6
 
     def __call__(
         self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray
@@ -208,7 +208,7 @@ def draw_pose(
             )
 
         for idx in range(len(prediction) // 3):
-            x, y, score = result[idx * 3 : (idx + 1) * 3]
+            x, y, score = prediction[idx * 3 : (idx + 1) * 3]
             cv2.circle(img, (int(x), int(y)), radius=3, color=kpt_color, thickness=-1)
 
     return img
