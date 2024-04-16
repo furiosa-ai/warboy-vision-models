@@ -1,17 +1,16 @@
 import os
 import sys
+from typing import Tuple
 
 import torch
 import typer
 import yaml
 
-from typing import Tuple
-
 HOME_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(HOME_DIR)
-from utils_.parse_params import get_model_params_from_cfg
 from tools.model_utils import load_onnx_extractor, load_torch_model
 from tools.model_utils.extractor import *
+from utils.parse_params import get_model_params_from_cfg
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
@@ -59,6 +58,7 @@ def export_onnx_file(
 @app.command()
 def main(cfg):
     params = get_model_params_from_cfg(cfg, mode="export_onnx")
+    del sys.modules["utils"]
     export_onnx_file(**params)
     return
 

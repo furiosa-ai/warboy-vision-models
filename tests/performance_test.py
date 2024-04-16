@@ -16,9 +16,8 @@ HOME_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(HOME_DIR)
 from tools.export_onnx import export_onnx_file
 from tools.furiosa_quantizer import quantize_model
-
-from utils_.postprocess import getPostProcesser
-from utils_.preprocess import YOLOPreProcessor
+from utils.postprocess import getPostProcesser
+from utils.preprocess import YOLOPreProcessor
 
 ANCHORS = {
     "yolov8": [None],

@@ -8,12 +8,12 @@ import cv2
 import psutil
 import typer
 
-from utils_.handler import InputHandler, OutputHandler
-from utils_.mp_queue import MpQueue, QueueStopEle
-from utils_.parse_params import get_demo_params_from_cfg
-from utils_.postprocess import getPostProcesser
-from utils_.preprocess import YOLOPreProcessor
-from utils_.warboy_runner import WarboyRunner
+from utils.handler import InputHandler, OutputHandler
+from utils.mp_queue import MpQueue, QueueStopEle
+from utils.parse_params import get_demo_params_from_cfg
+from utils.postprocess import getPostProcesser
+from utils.preprocess import YOLOPreProcessor
+from utils.warboy_runner import WarboyRunner
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
@@ -82,7 +82,9 @@ class DemoApplication:
         ]
         self.viewer = viewer
 
-    def run(self,):
+    def run(
+        self,
+    ):
         for app_thread in self.app_threads:
             app_thread.start()
 
