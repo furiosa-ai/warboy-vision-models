@@ -39,8 +39,8 @@ class InputHandler(JobHandler):
         self.video_handlers = [
             mp.Process(
                 target=self.video_to_input,
-                args=(input_video_path, video_idx, input_queue),
-            )
+                args=(input_video_path, video_idx, input_queue,
+            ))
             for video_idx, input_video_path in enumerate(input_video_paths)
         ]
         super().__init__(self.video_handlers)
@@ -65,16 +65,11 @@ class InputHandler(JobHandler):
             if not hasFrame:
                 make_ending_signal(output_path, img_idx)
                 break
-
-            input_, contexts = self.preprocessor(frame, self.input_shape)
-            try:
-                input_queue.put((input_, contexts, img_idx, video_idx))
-            except queue.Full:
-                time.sleep(0.001)
-                input_queue.put((input_, contexts, img_idx, video_idx))
-
+        
+            dummy_img_path = os.path.join(output_path, ".%010d.bmp" % img_idx)
             img_path = os.path.join(output_path, "%010d.bmp" % img_idx)
-            cv2.imwrite(img_path, frame)
+            cv2.imwrite(dummy_img_path, frame)
+            os.rename(dummy_img_path, img_path)
 
             img_idx += 1
 

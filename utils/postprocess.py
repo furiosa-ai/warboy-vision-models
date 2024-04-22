@@ -58,10 +58,11 @@ class PoseEstPostprocess:
     def __init__(
         self, model_name: str, model_cfg, class_names, use_traking: bool = True
     ):
+        print(model_name)
         model_cfg.update({"use_tracker": use_traking})
         self.postprocess_func = PoseEstDecoder(model_name, **model_cfg)
         self.class_names = class_names
-        self.s_idx = 5 if "yolov8" in model_name else 6
+        self.s_idx = 5 if "yolov8" in model_name  else 6
 
     def __call__(
         self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray
@@ -75,7 +76,7 @@ class PoseEstPostprocess:
 
         if num_prediction == 0:
             return img
-
+    
         predictions = predictions[:, self.s_idx :]
         pose_img = draw_pose(img, predictions)
         return pose_img
@@ -137,7 +138,7 @@ def plot_onx_box(
     label: str,
     line_thickness: int = None,
 ) -> np.ndarray:
-    tl = line_thickness or round(0.0005 * max(img.shape[0:2])) + 1
+    tl = line_thickness or round(0.003 * max(img.shape[0:2])) + 1
     tf = max(tl - 1, 1)
     c1, c2 = (box[0], box[1]), (box[2], box[3])
     cv2.rectangle(img, c1, c2, color, thickness=tl)
@@ -183,11 +184,10 @@ def draw_pose(
 ) -> np.ndarray:
     ## Draw Pose
 
-    tl = line_thickness or round(0.0005 * max(img.shape[0:2])) + 1
+    tl = line_thickness or round(0.003 * max(img.shape[0:2])) + 1
     kpt_color = [62, 0, 198]
 
     for i, prediction in enumerate(predictions):
-
         for idx in range(len(SKELETONS)):
             color = POSE_LIMB_COLOR[idx]
             skeleton = SKELETONS[idx]

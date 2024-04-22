@@ -1,7 +1,7 @@
 import os
 import subprocess
 import sys
-
+import time
 import cv2
 import uvicorn
 from fastapi import FastAPI, Response
@@ -29,7 +29,7 @@ async def stream():
                 b"--frame\r\n"
                 b"Content-Type: image/jpeg\r\n\r\n" + bytearray(out_frame) + b"\r\n"
             )
-
+            
     return StreamingResponse(
         getByteFrame(), media_type="multipart/x-mixed-replace; boundary=frame"
     )

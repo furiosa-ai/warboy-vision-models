@@ -3,6 +3,7 @@ import os
 import subprocess
 import threading
 import time
+import asyncio
 
 import cv2
 import psutil
@@ -13,7 +14,7 @@ from utils.mp_queue import MpQueue, QueueStopEle
 from utils.parse_params import get_demo_params_from_cfg
 from utils.postprocess import getPostProcesser
 from utils.preprocess import YOLOPreProcessor
-from utils.warboy_runner import WarboyRunner
+from utils.warboy_runner import WarboyRunner, WarboyServer
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
@@ -70,12 +71,60 @@ class AppRunner:
 
         print(f"Application -> {self.app_type} End!!")
 
+async def startup(runner):
+    await runner.load()
+
+async def run_model(runner):
+    await runner.run()
+
+class AppRunner2:
+    def __init__(self, param):
+        self.app_type = param["app"]
+        self.video_paths = param["video_paths"]
+        self.runtime_params = param["runtime_params"]
+        self.video_names = [video_path.split('/')[-1].split('.')[0] for video_path in self.video_paths]
+        self.preprocessor = YOLOPreProcessor()
+        self.postprocessor = [getPostProcesser(
+            self.app_type,
+            param["model_name"],
+            self.runtime_params,
+            param["class_names"],
+        ) for _ in range(len(self.video_names))]
+        self.furiosa_runtime = WarboyServer(
+            param["model_path"], param["worker_num"], param["warboy_device"], self.preprocessor, self.postprocessor, param["input_shape"], param["output_path"], self.video_names
+        )
+        self.input_handler = InputHandler(
+            self.video_paths,
+            param["output_path"],
+            None,
+            None,
+            param["input_shape"],
+        )
+
+
+    def start_runtime(self):
+        asyncio.run(startup(self.furiosa_runtime))
+        asyncio.run(run_model(self.furiosa_runtime))
+
+
+    def __call__(self):
+        warboy_runtime_process = mp.Process(
+            target=self.start_runtime
+        )
+        self.input_handler.start()
+        warboy_runtime_process.start()
+
+        self.input_handler.join()
+        warboy_runtime_process.join()
+
+        print(f"Application -> {self.app_type} End!!")
+
 
 class DemoApplication:
     def __init__(self, cfg, viewer=None):
         self.cfg = cfg
         self.demo_params = get_demo_params_from_cfg(cfg)
-        self.app_runners = [AppRunner(param) for param in self.demo_params]
+        self.app_runners = [AppRunner2(param) for param in self.demo_params]
         self.app_threads = [
             threading.Thread(target=app_runner, args=())
             for app_runner in self.app_runners

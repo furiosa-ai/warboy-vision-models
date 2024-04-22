@@ -28,6 +28,7 @@ class ImageMerger:
         last_pc = {}
 
         while ending_channel < num_channel:
+            t1 = time.time()
             c_idx = 0
             grid_imgs = []
 
@@ -59,6 +60,10 @@ class ImageMerger:
             if img_idx % 5 == 0:
                 power_info, util_info = get_warboy_info(warboy_devices, last_pc)
             img = put_warboy_info(img, power_info, util_info, full_grid_shape)
+            elapsed_time = time.time()-t1
+            if elapsed_time < 0.03:
+                time.sleep(0.03-elapsed_time)
+            
             yield (img)
             img_idx += 1
         return
