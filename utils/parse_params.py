@@ -59,10 +59,9 @@ def get_model_params_from_cfg(cfg: str, mode: str = "runtime") -> List[Any]:
     class_names = model_params["class_names"]
     anchors = model_params["anchors"]
     num_classes = len(class_names)
-    num_anchors = 3 if anchors is None else len(anchors)
+    num_anchors = 3 if anchors[0] is None else len(anchors)
     conf_thres = model_params["conf_thres"]
     iou_thres = model_params["iou_thres"]
-
     params = []
 
     if mode == "export_onnx":
