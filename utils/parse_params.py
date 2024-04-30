@@ -17,9 +17,6 @@ def get_demo_params_from_cfg(cfg: str):
             runtime_params, model_name, input_shape, class_names = (
                 get_model_params_from_cfg(demo_param["model_config"])
             )
-            if os.path.exists(demo_param["output_path"]):
-                subprocess.run(["rm", "-rf", demo_param["output_path"]])
-            os.makedirs(demo_param["output_path"])
             params.append(
                 {
                     "app": demo_param["application"],
@@ -59,7 +56,7 @@ def get_model_params_from_cfg(cfg: str, mode: str = "runtime") -> List[Any]:
     class_names = model_params["class_names"]
     anchors = model_params["anchors"]
     num_classes = len(class_names)
-    num_anchors = 3 if anchors is None else len(anchors)
+    num_anchors = 3 if anchors[0] is None else len(anchors)
     conf_thres = model_params["conf_thres"]
     iou_thres = model_params["iou_thres"]
 

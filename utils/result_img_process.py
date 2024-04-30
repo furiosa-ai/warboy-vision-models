@@ -5,67 +5,60 @@ from typing import List, Tuple
 
 import cv2
 import numpy as np
+from utils.mp_queue import *
 from furiosa.device.sync import list_devices
 
-
 class ImageMerger:
-    """ """
-
+    """ 
+    """
     def __call__(
         self,
-        output_img_paths: List[str],
+        result_queues,
         full_grid_shape: Tuple[int, int] = (1080, 1920),
     ):
-        num_channel = len(output_img_paths)
+        num_channel = len(result_queues)
         ending_channel = 0
 
         num_grid, grid_shape = get_grid_info(num_channel, full_grid_shape)
 
-        img_idx = 0
+        img_idx = [0 for _ in range(num_channel)]
         states = [True for _ in range(num_channel)]
+        cnt = 0
 
         warboy_devices = list_devices()
         last_pc = {}
 
         while ending_channel < num_channel:
-            t1 = time.time()
             c_idx = 0
             grid_imgs = []
 
             while c_idx < num_channel:
-                grid_img_path = os.path.join(
-                    output_img_paths[c_idx], "%010d.bmp" % img_idx
-                )
-                if os.path.exists(grid_img_path):
-                    img = cv2.imread(grid_img_path)
-                    grid_img = cv2.resize(
-                        img,
-                        (grid_shape[1], grid_shape[0]),
-                        interpolation=cv2.INTER_NEAREST,
-                    )
-                    grid_imgs.append(grid_img)
+                try:
+                    out_img = result_queues[c_idx].get()
+                except QueueClosedError:
                     c_idx += 1
-                else:
-                    ending_signal = os.path.join(
-                        output_img_paths[c_idx], "%010d.csv" % img_idx
-                    )
-                    if os.path.exists(ending_signal) or not states[c_idx]:
-                        if states[c_idx]:
-                            ending_channel += 1
+                    if states[c_idx]:
                         states[c_idx] = False
-                        grid_imgs.append(None)
-                        c_idx += 1
+                        ending_channel += 1
+                    grid_imgs.append(None)
+                    continue
+                
+                grid_img = cv2.resize(
+                    out_img,
+                    (grid_shape[1], grid_shape[0]),
+                    interpolation=cv2.INTER_NEAREST,
+                )
+                grid_imgs.append(grid_img)
+                c_idx += 1
 
             img = make_full_grid(grid_imgs, num_grid, grid_shape, full_grid_shape)
-            if img_idx % 5 == 0:
+            if cnt % 5 == 0:
                 power_info, util_info = get_warboy_info(warboy_devices, last_pc)
             img = put_warboy_info(img, power_info, util_info, full_grid_shape)
-            elapsed_time = time.time()-t1
-            if elapsed_time < 0.03:
-                time.sleep(0.03-elapsed_time)
-            
-            yield (img)
-            img_idx += 1
+            output_path = "result"
+            cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt),img)
+            os.rename(os.path.join(output_path, ".%010d.bmp" % cnt),os.path.join(output_path, "%010d.bmp" % cnt))
+            cnt += 1
         return
 
 
