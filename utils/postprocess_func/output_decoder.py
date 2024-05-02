@@ -195,7 +195,7 @@ class InsSegDecoder(YOLO_Decoder):
         proto = model_outputs[-1][0]
         model_outputs = model_outputs[:-1]
         ins_seg_dec = self.box_decoder(model_outputs, step=3)
-        outputs = non_max_suppression(ins_seg_dec, self.iout_thres)
+        outputs = non_max_suppression(ins_seg_dec, self.iou_thres)
 
         predictions = []
         ratio, dwdh = contexts["ratio"], contexts["pad"]
@@ -213,7 +213,7 @@ class InsSegDecoder(YOLO_Decoder):
                 prediction[:, :4], ratio, dwdh, org_input_shape
             )  # Box Result
             ins_masks = process_mask(
-                proto, prediction[:, 6:], prediction[:, :4], prediction[:, :4]
+                proto, prediction[:, 6:], prediction[:, :4], org_input_shape
             )
 
             bbox = prediction[:, :6]
