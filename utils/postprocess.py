@@ -16,7 +16,7 @@ def getPostProcesser(app_type, model_name, model_cfg, class_names, use_tracking=
         "object_detection",
         "pose_estimation",
         "instance_segmentation",
-    ], "sdfasd"
+    ]
     if app_type == "object_detection":
         postproc = ObjDetPostprocess(model_name, model_cfg, class_names, use_tracking)
     elif app_type == "pose_estimation":
