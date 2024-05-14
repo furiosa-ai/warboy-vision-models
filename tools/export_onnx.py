@@ -25,7 +25,8 @@ def export_onnx_file(
     num_anchors: int,
 ):
     model = load_torch_model(application, weight, model_name)
-    assert model is not None, "Fail to load model!!!"
+    if model is None:
+        raise Exception("Fail to load model")
 
     model.eval()
     dummy_input = torch.zeros(1, 3, *input_shape).to(torch.device("cpu"))

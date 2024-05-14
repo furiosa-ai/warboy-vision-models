@@ -8,7 +8,7 @@ def load_instance_seg_model(model_name, weight):
     if "yolov8" in model_name:
         return YOLO(weight).model
     else:
-        raise "Unsupported Model!!"
+        raise ValueError(f"{model_name} is not supported")
 
 
 class Instance_Seg_YOLO_Extractor(YOLO_ONNX_Extractor):
@@ -61,6 +61,8 @@ class Instance_Seg_YOLO_Extractor(YOLO_ONNX_Extractor):
             )
             output_to_shape.append(proto_layer)
         else:
-            raise "Unsupported Pose Estimation Model!!"
+            raise ValueError(
+                f"{model_name} is not instance segmentation model in support"
+            )
 
         return output_to_shape

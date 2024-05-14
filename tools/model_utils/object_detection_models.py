@@ -12,7 +12,7 @@ def load_od_model(model_name, weight):
     elif "yolov5" in model_name:
         return torch.hub.load("ultralytics/yolov5", "custom", weight)
     else:
-        raise "Unsupported Model!!"
+        raise ValueError(f"{model_name} is not supported")
 
 
 class ObjDet_YOLO_Extractor(YOLO_ONNX_Extractor):
@@ -94,6 +94,6 @@ class ObjDet_YOLO_Extractor(YOLO_ONNX_Extractor):
                 for idx in range(num_anchors)
             ]
         else:
-            raise "Unsupported Object Detection Model!!"
+            raise ValueError(f"{model_name} is not object detection model in support")
 
         return output_to_shape
