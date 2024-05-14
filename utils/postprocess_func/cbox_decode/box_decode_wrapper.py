@@ -111,7 +111,7 @@ def _yolov8_box_decode_feat(
             out_batch_pos,
         )
     else:
-        raise Exception(type(feat_box))
+        raise ValueError(f"feat_box's type ({type(feat_box)}) is not np.ndarray")
 
 
 def yolov8_box_decode(
@@ -166,7 +166,7 @@ def _yolov5_box_decode_feat(
             out_batch_pos,
         )
     else:
-        raise Exception(type(feat))
+        raise ValueError(f"feat's type ({type(feat)}) is not np.ndarray")
 
 
 def yolov5_box_decode(

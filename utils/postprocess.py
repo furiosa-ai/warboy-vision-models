@@ -12,17 +12,14 @@ from utils.postprocess_func.output_decoder import (
 
 
 def getPostProcesser(app_type, model_name, model_cfg, class_names, use_tracking=True):
-    assert app_type in [
-        "object_detection",
-        "pose_estimation",
-        "instance_segmentation",
-    ]
     if app_type == "object_detection":
         postproc = ObjDetPostprocess(model_name, model_cfg, class_names, use_tracking)
     elif app_type == "pose_estimation":
         postproc = PoseEstPostprocess(model_name, model_cfg, class_names, use_tracking)
     elif app_type == "instance_segmentation":
         postproc = InsSegPostProcess(model_name, model_cfg, class_names, use_tracking)
+    else:
+        raise NotImplementedError(f"{app_type} is not supported.")
     return postproc
 
 
@@ -41,7 +38,8 @@ class ObjDetPostprocess:
         ## Consider batch 1
 
         predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
-        assert len(predictions) == 1, f"{len(predictions)}!=1"
+        if len(predictions) != 1:
+            raise ValueError(f"len(predictions) is not 1 ({len(predictions)})")
 
         predictions = predictions[0]
         num_prediction = predictions.shape[0]
@@ -68,7 +66,8 @@ class PoseEstPostprocess:
     ) -> np.ndarray:
         ## Consider batch 1
         predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
-        assert len(predictions) == 1, f"{len(predictions)}!=1"
+        if len(predictions) != 1:
+            raise ValueError(f"len(predictions) is not 1 ({len(predictions)})")
 
         predictions = predictions[0]
         num_prediction = predictions.shape[0]
@@ -96,7 +95,8 @@ class InsSegPostProcess:
         ## Consider batch 1
 
         predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
-        assert len(predictions) == 1, f"{len(predictions)}!=1"
+        if len(predictions) != 1:
+            raise ValueError(f"len(predictions) is not 1 ({len(predictions)})")
 
         predictions = predictions[0]
         bbox, ins_mask = predictions

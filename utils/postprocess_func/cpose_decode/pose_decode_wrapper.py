@@ -80,14 +80,22 @@ def _yolov8_pose_decode_feat(
     feat_cls = feat_cls.transpose(0, 2, 3, 1)
     feat_pose = feat_pose.transpose(0, 2, 3, 1)
     feat_pose[..., 2::3] = sigmoid(feat_pose[..., 2::3])
-    assert (
+    if not (
         feat_box.shape[:3] == feat_cls.shape[:3]
         and feat_pose.shape[:3] == feat_cls.shape[:3]
-    )
+    ):
+        raise ValueError("feat_box, feat_cls, feat_pos shape is mismatching")
     bs, ny, nx, num_box_params = feat_box.shape
     bs, ny, nx, num_pose_params = feat_pose.shape
 
-    assert num_box_params == 4 * reg_max and num_pose_params == 3 * num_pose
+    if not (num_box_params == 4 * reg_max):
+        raise ValueError(
+            f"num_box_params ({num_box_params}) is not 4 * reg_max (4 * {reg_max})"
+        )
+    if not (num_pose_params == 3 * num_pose):
+        raise ValueError(
+            f"num_pose_params ({num_pose_params}) is not 3 * num_pose (3 * {num_pose})"
+        )
     _, _, _, nc = feat_cls.shape
 
     if isinstance(feat_box, np.ndarray):
@@ -108,7 +116,7 @@ def _yolov8_pose_decode_feat(
             out_batch_pos,
         )
     else:
-        raise Exception(type(feat_box))
+        raise ValueError(f"feat_box's type ({type(feat_box)}) is not np.ndarray")
 
 
 def yolov8_pose_decode(
@@ -165,7 +173,7 @@ def _yolov5_pose_decode_feat(
             out_batch_pos,
         )
     else:
-        raise Exception(type(feat))
+        raise ValueError(f"feat's type ({type(feat)}) is not np.ndarray")
 
 
 def _reshape_output(i, num_pose, y_det, y_kpt):

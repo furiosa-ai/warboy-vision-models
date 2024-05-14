@@ -8,7 +8,8 @@ def load_pose_model(model_name, weight):
     if "yolov8" in model_name:
         return YOLO(weight).model
     elif "yolov7" in model_name:
-        import sys, os
+        import os
+        import sys
 
         sys.path.append(
             os.path.join(
@@ -20,7 +21,8 @@ def load_pose_model(model_name, weight):
         model = attempt_load(weight, map_location="cpu")
         return model
     elif "yolov5" in model_name:
-        import sys, os
+        import os
+        import sys
 
         sys.path.append(
             os.path.join(
@@ -33,7 +35,7 @@ def load_pose_model(model_name, weight):
         model = attempt_load(weight, map_location="cpu")
         return model
     else:
-        raise "Unsupported Model!!"
+        raise ValueError(f"{model_name} is not supported")
 
 
 class Pose_Estimation_YOLO_Extractor(YOLO_ONNX_Extractor):
@@ -139,6 +141,6 @@ class Pose_Estimation_YOLO_Extractor(YOLO_ONNX_Extractor):
                 output_to_shape.append(box_layer)
                 output_to_shape.append(pose_layer)
         else:
-            raise "Unsupported Pose Estimation Model!!"
+            raise ValueError(f"{model_name} is not pose estimation model in support")
 
         return output_to_shape
