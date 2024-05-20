@@ -4,10 +4,7 @@ import multiprocessing as mp
 import os
 import random
 import shutil
-import subprocess
-import threading
 import time
-from concurrent import futures
 from concurrent.futures import (
     ALL_COMPLETED,
     ProcessPoolExecutor,
@@ -18,30 +15,16 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import onnx
-import onnxruntime
-import torch
-import tqdm
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from furiosa.optimizer import optimize_model
-from furiosa.quantizer import (
-    CalibrationMethod,
-    Calibrator,
-    ModelEditor,
-    TensorType,
-    get_pure_input_names,
-    quantize,
-)
 from furiosa.runtime import create_queue
-from furiosa.runtime.sync import create_runner
 
 from utils.result_img_process import ImageMerger
-from utils.warboy import WarboyDevice, WarboyRunner
+from utils.warboy import WarboyDevice
 
 NUM_INPUT_WORKER = 8
 
