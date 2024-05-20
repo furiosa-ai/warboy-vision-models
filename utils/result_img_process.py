@@ -70,7 +70,7 @@ class ImageMerger:
 
 
 def get_grid_info(num_channel: int, full_grid_shape: Tuple[int, int]):
-    num_grid = math.ceil(math.sqrt(num_channel))
+    num_grid = math.ceil((math.sqrt(num_channel) / 2)) * 2
     grid_shape = (
         int((full_grid_shape[0] - 5) / num_grid) - 5,
         int((full_grid_shape[1] - 5) / num_grid) - 5,
