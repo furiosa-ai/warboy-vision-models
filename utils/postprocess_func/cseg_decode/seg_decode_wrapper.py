@@ -1,6 +1,6 @@
 import ctypes
 import os
-
+import time
 import numpy as np
 
 _clib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), "cseg_decode.so"))

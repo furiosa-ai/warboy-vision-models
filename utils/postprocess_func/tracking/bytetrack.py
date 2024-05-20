@@ -11,7 +11,7 @@ class ByteTrack:
         track_thresh=0.5,
         track_buffer=30,
         match_thresh=0.8,
-        clear_track_interval=30,
+        clear_track_interval=200,
     ):
         self.tracker = CByteTrack(track_thresh, track_buffer, match_thresh)
         self.max_track_count = None

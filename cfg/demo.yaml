@@ -1,34 +1,27 @@
-application: object_detection
-model_config: ./cfg/object_detection_model.yaml
-model_path: yolov8s_od.enf
-output_path: output_detection
-num_worker: 8
-device: npu0pe0
-video_path:
-  - /home/furiosa/input_videos_2/Car_1.mp4
-  - /home/furiosa/input_videos_2/Car_3.mp4
-  - /home/furiosa/input_videos_2/Car_4.mp4
-  - /home/furiosa/input_videos_2/Foot_3.mp4
-  - /home/furiosa/input_videos_2/Foot_4.mp4
-  - /home/furiosa/input_videos_2/Golf_1.mp4
-  - /home/furiosa/input_videos_2/Golf_2.mp4
-  - /home/furiosa/input_videos_2/Tennis_1.mp4
----
-application: pose_estimation
-model_config: ./cfg/pose_estimation_model.yaml
-model_path: yolov8n-pose.enf
-output_path: output_pose
-num_worker: 8
-device: npu0pe1
-video_path:
-  - /home/furiosa/input_videos_2/Basket_2.mp4
-  - /home/furiosa/input_videos_2/Basket_4.mp4
-  - /home/furiosa/input_videos_2/Basket_5.mp4
-  - /home/furiosa/input_videos_2/Box_1.mp4
-  - /home/furiosa/input_videos_2/Box_3.mp4
-  - /home/furiosa/input_videos_2/Box_4.mp4
-  - /home/furiosa/input_videos_2/Foot_1.mp4
-  - /home/furiosa/input_videos_2/Foot_2.mp4
-
-
-
+app_config:
+  - application: 
+      - object_detection
+      #- instance_segmentation
+    model_config: 
+      - ./cfg/object_detection_model.yaml
+      #- ./cfg/instance_segmentation_model.yaml
+    model_path: 
+      - yolov8s_od.enf
+      #- yolov9c-seg_person_2.enf
+    num_worker: 8
+    device: 
+      - npu0pe0
+      #- npu0pe1
+    video_path:
+      #- /home/ubuntu/demo_videos/input_videos_4/Car_1.mp4
+      - /home/ubuntu/demo_videos/input_videos_4/Car_3.mp4
+      - /home/ubuntu/demo_videos/input_videos_4/Basket_5.mp4
+      - /home/ubuntu/demo_videos/input_videos_4/Box_1.mp4
+      - /home/ubuntu/demo_videos/input_videos_4/Box_3.mp4
+      ##- /home/ubuntu/demo_videos/input_videos_4/Box_4.mp4
+      #- /home/ubuntu/demo_videos/input_videos_4/Foot_1.mp4
+      #- /home/ubuntu/demo_videos/input_videos_4/Foot_2.mp4
+      #- /home/ubuntu/demo_videos/input_videos_4/Foot_2.mp4
+      #- /home/ubuntu/demo_videos/input_videos_4/Foot_2.mp
+port: 20001
+recursive: 1 # 

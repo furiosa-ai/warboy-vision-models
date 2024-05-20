@@ -20,7 +20,7 @@ BYTETracker::~BYTETracker()
 
 uint32_t BYTETracker::update(const float* const box, const uint32_t nbox, float* out, const uint32_t n_extra) {
 	const uint32_t input_d = 5 + n_extra;
-	const uint32_t output_d = 5 + n_extra + 1;
+	const uint32_t output_d = 5 + n_extra + 2;
 
 	vector<Object> objects(nbox);
 	// label not needed
@@ -33,10 +33,11 @@ uint32_t BYTETracker::update(const float* const box, const uint32_t nbox, float*
 		objects[i].prob = box[bi + 4];
 		objects[i].label = 0;
 
-		objects[i].extra.resize(n_extra);
+		objects[i].extra.resize(n_extra+1);
 		for (uint32_t e = 0; e < n_extra; e++) {
 			objects[i].extra[e] = box[bi + 5 + e];
 		}
+		objects[i].extra[n_extra] = i;
 		// objects[i].label = cls[i];
 	}
 
@@ -52,7 +53,7 @@ uint32_t BYTETracker::update(const float* const box, const uint32_t nbox, float*
 		for (uint32_t e = 0; e < n_extra; e++) {
 			out[5 + e] = t.extra[e];
 		}
-
+		out[output_d - 2] = t.extra[n_extra];
 		out[output_d - 1] = t.track_id;  // int -> float
 		out += output_d;
 	}

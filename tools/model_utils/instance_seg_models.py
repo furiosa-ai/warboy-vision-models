@@ -5,7 +5,7 @@ from tools.model_utils import YOLO_ONNX_Extractor
 
 
 def load_instance_seg_model(model_name, weight):
-    if "yolov8" in model_name:
+    if "yolov8" in model_name or "yolov9":
         return YOLO(weight).model
     else:
         raise "Unsupported Model!!"
@@ -22,8 +22,8 @@ class Instance_Seg_YOLO_Extractor(YOLO_ONNX_Extractor):
 
     def get_output_to_shape(self, model_name, nc, input_shape, num_anchors):
         output_to_shape = []
-        if "yolov8" in model_name:
-            proto_layer_names = {"yolov8n": "755", "yolov8m": "961", "yolov8x": "1167"}
+        if "yolov8" in model_name or "yolov9" in model_name:
+            proto_layer_names = {"yolov8n-seg": "755", "yolov8m-seg": "961", "yolov8x-seg": "1167", "yolov9c-seg": "1850"}
             for idx in range(num_anchors):
                 box_layer = (
                     f"/model.22/cv2.{idx}/cv2.{idx}.2/Conv_output_0",
@@ -61,6 +61,6 @@ class Instance_Seg_YOLO_Extractor(YOLO_ONNX_Extractor):
             )
             output_to_shape.append(proto_layer)
         else:
-            raise "Unsupported Pose Estimation Model!!"
+            raise "Unsupported Segmentation Model!!"
 
         return output_to_shape

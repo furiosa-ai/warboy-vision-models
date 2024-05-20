@@ -1,7 +1,6 @@
 import os
 import subprocess
 from typing import Any, List
-
 import yaml
 
 
@@ -9,29 +8,39 @@ def get_demo_params_from_cfg(cfg: str):
     """
     function for parsing demo parameters from config file (.yaml)
     """
-    num_channel = 0
     with open(cfg) as f:
-        demo_params = yaml.load_all(f, Loader=yaml.FullLoader)
-        params = []
-        for demo_param in demo_params:
-            runtime_params, model_name, input_shape, class_names = (
-                get_model_params_from_cfg(demo_param["model_config"])
-            )
-            params.append(
+        demo_params = list(yaml.load_all(f, Loader=yaml.FullLoader))[0]
+        app_configs = demo_params["app_config"]    
+        port = demo_params["port"]
+        app_params = []
+        for app_config in app_configs:
+            runtime_params = []
+            model_names = []
+            input_shapes = []
+            class_names = []
+            
+            for model_config in app_config["model_config"]:
+                runtime_param, model_name, input_shape, class_name = (
+                        get_model_params_from_cfg(model_config)
+                    )
+                runtime_params.append(runtime_param)
+                model_names.append(model_name)
+                input_shapes.append(input_shape)
+                class_names.append(class_name)
+            app_params.append(
                 {
-                    "app": demo_param["application"],
+                    "app": app_config["application"],
                     "runtime_params": runtime_params,
-                    "input_shape": input_shape,
+                    "input_shape": input_shapes,
                     "class_names": class_names,
-                    "model_name": model_name,
-                    "model_path": demo_param["model_path"],
-                    "worker_num": int(demo_param["num_worker"]),
-                    "warboy_device": demo_param["device"],
-                    "video_paths": demo_param["video_path"],
-                    "output_path": demo_param["output_path"],
+                    "model_name": model_names,
+                    "model_path": app_config["model_path"],
+                    "worker_num": int(app_config["num_worker"]),
+                    "warboy_device": app_config["device"],
+                    "video_paths": app_config["video_path"],
                 }
-            )
-    return params
+            ) 
+    return app_params, port,
 
 
 def get_model_params_from_cfg(cfg: str, mode: str = "runtime") -> List[Any]:
@@ -99,16 +108,3 @@ def get_model_params_from_cfg(cfg: str, mode: str = "runtime") -> List[Any]:
         ]
 
     return params
-
-
-def get_output_paths(cfg):
-    output_paths = []
-    with open(cfg) as f:
-        demo_params = yaml.load_all(f, Loader=yaml.FullLoader)
-        for param in demo_params:
-            for video_path in param["video_path"]:
-                video_name = (video_path.split("/")[-1]).split(".")[0]
-                output_paths.append(
-                    os.path.join(param["output_path"], "_output", video_name)
-                )
-    return output_paths

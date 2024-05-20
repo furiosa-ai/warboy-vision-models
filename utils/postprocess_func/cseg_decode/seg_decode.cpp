@@ -32,7 +32,7 @@ void yolov8_seg_decode(
                 const float r = mask_in_cur[mask_in_pos] * proto_cur[proto_pos];
                 out[out_pos] += r;
             }
-            out[out_pos] = sigmoid(out[out_pos]);
+            //out[out_pos] = sigmoid(out[out_pos]);
             out_pos += 1;
         }
         *out_pos_ptr = out_pos;

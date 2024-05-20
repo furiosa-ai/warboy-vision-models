@@ -52,9 +52,9 @@ def _init():
 class CByteTrack:
     def __init__(
         self,
-        track_thresh=0.5,
+        track_thresh=0.1,
         track_buffer=30,
-        match_thresh=0.8,
+        match_thresh=0.3,
         high_thresh=None,
         framerate=30,
     ) -> None:
@@ -89,8 +89,8 @@ class CByteTrack:
         num_boxes = boxes.shape[0]
         n_extra = boxes.shape[1] - 5
 
-        if self.buffer is None or self.buffer.shape[1] != boxes.shape[1] + 1:
-            self.buffer = np.zeros((int(1e5), boxes.shape[1] + 1), dtype=np.float32)
+        if self.buffer is None or self.buffer.shape[1] != boxes.shape[1] + 2:
+            self.buffer = np.zeros((int(1e5), boxes.shape[1] + 2), dtype=np.float32)
 
         num_tracks = _clib.ByteTrackUpdate(
             self.obj, np.ascontiguousarray(boxes), num_boxes, self.buffer, n_extra

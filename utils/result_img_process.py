@@ -13,9 +13,14 @@ class ImageMerger:
     """
     def __call__(
         self,
+        model_names,
         result_queues,
         full_grid_shape: Tuple[int, int] = (1080, 1920),
     ):
+        demo_model_names = []
+        for model_name in model_names:
+            for name in model_name:
+                demo_model_names.append(name)
         num_channel = len(result_queues)
         ending_channel = 0
 
@@ -52,10 +57,7 @@ class ImageMerger:
                 c_idx += 1
 
             img = make_full_grid(grid_imgs, num_grid, grid_shape, full_grid_shape)
-            if cnt % 5 == 0:
-                power_info, util_info = get_warboy_info(warboy_devices, last_pc)
-            img = put_warboy_info(img, power_info, util_info, full_grid_shape)
-            output_path = "result"
+            output_path = ".tmp"
             cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt),img)
             os.rename(os.path.join(output_path, ".%010d.bmp" % cnt),os.path.join(output_path, "%010d.bmp" % cnt))
             cnt += 1
@@ -70,50 +72,13 @@ def get_grid_info(num_channel: int, full_grid_shape: Tuple[int, int]):
     )
     return num_grid, grid_shape
 
-
-def get_warboy_info(devices, last_pc):
-    powers_str = ""
-    utils_str = ""
-    for device in devices:
-        warboy_name = str(device)
-        per_counters = device.performance_counters()
-
-        if len(per_counters) != 0:
-            fetcher = device.get_hwmon_fetcher()
-            power_info = str(fetcher.read_powers_average()[0])
-            p = round(float(power_info.split(" ")[-1]) / 1000000.0, 2)
-            power = f"{p:.2f}"
-            power_str = f"POWER({warboy_name}): {power}W"
-            powers_str += "| {0:<21}".format(power_str)
-
-        t_utils = 0.0
-        for pc in per_counters:
-            pe_name = str(pc[0])
-            cur_pc = pc[1]
-
-            if pe_name in last_pc:
-                result = cur_pc.calculate_utilization(last_pc[pe_name])
-                util = result.npu_utilization()
-                if not ("0-1" in pe_name):
-                    util /= 2.0
-                t_utils += util
-
-            last_pc[pe_name] = cur_pc
-        if len(per_counters) != 0:
-            t_utils = round(t_utils * 100.0, 2)
-            util_str = f"Utilize({warboy_name}): {t_utils:.2f}%"
-            utils_str += "| {0:<23}".format(util_str)
-
-    return powers_str, utils_str
-
-
 def make_full_grid(
     grid_imgs: List[np.ndarray],
     num_grid: int,
     grid_shape: Tuple[int, int],
     full_grid_shape: Tuple[int, int],
 ) -> np.ndarray:
-    pad = int(full_grid_shape[0] * 0.1)
+    pad = 10 # int(full_grid_shape[0] * 0.1)
     full_grid = np.zeros(
         (full_grid_shape[0] + pad, full_grid_shape[1] + pad, 3), np.uint8
     )
@@ -125,37 +90,33 @@ def make_full_grid(
         r = i // num_grid
         c = i % num_grid
 
-        x0 = r * grid_shape[0] + (r + 1) * 5 + pad
-        x1 = (r + 1) * grid_shape[0] + (r + 1) * 5 + pad
+        x0 = r * grid_shape[0] + (r + 1) * 5
+        x1 = (r + 1) * grid_shape[0] + (r + 1) * 5
         y0 = c * grid_shape[1] + (c + 1) * 5
         y1 = (c + 1) * grid_shape[1] + (c + 1) * 5
         full_grid[x0:x1, y0:y1] = grid_img
 
     return full_grid
 
-
-def put_warboy_info(
-    img: np.ndarray, power_info: str, util_info: str, img_shape: Tuple[int, int]
+def put_model_name_info(
+    img: np.ndarray, model_names, img_shape: Tuple[int, int]
 ):
-    scale = max(int(0.0015 * img_shape[0]), 1)
-    img = cv2.putText(
-        img,
-        power_info,
-        (int(0.02 * img_shape[0]), int(0.01 * img_shape[1]) + 20),
-        cv2.FONT_HERSHEY_PLAIN,
-        scale,
-        (255, 255, 255),
-        scale,
-        cv2.LINE_AA,
-    )
-    img = cv2.putText(
-        img,
-        util_info,
-        (int(0.02 * img_shape[0]), int(0.01 * img_shape[1]) + 45),
-        cv2.FONT_HERSHEY_PLAIN,
-        scale,
-        (255, 255, 255),
-        scale,
-        cv2.LINE_AA,
-    )
+    initial_pos = (int(img_shape[1]*0.99), int(img_shape[0]*0.01) + 75)
+    scale = max(int(0.003 * img_shape[0]), 1)
+
+    for model_name in model_names:
+        model_name = "| "+model_name
+        t_size = cv2.getTextSize(model_name, 0, fontScale=scale, thickness=scale)[0]
+        text_pos = (int(initial_pos[0]-t_size[0]//2-20), initial_pos[1]-25)
+        img = cv2.putText(
+            img,
+            model_name,
+            text_pos,
+            cv2.FONT_HERSHEY_PLAIN,
+            scale,
+            (255, 255, 255),
+            scale,
+            cv2.LINE_AA,
+        )
+        initial_pos = (text_pos[0]-10, initial_pos[1])
     return img

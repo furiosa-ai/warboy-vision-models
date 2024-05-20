@@ -195,7 +195,7 @@ class InsSegDecoder(YOLO_Decoder):
         proto = model_outputs[-1][0]
         model_outputs = model_outputs[:-1]
         ins_seg_dec = self.box_decoder(model_outputs, step=3)
-        outputs = non_max_suppression(ins_seg_dec, self.iout_thres)
+        outputs = non_max_suppression(ins_seg_dec, self.iou_thres)
 
         predictions = []
         ratio, dwdh = contexts["ratio"], contexts["pad"]
@@ -209,11 +209,20 @@ class InsSegDecoder(YOLO_Decoder):
         proto = proto[..., top:bottom, left:right]
 
         for _, prediction in enumerate(outputs):
+            tmp_prediction = []
+            for p in prediction:
+                if int(p[5]) == 0:
+                    tmp_prediction.append(p)
+            if len(tmp_prediction)==0:
+                return [(np.array([]), np.array([]))]
+
+            prediction = np.array(tmp_prediction)
+
             prediction[:, :4] = scale_coords(
                 prediction[:, :4], ratio, dwdh, org_input_shape
             )  # Box Result
             ins_masks = process_mask(
-                proto, prediction[:, 6:], prediction[:, :4], prediction[:, :4]
+                proto, prediction[:, 6:], prediction[:, :4], org_input_shape
             )
 
             bbox = prediction[:, :6]
@@ -341,7 +350,9 @@ def process_mask(proto, mask_in, bbox, shape):
         )[0]
         masks = masks.numpy()
         masks = _crop_mask(masks, bbox)
-    return masks >= 0.5
+    return (masks >= 0.7)
+
+
 
 
 def _crop_mask(masks, boxes):

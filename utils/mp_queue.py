@@ -1,6 +1,6 @@
 from multiprocessing import Lock as _MPLock
 from multiprocessing import Queue as _MPQueue
-
+import time, queue
 
 class QueueStopEle:
     pass
@@ -13,15 +13,15 @@ class QueueClosedError(Exception):
 class MpQueue:
     def __init__(self, max_size: int = 0) -> None:
         self.qu = _MPQueue(maxsize=max_size)
-        self.get_lk = _MPLock()
+        self.put_lk, self.get_lk = _MPLock(), _MPLock()
 
     def put(self, item, block=True, timeout=None) -> None:
-        # assert item is not _QueueStopEle
+        assert item is not QueueStopEle
         return self._put(item, block, timeout)
 
     def _put(self, item, block=True, timeout=None) -> None:
         return self.qu.put(item, block, timeout)
-
+       
     def get(self, block=True, timeout=None):
         with self.get_lk:
             if self.qu is not None:
