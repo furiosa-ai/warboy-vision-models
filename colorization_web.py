@@ -29,230 +29,274 @@ from furiosa.runtime import create_queue
 from utils.result_img_process import ImageMerger
 from utils.warboy import WarboyDevice
 
-NUM_INPUT_WORKER = 8
-
-OVERLAP = 0
-PAD = 32
-_SINGLE_PAD = PAD // 2
-
-IN_PATCH_SIZE = 256
-IN_STRIDE = IN_PATCH_SIZE - OVERLAP - PAD
-
-OUT_PATCH_SIZE = IN_PATCH_SIZE - PAD
-OUT_STRIDE = OUT_PATCH_SIZE - OVERLAP
-
-NUM_WIDTH = 1
-NUM_HEIGHT = 1
-
-INPUT_HEIGHT = NUM_HEIGHT * IN_STRIDE + OVERLAP + PAD
-INPUT_WIDTH = NUM_WIDTH * IN_STRIDE + OVERLAP + PAD
-OUTPUT_HEIGHT = NUM_HEIGHT * OUT_STRIDE + OVERLAP
-OUTPUT_WIDTH = NUM_WIDTH * OUT_STRIDE + OVERLAP
-
+# >>> EDITABLE CONFIGS >>>
+# path config
 ONNX_PATH = "colorization_after_1_best_i8_origin.onnx"
-
 DATA_PATHS = glob.glob("video/*.wmv")
 
+# data config
+IN_PATCH_SIZE = 256
+## number of patches
+NUM_WIDTH = 1
+NUM_HEIGHT = 1
+## pad size to cut off from raw output
+PAD = 32
+## size of overlap from cut offed output
+OVERLAP = 0
 
-warboy_device = WarboyDevice()
-
-
-def async_get_patch(video_Q, input_Q):
-    out = video_Q.get()
-    if not out:
-        return out
-    img, data_path = out
-    img = cv2.resize(img, (INPUT_WIDTH, INPUT_HEIGHT), interpolation=cv2.INTER_LINEAR)
-    h, w, _ = img.shape
-    for h_idx in range(NUM_HEIGHT):
-        for w_idx in range(NUM_WIDTH):
-            hh = h_idx * IN_STRIDE
-            ww = w_idx * IN_STRIDE
-
-            patch = img[hh : hh + IN_PATCH_SIZE, ww : ww + IN_PATCH_SIZE]
-            patch = patch.transpose((2, 0, 1))[::-1].copy()
-            patch = np.ascontiguousarray(np.expand_dims(patch, 0), dtype=np.uint8)
-            input_Q.put((patch, h_idx, w_idx, data_path))
-
-    return True
+# worker config
+NUM_INPUT_WORKER = 8
+# <<< EDITABLE CONFIGS <<<
 
 
-def gather_patch(img_mat):
-    num_h = len(img_mat)
-    num_w = len(img_mat[0])
+# >>> DO NOT EDIT >>>
+_SINGLE_PAD = PAD // 2
 
-    full_img = np.zeros(
-        (
-            OUTPUT_HEIGHT,
-            OUTPUT_WIDTH,
-            3,
-        )
-    )
+_IN_STRIDE = IN_PATCH_SIZE - OVERLAP - PAD
 
-    for h_idx in range(num_h):
-        for w_idx in range(num_w):
-            out_patch = img_mat[h_idx][w_idx][
-                _SINGLE_PAD : _SINGLE_PAD + OUT_PATCH_SIZE,
-                _SINGLE_PAD : _SINGLE_PAD + OUT_PATCH_SIZE,
-            ]
-            hh = h_idx * OUT_STRIDE
-            ww = w_idx * OUT_STRIDE
-            full_img[hh : hh + OUT_PATCH_SIZE, ww : ww + OUT_PATCH_SIZE] = np.add(
-                out_patch, full_img[hh : hh + OUT_PATCH_SIZE, ww : ww + OUT_PATCH_SIZE]
+_OUT_PATCH_SIZE = IN_PATCH_SIZE - PAD
+_OUT_STRIDE = _OUT_PATCH_SIZE - OVERLAP
+
+_INPUT_HEIGHT = NUM_HEIGHT * _IN_STRIDE + OVERLAP + PAD
+_INPUT_WIDTH = NUM_WIDTH * _IN_STRIDE + OVERLAP + PAD
+_OUTPUT_HEIGHT = NUM_HEIGHT * _OUT_STRIDE + OVERLAP
+_OUTPUT_WIDTH = NUM_WIDTH * _OUT_STRIDE + OVERLAP
+# <<< DO NOT EDIT <<<
+
+_warboy_device = WarboyDevice()
+
+
+class Colorizer:
+    def __init__(self):
+        self.manager = mp.Manager()
+        self.video_Q = self.manager.Queue(1024)
+        self.patch_Q = self.manager.Queue(1024)
+        self.output_Q = asyncio.Queue(1024)
+
+        self.gray_Qs = dict()
+        self.result_Qs = dict()
+        for video_path in DATA_PATHS:
+            self.gray_Qs[video_path] = self.manager.Queue(1024)
+            self.result_Qs[video_path] = self.manager.Queue(1024)
+
+    @staticmethod
+    def video_split_worker(video_path, video_Q, gray_Qs):
+        print(f"start processing {video_path}")
+
+        while True:
+            cap = cv2.VideoCapture(video_path, cv2.CAP_FFMPEG)
+            img_idx = 0
+            while True:
+                hasFrame, frame = cap.read()
+                if not hasFrame:
+                    break
+
+                img_path = os.path.join(video_path, "%010d.bmp" % (img_idx))
+                video_Q.put((frame, img_path))
+                gray_Qs[video_path].put(frame)
+                img_idx += 1
+
+            if cap.isOpened():
+                cap.release()
+        video_Q.put(None)
+        return
+
+    def launch_video_workers(self, p_executor):
+        merger = ImageMerger()
+
+        # Preprocessing
+        for video_path in DATA_PATHS:
+            print(f"Read video {video_path}")
+            p_executor.submit(
+                Colorizer.video_split_worker, video_path, self.video_Q, self.gray_Qs
+            )
+        merger_l = [
+            i
+            for zip_l in zip(list(self.result_Qs.values()), list(self.gray_Qs.values()))
+            for i in zip_l
+        ]
+        # Postprocessing
+        p_executor.submit(merger, "Pix2Pix", merger_l)
+
+    @staticmethod
+    def patch_creator(video_Q, patch_Q):
+        def create_patch():
+            out = video_Q.get()
+            if not out:
+                return out
+            img, data_path = out
+            img = cv2.resize(
+                img, (_INPUT_WIDTH, _INPUT_HEIGHT), interpolation=cv2.INTER_LINEAR
+            )
+            h, w, _ = img.shape
+            for h_idx in range(NUM_HEIGHT):
+                for w_idx in range(NUM_WIDTH):
+                    hh = h_idx * _IN_STRIDE
+                    ww = w_idx * _IN_STRIDE
+
+                    patch = img[hh : hh + IN_PATCH_SIZE, ww : ww + IN_PATCH_SIZE]
+                    patch = patch.transpose((2, 0, 1))[::-1].copy()
+                    patch = np.ascontiguousarray(
+                        np.expand_dims(patch, 0), dtype=np.uint8
+                    )
+                    patch_Q.put((patch, h_idx, w_idx, data_path))
+            return True
+
+        while create_patch():
+            pass
+
+    async def create_patch_worker(self, executor, loop):
+        print("START create_patch_worker")
+
+        exec_l = list()
+        for _ in range(NUM_INPUT_WORKER):
+            exec_l.append(
+                loop.run_in_executor(
+                    executor, Colorizer.patch_creator, self.video_Q, self.patch_Q
+                )
             )
 
-            if h_idx == 0 and w_idx == 0:
-                continue
-            if h_idx > 0:
-                full_img[hh : hh + OVERLAP, ww : ww + OUT_PATCH_SIZE] /= 2
-            if w_idx > 0:
-                full_img[hh : hh + OUT_PATCH_SIZE, ww : ww + OVERLAP] /= 2
-            if h_idx > 0 and w_idx > 0:
-                full_img[hh : hh + OVERLAP, ww : ww + OVERLAP] *= 2
+        for t in exec_l:
+            await t
 
-    return full_img
+        print("END preproc_task")
+        self.patch_Q.put(None)
+        return True
 
+    async def gather_patch_worker(self, reciever):
+        print("START gather_patch_worker")
+        await asyncio.sleep(1)
 
-def get_patch_wrapper(video_Q, patch_Q):
-    while async_get_patch(video_Q, patch_Q):
-        pass
+        def gather_patch(img_mat):
+            num_h = len(img_mat)
+            num_w = len(img_mat[0])
 
+            full_img = np.zeros(
+                (
+                    _OUTPUT_HEIGHT,
+                    _OUTPUT_WIDTH,
+                    3,
+                )
+            )
 
-async def async_create_patch(executor, loop, video_Q, patch_Q):
-    print("START async_create_patch")
+            for h_idx in range(num_h):
+                for w_idx in range(num_w):
+                    out_patch = img_mat[h_idx][w_idx][
+                        _SINGLE_PAD : _SINGLE_PAD + _OUT_PATCH_SIZE,
+                        _SINGLE_PAD : _SINGLE_PAD + _OUT_PATCH_SIZE,
+                    ]
+                    hh = h_idx * _OUT_STRIDE
+                    ww = w_idx * _OUT_STRIDE
+                    full_img[hh : hh + _OUT_PATCH_SIZE, ww : ww + _OUT_PATCH_SIZE] = (
+                        np.add(
+                            out_patch,
+                            full_img[
+                                hh : hh + _OUT_PATCH_SIZE, ww : ww + _OUT_PATCH_SIZE
+                            ],
+                        )
+                    )
 
-    exec_l = list()
-    for _ in range(NUM_INPUT_WORKER):
-        exec_l.append(
-            loop.run_in_executor(executor, get_patch_wrapper, video_Q, patch_Q)
-        )
+                    if h_idx == 0 and w_idx == 0:
+                        continue
+                    if h_idx > 0:
+                        full_img[hh : hh + OVERLAP, ww : ww + _OUT_PATCH_SIZE] /= 2
+                    if w_idx > 0:
+                        full_img[hh : hh + _OUT_PATCH_SIZE, ww : ww + OVERLAP] /= 2
+                    if h_idx > 0 and w_idx > 0:
+                        full_img[hh : hh + OVERLAP, ww : ww + OVERLAP] *= 2
 
-    for t in exec_l:
-        await t
+            return full_img
 
-    print("END preproc_task")
-    patch_Q.put(None)
-    return True
+        curr_idx = -1
+        data_path = -1
+        img_mat = dict()
+        img_mat_count = dict()
 
+        while True:
+            if await self.output_Q.get() is None:
+                return
 
-async def async_gather_patch(output_Q, result_Qs, reciever):
-    print("START async_gather_patch")
-    await asyncio.sleep(1)
+            (y_idx, x_idx, data_path), patch_out = await reciever.recv()
 
-    curr_idx = -1
-    data_path = -1
-    img_mat = dict()
-    img_mat_count = dict()
+            patch_out = patch_out[0][0]
+            patch_out = patch_out[::-1].copy()
+            patch_out = patch_out.astype(np.uint8)
+            patch_out = patch_out.squeeze().transpose((1, 2, 0))
 
-    while True:
-        if await output_Q.get() is None:
-            return
+            if curr_idx == -1:
+                curr_idx = data_path
 
-        (y_idx, x_idx, data_path), patch_out = await reciever.recv()
+            if data_path not in img_mat.keys():
+                img_mat[data_path] = [
+                    [None for _ in range(NUM_WIDTH)] for _ in range(NUM_HEIGHT)
+                ]
+                img_mat_count[data_path] = 0
 
-        patch_out = patch_out[0][0]
-        patch_out = patch_out[::-1].copy()
-        patch_out = patch_out.astype(np.uint8)
-        patch_out = patch_out.squeeze().transpose((1, 2, 0))
+            img_mat[data_path][y_idx][x_idx] = patch_out
+            img_mat_count[data_path] += 1
 
-        if curr_idx == -1:
-            curr_idx = data_path
+            if img_mat_count[data_path] >= NUM_HEIGHT * NUM_WIDTH:
+                self.result_Qs[os.path.dirname(data_path)].put(
+                    gather_patch(img_mat[data_path])
+                )
+                del img_mat[data_path]
+                del img_mat_count[data_path]
 
-        if data_path not in img_mat.keys():
-            img_mat[data_path] = [
-                [None for _ in range(NUM_WIDTH)] for _ in range(NUM_HEIGHT)
-            ]
-            img_mat_count[data_path] = 0
+        print("END gather_patch_worker")
+        return True
 
-        img_mat[data_path][y_idx][x_idx] = patch_out
-        img_mat_count[data_path] += 1
+    async def npu_worker(self, submitter):
+        print("START NPU_WORKER")
+        await asyncio.sleep(1)
 
-        if img_mat_count[data_path] >= NUM_HEIGHT * NUM_WIDTH:
-            path_name = os.path.basename(data_path)
-            path_name = os.path.splitext(path_name)[0]
-            path_dir = os.path.dirname(data_path)
-            path_dir = os.path.basename(path_dir)
-            result_Qs[os.path.dirname(data_path)].put(gather_patch(img_mat[data_path]))
-            del img_mat[data_path]
-            del img_mat_count[data_path]
+        while True:
+            input_data = self.patch_Q.get()
+            if input_data is None:
+                await self.output_Q.put(None)
+                break
 
-    print("END async_gather_patch")
-    return True
+            patch, y_idx, x_idx, data_path = input_data
 
+            await submitter.submit(patch, context=(y_idx, x_idx, data_path))
+            await self.output_Q.put(True)
+        print("END NPU_WORKER")
+        return True
 
-async def npu_worker(input_Q, output_Q, submitter):
-    print("START NPU_WORKER")
-    await asyncio.sleep(1)
+    async def run(self, p_executor):
+        loop = asyncio.get_running_loop()
 
-    while True:
-        input_data = input_Q.get()
-        if input_data is None:
-            await output_Q.put(None)
-            break
-
-        patch, y_idx, x_idx, data_path = input_data
-
-        await submitter.submit(patch, context=(y_idx, x_idx, data_path))
-        await output_Q.put(True)
-    print("END NPU_WORKER")
-    return True
-
-
-async def async_main():
-    random.seed(42)
-
-    merger = ImageMerger()
-
-    manager = mp.Manager()
-    video_Q = manager.Queue(1024)
-    patch_Q = manager.Queue(1024)
-    output_Q = asyncio.Queue(1024)
-
-    gray_Qs = dict()
-    result_Qs = dict()
-    for video_path in DATA_PATHS:
-        gray_Qs[video_path] = manager.Queue(1024)
-        result_Qs[video_path] = manager.Queue(1024)
-
-    lock = manager.Lock()
-    asyncio_lock = asyncio.Lock()
-
-    loop = asyncio.get_running_loop()
-    with ProcessPoolExecutor(32) as p_executor:
         async with create_queue(
             ONNX_PATH,
             worker_num=2,
             device="npu0pe0,npu0pe1",
         ) as (submitter, reciever):
             start = time.time()
-            for video_path in DATA_PATHS:
-                print(f"Read video {video_path}")
-                p_executor.submit(video_handler, video_path, video_Q, gray_Qs)
-            merger_l = [
-                i
-                for zip_l in zip(list(result_Qs.values()), list(gray_Qs.values()))
-                for i in zip_l
-            ]
-            p_executor.submit(merger, "Pix2Pix", merger_l)
 
-            postproc_task = asyncio.create_task(
-                async_gather_patch(output_Q, result_Qs, reciever)
-            )
-            npu_task = asyncio.create_task(npu_worker(patch_Q, output_Q, submitter))
+            self.launch_video_workers(p_executor)
+
+            postproc_task = asyncio.create_task(self.gather_patch_worker(reciever))
+            npu_task = asyncio.create_task(self.npu_worker(submitter))
             preproc_task = asyncio.create_task(
-                async_create_patch(p_executor, loop, video_Q, patch_Q)
+                self.create_patch_worker(p_executor, loop)
             )
 
             await preproc_task
             await npu_task
             await postproc_task
 
-    end = time.time()
-    total_time = end - start
+            end = time.time()
+            total_time = end - start
 
 
 class NPU_runner:
     npu_task = None
+
+    @staticmethod
+    async def run():
+        random.seed(42)
+        colorizer = Colorizer()
+        with ProcessPoolExecutor(32) as p_executor:
+            await colorizer.run(p_executor)
 
     @staticmethod
     def kill_child_processes(sig=signal.SIGTERM):
@@ -268,7 +312,7 @@ class NPU_runner:
     def startup(cls):
         if cls.npu_task:
             print("WARN: NPU runner started more than once.")
-        cls.npu_task = asyncio.create_task(async_main())
+        cls.npu_task = asyncio.create_task(NPU_runner.run())
 
     @classmethod
     def shutdown(cls):
@@ -277,28 +321,6 @@ class NPU_runner:
             return
         cls.npu_task.cancel()
         cls.kill_child_processes(signal.SIGKILL)
-
-
-def video_handler(video_path, video_Q, gray_Qs):
-    print(f"start processing {video_path}")
-
-    while True:
-        cap = cv2.VideoCapture(video_path, cv2.CAP_FFMPEG)
-        img_idx = 0
-        while True:
-            hasFrame, frame = cap.read()
-            if not hasFrame:
-                break
-
-            img_path = os.path.join(video_path, "%010d.bmp" % (img_idx))
-            video_Q.put((frame, img_path))
-            gray_Qs[video_path].put(frame)
-            img_idx += 1
-
-        if cap.isOpened():
-            cap.release()
-    video_Q.put(None)
-    return
 
 
 # >>> Web Handler >>>
@@ -347,7 +369,7 @@ async def stream():
 @app.get("/chart_data")
 async def get_data():
     def generate_data():
-        power, util, temp, se, devices = warboy_device()
+        power, util, temp, se, devices = _warboy_device()
         return jsonable_encoder(
             {"power": power, "util": util, "temp": temp, "time": se, "devices": devices}
         )
