@@ -29,7 +29,7 @@ from utils.warboy import WarboyDevice, WarboyRunner
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="templates/static"))
-warboy_device = WarboyDevice()
+warboy_device = None
 
 
 class AppRunner:
@@ -196,28 +196,37 @@ async def stream():
     )
 
 
-# 임의의 데이터 생성 함수
-def generate_data():
-    power, util, temp, se, devices = warboy_device()
+async def generate_data():
+    global warboy_device
+    if warboy_device is None:
+        warboy_device = await WarboyDevice.create()
+    power, util, temp, se, devices = await warboy_device()
     return jsonable_encoder(
         {"power": power, "util": util, "temp": temp, "time": se, "devices": devices}
     )
 
 
-# API 엔드포인트
 @app.get("/chart_data")
 async def get_data():
-    # 데이터 생성
     t1 = time.time()
-    d = generate_data()
+    d = await generate_data()
     t2 = time.time()
     await asyncio.sleep(1 - (t2 - t1))
     return JSONResponse(content=d)
 
 
+def inside_func(*args, **kwargs):
+    try:
+        uvicorn.run(*args, **kwargs)
+    except Exception as e:
+        print(e, flush=True)
+        with open("a.txt", "w") as f:
+            print(e, file=f)
+
+
 def run_web_server(port):
     proc = mp.Process(
-        target=uvicorn.run,
+        target=inside_func,
         args=("warboy_demo:app",),
         kwargs={
             "host": "0.0.0.0",
@@ -254,7 +263,6 @@ if __name__ == "__main__":
     os.makedirs(".tmp")
 
     demo_params, port = get_demo_params_from_cfg(sys.argv[1])
-
     demo_app = DemoApplication(demo_params)
     run_demo_thread(demo_app)
     proc = run_web_server(port)

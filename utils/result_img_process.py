@@ -5,17 +5,19 @@ from typing import List, Tuple
 
 import cv2
 import numpy as np
-from utils.mp_queue import *
 from furiosa.device.sync import list_devices
 
+from utils.mp_queue import *
+
+
 class ImageMerger:
-    """ 
-    """
+    """ """
+
     def __call__(
         self,
         model_names,
         result_queues,
-        full_grid_shape: Tuple[int, int] = (1080, 1920),
+        full_grid_shape: Tuple[int, int] = (720, 1280),
     ):
         demo_model_names = []
         for model_name in model_names:
@@ -47,7 +49,7 @@ class ImageMerger:
                         ending_channel += 1
                     grid_imgs.append(None)
                     continue
-                
+
                 grid_img = cv2.resize(
                     out_img,
                     (grid_shape[1], grid_shape[0]),
@@ -58,8 +60,11 @@ class ImageMerger:
 
             img = make_full_grid(grid_imgs, num_grid, grid_shape, full_grid_shape)
             output_path = ".tmp"
-            cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt),img)
-            os.rename(os.path.join(output_path, ".%010d.bmp" % cnt),os.path.join(output_path, "%010d.bmp" % cnt))
+            cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt), img)
+            os.rename(
+                os.path.join(output_path, ".%010d.bmp" % cnt),
+                os.path.join(output_path, "%010d.bmp" % cnt),
+            )
             cnt += 1
         return
 
@@ -72,13 +77,14 @@ def get_grid_info(num_channel: int, full_grid_shape: Tuple[int, int]):
     )
     return num_grid, grid_shape
 
+
 def make_full_grid(
     grid_imgs: List[np.ndarray],
     num_grid: int,
     grid_shape: Tuple[int, int],
     full_grid_shape: Tuple[int, int],
 ) -> np.ndarray:
-    pad = 10 # int(full_grid_shape[0] * 0.1)
+    pad = 10  # int(full_grid_shape[0] * 0.1)
     full_grid = np.zeros(
         (full_grid_shape[0] + pad, full_grid_shape[1] + pad, 3), np.uint8
     )
@@ -98,16 +104,15 @@ def make_full_grid(
 
     return full_grid
 
-def put_model_name_info(
-    img: np.ndarray, model_names, img_shape: Tuple[int, int]
-):
-    initial_pos = (int(img_shape[1]*0.99), int(img_shape[0]*0.01) + 75)
+
+def put_model_name_info(img: np.ndarray, model_names, img_shape: Tuple[int, int]):
+    initial_pos = (int(img_shape[1] * 0.99), int(img_shape[0] * 0.01) + 75)
     scale = max(int(0.003 * img_shape[0]), 1)
 
     for model_name in model_names:
-        model_name = "| "+model_name
+        model_name = "| " + model_name
         t_size = cv2.getTextSize(model_name, 0, fontScale=scale, thickness=scale)[0]
-        text_pos = (int(initial_pos[0]-t_size[0]//2-20), initial_pos[1]-25)
+        text_pos = (int(initial_pos[0] - t_size[0] // 2 - 20), initial_pos[1] - 25)
         img = cv2.putText(
             img,
             model_name,
@@ -118,5 +123,5 @@ def put_model_name_info(
             scale,
             cv2.LINE_AA,
         )
-        initial_pos = (text_pos[0]-10, initial_pos[1])
+        initial_pos = (text_pos[0] - 10, initial_pos[1])
     return img

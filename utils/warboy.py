@@ -7,7 +7,9 @@ import time
 from typing import List
 
 from furiosa import runtime
-from furiosa.device.sync import list_devices
+
+# from furiosa.device.sync import list_devices
+from furiosa.device import list_devices
 
 from utils.mp_queue import MpQueue, QueueClosedError
 
@@ -73,19 +75,25 @@ class WarboyRunner:
 
 class WarboyDevice:
     def __init__(self):
-        self.warboy_devices = list_devices()
+        pass
+
+    @classmethod
+    async def create(cls):
+        self = cls()
+        self.warboy_devices = await list_devices()
         self.last_pc = {}
         self.idx = 0
+        return self
 
-    def __call__(self):
-        power_info, util_info, temper_info, devices = get_warboy_info(
+    async def __call__(self):
+        power_info, util_info, temper_info, devices = await get_warboy_info(
             self.warboy_devices, self.last_pc
         )
         self.idx += 1
         return power_info, util_info, temper_info, self.idx, devices
 
 
-def get_warboy_info(devices, last_pc):
+async def get_warboy_info(devices, last_pc):
     powers = []
     utils = []
     tempers = []
@@ -96,15 +104,13 @@ def get_warboy_info(devices, last_pc):
         per_counters = device.performance_counters()
         if len(per_counters) != 0:
             fetcher = device.get_hwmon_fetcher()
-            peak_device_temper = (
-                int(str(fetcher.read_temperatures()[0]).split(" ")[-1]) // 1000
-            )
-            power_info = str(fetcher.read_powers_average()[0])
+            temper = await fetcher.read_temperatures()
+            peak_device_temper = int(str(temper[0]).split(" ")[-1]) // 1000
+            power_info = str((await fetcher.read_powers_average())[0])
             p = int(float(power_info.split(" ")[-1]) / 1000000.0)
             powers.append(p)
             tempers.append(peak_device_temper)
             dd.append(device_idx)
-
         t_utils = 0.0
         for pc in per_counters:
             pe_name = str(pc[0])
