@@ -48,7 +48,7 @@ INPUT_WIDTH = NUM_WIDTH * IN_STRIDE + OVERLAP + PAD
 OUTPUT_HEIGHT = NUM_HEIGHT * OUT_STRIDE + OVERLAP
 OUTPUT_WIDTH = NUM_WIDTH * OUT_STRIDE + OVERLAP
 
-onnx_path = "colorization_after_1_best_i8_origin.onnx"
+ONNX_PATH = "colorization_after_1_best_i8_origin.onnx"
 
 DATA_PATHS = glob.glob("video/*.wmv")
 
@@ -59,19 +59,8 @@ except:
     pass
 
 
-app = FastAPI()
 warboy_device = WarboyDevice()
 MERGER = ImageMerger()
-
-
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"))
-templates = Jinja2Templates(directory="templates")
-
-
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
 
 
 def async_get_patch(video_Q, input_Q):
@@ -235,7 +224,7 @@ async def async_main():
     loop = asyncio.get_running_loop()
     with ProcessPoolExecutor(32) as p_executor:
         async with create_queue(
-            onnx_path,
+            ONNX_PATH,
             worker_num=2,
             device="npu0pe0,npu0pe1",
         ) as (submitter, reciever):
@@ -316,25 +305,37 @@ def video_handler(video_path, video_Q, gray_Qs):
     return
 
 
-def getByteFrame():
-    cnt = 0
-    while True:
-        img_path = os.path.join(".tmp", "%010d.bmp" % cnt)
-        if not os.path.exists(img_path):
-            continue
-        out_img = cv2.imread(img_path)
-        ret, out_img = cv2.imencode(".jpg", out_img)
-        out_frame = out_img.tobytes()
-        yield (
-            b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n" + bytearray(out_frame) + b"\r\n"
-        )
-        os.remove(img_path)
-        cnt += 1
+# >>> Web Handler >>>
+
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"))
+templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/video_feed")
 async def stream():
+    def getByteFrame():
+        cnt = 0
+        while True:
+            img_path = os.path.join(".tmp", "%010d.bmp" % cnt)
+            if not os.path.exists(img_path):
+                continue
+            out_img = cv2.imread(img_path)
+            ret, out_img = cv2.imencode(".jpg", out_img)
+            out_frame = out_img.tobytes()
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + bytearray(out_frame) + b"\r\n"
+            )
+            os.remove(img_path)
+            cnt += 1
+
     return StreamingResponse(
         getByteFrame(), media_type="multipart/x-mixed-replace; boundary=frame"
     )
