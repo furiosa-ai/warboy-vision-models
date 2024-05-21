@@ -4,6 +4,7 @@ import multiprocessing as mp
 import os
 import random
 import shutil
+import signal
 import time
 from concurrent.futures import (
     ALL_COMPLETED,
@@ -15,6 +16,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import psutil
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.encoders import jsonable_encoder
@@ -264,10 +266,32 @@ async def async_main():
     total_time = end - start
 
 
-def make_ending_signal(output_path, idx):
-    end_file = Path(os.path.join(output_path, "%010d.csv" % idx))
-    end_file.touch(exist_ok=True)
-    return
+class NPU_runner:
+    npu_task = None
+
+    @staticmethod
+    def kill_child_processes(sig=signal.SIGTERM):
+        try:
+            parent = psutil.Process(os.getpid())
+        except psutil.NoSuchProcess:
+            return
+        children = parent.children(recursive=True)
+        for process in children:
+            process.send_signal(sig)
+
+    @classmethod
+    def startup(cls):
+        if cls.npu_task:
+            print("WARN: NPU runner started more than once.")
+        cls.npu_task = asyncio.create_task(async_main())
+
+    @classmethod
+    def shutdown(cls):
+        if not cls.npu_task:
+            print("WARN: NPU runner not started yet. Ignore stopping NPU runner")
+            return
+        cls.npu_task.cancel()
+        cls.kill_child_processes(signal.SIGKILL)
 
 
 def video_handler(video_path, video_Q, gray_Qs):
@@ -316,22 +340,26 @@ async def stream():
     )
 
 
-def generate_data():
-    power, util, temp, se, devices = warboy_device()
-    return jsonable_encoder(
-        {"power": power, "util": util, "temp": temp, "time": se, "devices": devices}
-    )
-
-
 @app.get("/chart_data")
 async def get_data():
+    def generate_data():
+        power, util, temp, se, devices = warboy_device()
+        return jsonable_encoder(
+            {"power": power, "util": util, "temp": temp, "time": se, "devices": devices}
+        )
+
     d = generate_data()
     return JSONResponse(content=d)
 
 
 @app.on_event("startup")
 async def init_npu_runner():
-    asyncio.create_task(async_main())
+    NPU_runner.startup()
+
+
+@app.on_event("shutdown")
+async def destroy_npu_runner():
+    NPU_runner.shutdown()
 
 
 if __name__ == "__main__":
