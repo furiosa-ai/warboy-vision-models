@@ -12,6 +12,7 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     wait,
 )
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import cv2
@@ -303,7 +304,14 @@ def video_handler(video_path, video_Q, gray_Qs):
 # >>> Web Handler >>>
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    NPU_runner.startup()
+    yield
+    NPU_runner.shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"))
 templates = Jinja2Templates(directory="templates")
 
@@ -346,16 +354,6 @@ async def get_data():
 
     d = generate_data()
     return JSONResponse(content=d)
-
-
-@app.on_event("startup")
-async def init_npu_runner():
-    NPU_runner.startup()
-
-
-@app.on_event("shutdown")
-async def destroy_npu_runner():
-    NPU_runner.shutdown()
 
 
 if __name__ == "__main__":
