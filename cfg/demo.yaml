@@ -1,27 +1,19 @@
 app_config:
-  - application: 
+  - application:
       - object_detection
-      #- instance_segmentation
-    model_config: 
-      - ./cfg/object_detection_model.yaml
-      #- ./cfg/instance_segmentation_model.yaml
-    model_path: 
-      - yolov8s_od.enf
-      #- yolov9c-seg_person_2.enf
+      - instance_segmentation
+    model_config:
+      - ./cfg/face_model_config.yaml
+      - ./cfg/instance_segmentation_model.yaml
+    model_path:
+      - yolov8n-face.enf
+      - yolov9c_seg_person_single_pe.enf
     num_worker: 8
-    device: 
+    device:
       - npu0pe0
-      #- npu0pe1
+      - npu0pe1
     video_path:
-      #- /home/ubuntu/demo_videos/input_videos_4/Car_1.mp4
-      - /home/ubuntu/demo_videos/input_videos_4/Car_3.mp4
       - /home/ubuntu/demo_videos/input_videos_4/Basket_5.mp4
       - /home/ubuntu/demo_videos/input_videos_4/Box_1.mp4
-      - /home/ubuntu/demo_videos/input_videos_4/Box_3.mp4
-      ##- /home/ubuntu/demo_videos/input_videos_4/Box_4.mp4
-      #- /home/ubuntu/demo_videos/input_videos_4/Foot_1.mp4
-      #- /home/ubuntu/demo_videos/input_videos_4/Foot_2.mp4
-      #- /home/ubuntu/demo_videos/input_videos_4/Foot_2.mp4
-      #- /home/ubuntu/demo_videos/input_videos_4/Foot_2.mp
 port: 20001
-recursive: 1 # 
+recursive: 1 #

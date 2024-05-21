@@ -23,6 +23,7 @@ class JobHandler:
         for proc in self.handlers:
             proc.join()
 
+
 class InputHandler(JobHandler):
     def __init__(
         self,
@@ -35,7 +36,12 @@ class InputHandler(JobHandler):
         self.video_handlers = [
             mp.Process(
                 target=self.video_to_input,
-                args=(input_video_path, video_idx, input_queues[video_idx], frame_queues[video_idx]),
+                args=(
+                    input_video_path,
+                    video_idx,
+                    input_queues[video_idx],
+                    frame_queues[video_idx],
+                ),
             )
             for video_idx, input_video_path in enumerate(input_video_paths)
         ]
@@ -44,30 +50,35 @@ class InputHandler(JobHandler):
         self.preprocessor = preprocessor  # Preprocessor for Input of Model
 
     def video_to_input(
-        self, input_video_path: str, video_idx: int, input_queue: Tuple[MpQueue, MpQueue], frame_queue: MpQueue
+        self,
+        input_video_path: str,
+        video_idx: int,
+        input_queue: Tuple[MpQueue, MpQueue],
+        frame_queue: MpQueue,
     ) -> None:
         video_name = get_video_name(input_video_path)
         img_idx = 0
         while True:
             if ".mp4" in input_video_path:
-                cap = cv2.VideoCapture(input_video_path, cv2.CAP_FFMPEG) # video file
+                cap = cv2.VideoCapture(input_video_path, cv2.CAP_FFMPEG)  # video file
             else:
-                cap = cv2.VideoCapture(0) # webcam
+                cap = cv2.VideoCapture(0)  # webcam
             while True:
                 hasFrame, frame = cap.read()
                 if not hasFrame:
                     break
                 frame_queue.put(frame)
-                
+
                 for input_shape, iq in zip(self.input_shape, input_queue):
                     input_, contexts = self.preprocessor(frame, input_shape)
                     iq.put((input_, contexts, img_idx, video_idx))
                 img_idx += 1
-                
+
             if cap.isOpened():
                 cap.release()
         print(f"{video_idx}th-Video Process End..")
         return
+
 
 class OutputHandler(JobHandler):
     def __init__(
@@ -82,7 +93,12 @@ class OutputHandler(JobHandler):
         self.output_handlers = [
             mp.Process(
                 target=self.output_to_img,
-                args=(input_video_path, output_queues[video_idx], frame_queues[video_idx], result_queues[video_idx]),
+                args=(
+                    input_video_path,
+                    output_queues[video_idx],
+                    frame_queues[video_idx],
+                    result_queues[video_idx],
+                ),
             )
             for video_idx, input_video_path in enumerate(input_video_paths)
         ]
@@ -91,16 +107,43 @@ class OutputHandler(JobHandler):
         self.num_handler_process = 1
         self.draw_fps = draw_fps
 
-    def output_to_img(self, input_video_path: str, output_queue: MpQueue, frame_queue: MpQueue, result_queue: MpQueue):
-        current_idx = mp.Value("i",0)
-        output_handler_processes = [mp.Process(target=self._output_to_img, args = (input_video_path, output_queue, frame_queue, result_queue, idx, current_idx)) for idx in range(self.num_handler_process)]
+    def output_to_img(
+        self,
+        input_video_path: str,
+        output_queue: MpQueue,
+        frame_queue: MpQueue,
+        result_queue: MpQueue,
+    ):
+        current_idx = mp.Value("i", 0)
+        output_handler_processes = [
+            mp.Process(
+                target=self._output_to_img,
+                args=(
+                    input_video_path,
+                    output_queue,
+                    frame_queue,
+                    result_queue,
+                    idx,
+                    current_idx,
+                ),
+            )
+            for idx in range(self.num_handler_process)
+        ]
         for proc in output_handler_processes:
             proc.start()
 
         for proc in output_handler_processes:
             proc.join()
 
-    def _output_to_img(self, input_video_path: str, output_queue: MpQueue, frame_queue: MpQueue, result_queue: MpQueue, current_idx, cidx):
+    def _output_to_img(
+        self,
+        input_video_path: str,
+        output_queue: MpQueue,
+        frame_queue: MpQueue,
+        result_queue: MpQueue,
+        current_idx,
+        cidx,
+    ):
         video_name = get_video_name(input_video_path)
 
         max_ = 0
@@ -114,7 +157,7 @@ class OutputHandler(JobHandler):
 
         while True:
             outputs = []
-            #while True:
+            # while True:
             #    if cidx.value % self.num_handler_process == current_idx:
             #        break
             #    continue
@@ -127,21 +170,22 @@ class OutputHandler(JobHandler):
 
             img = frame_queue.get()
             ## Make output image from predictions
-            for postproc, (predictions, contexts, _) in zip(self.postprocessor, outputs):
+            for postproc, (predictions, contexts, _) in zip(
+                self.postprocessor, outputs
+            ):
                 img = postproc(predictions, contexts, img)
-            
+
             if self.draw_fps:
                 elapsed_time = time.time() - start_time
                 if elapsed_time > 0.3:
                     FPS = (completed - last) / elapsed_time
                     start_time = time.time()
                     last = completed
-                h,w,c = img.shape
-                dh = int(h*0.1)
-                dummy_img = np.zeros((h+dh, w, c)).astype(np.uint8)
+                h, w, c = img.shape
+                dh = int(h * 0.1)
+                dummy_img = np.zeros((h + dh, w, c)).astype(np.uint8)
                 dummy_img[dh:, :, :] = img
                 img = put_fps_to_img(dummy_img, FPS)
-
             result_queue.put(img)
 
             completed += self.num_handler_process
@@ -155,9 +199,8 @@ def get_video_name(video_path: str) -> str:
 
 def put_fps_to_img(output_img: np.ndarray, FPS: float):
     h, w, _ = output_img.shape
-    org = (int(0.05 * h), int(0.05 * w)-5)
-    scale = int(org[1] * 0.1)
-
+    org = (int(0.01 * h), int(0.05 * w) - 5)
+    scale = min(int(org[1] * 0.1), 3)
     output_img = cv2.putText(
         output_img,
         f"FPS: {FPS:.2f}",

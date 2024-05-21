@@ -9,8 +9,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'IBMPlexSans Italic';
+            src: url("/static/IBMPlexSans-Italic.ttf") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'IBMPlexSans BoldItalic';
+            src: url("/static/IBMPlexSans-BoldItalic.ttf") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'IBMPlexSans Light';
+            src: url("/static/IBMPlexSans-Light.ttf") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         * {
-            font-family: 'Noto Sans KR', sans-serif;
+            font-family: 'Noto Sans KR', 'IBMPlexSans Italic', 'IBMPlexSans BoldItalic', 'IBMPlexSans Light', sans-serif;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -40,11 +61,11 @@
         </style>
         <img src="/static/img/Furiosa_AI_h_w.svg" alt="Why" class="logo_image">
         <span
-            style="margin-top: -0.4%; font-family: 'Noto Sans KR' !important; color:white; text-align: left; margin-left: 3%; font-size: 2.5rem; align-content: center;">
+            style="margin-top: 0.2%; font-family: 'IBMPlexSans BoldItalic' !important; color:white; text-align: left; margin-left: 1%; font-size: 2.5rem; align-content: center;">
             WARBOY Demo
         </span>
     </header>
-    <div style="display: flex; justify-content: left; background-color: black; margin-top: 1.5%;">
+    <div style="display: flex; justify-content: left; background-color: black; margin-top: 1.5%; width: 95%;">
         <div style="margin-left: 2%;">
             <div>
                 <img src="/video_feed" alt="Inference Image" class="demo_image">
@@ -52,15 +73,15 @@
         </div>
         <div style="display: grid; justify-content: left; background-color: black; margin-top: -2%">
             <div>
-                <p style="color:white; text-align: left;">NPU Power (W)</p>
+                <p style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Power (W)</p>
                 <canvas id="power" class="graph"></canvas>
             </div>
             <div>
-                <p style="color:white; text-align: left;">NPU Utilization (%)</p>
+                <p style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Utilization (%)</p>
                 <canvas id="util" class="graph"></canvas>
             </div>
             <div>
-                <p style="color:white; text-align: left;">NPU Temperature (°C)</p>
+                <p style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Temperature (°C)</p>
                 <canvas id="temp" class="graph"></canvas>
             </div>
         </div>
@@ -106,7 +127,7 @@
             data: power_data,
             options: {
                 animation: {
-                    duration: 200,
+                    duration: 300,
                 },
                 datasets: {
                     line: {
@@ -125,7 +146,7 @@
             data: util_data,
             options: {
                 animation: {
-                    duration: 200,
+                    duration: 300,
                 },
                 datasets: {
                     line: {
@@ -145,7 +166,7 @@
             data: temp_data,
             options: {
                 animation: {
-                    duration: 200,
+                    duration: 300,
                 },
                 datasets: {
                     line: {
@@ -172,7 +193,7 @@
                     var sec = newData.time;
                     var devices = newData.devices;
                     var len = devices.length;
-                    var maxDataPoints = 10;
+                    var maxDataPoints = 20;
 
                     for (var idx = 0; idx < len; idx++) {
                         device = devices[idx];
@@ -244,9 +265,6 @@
                             t = temp_data.datasets[data_idx].data.shift();
                         }
                     }
-                    //myChart_1.update('none');
-                    //myChart_2.update('none');
-                    //myChart_3.update('none');
                     myChart_1.update();
                     myChart_2.update();
                     myChart_3.update();

@@ -7,7 +7,6 @@ import torch.nn.functional as F
 
 from utils.postprocess_func.cbox_decode import yolov5_box_decode, yolov8_box_decode
 from utils.postprocess_func.cpose_decode import yolov5_pose_decode, yolov8_pose_decode
-from utils.postprocess_func.cseg_decode import yolov8_segmentation_decode
 from utils.postprocess_func.nms import non_max_suppression
 from utils.postprocess_func.tracking.bytetrack import ByteTrack
 
@@ -213,7 +212,7 @@ class InsSegDecoder(YOLO_Decoder):
             for p in prediction:
                 if int(p[5]) == 0:
                     tmp_prediction.append(p)
-            if len(tmp_prediction)==0:
+            if len(tmp_prediction) == 0:
                 return [(np.array([]), np.array([]))]
 
             prediction = np.array(tmp_prediction)
@@ -222,8 +221,14 @@ class InsSegDecoder(YOLO_Decoder):
                 prediction[:, :4], ratio, dwdh, org_input_shape
             )  # Box Result
             ins_masks = process_mask(
-                proto, prediction[:, 6:], prediction[:, :4], org_input_shape
+                torch.from_numpy(proto),
+                torch.from_numpy(prediction[:, 6:]),
+                prediction[:, :4],
+                org_input_shape,
             )
+            # ins_masks = process_mask(
+            #    proto, prediction[:, 6:], prediction[:, :4], org_input_shape
+            # )
 
             bbox = prediction[:, :6]
             if self.tracker is not None:
@@ -343,16 +348,15 @@ def scale_coords(
 
 def process_mask(proto, mask_in, bbox, shape):
     c, mh, mw = proto.shape
-    masks = yolov8_segmentation_decode(mask_in, proto)
+    # masks = yolov8_segmentation_decode(mask_in, proto)
+    masks = (mask_in @ proto.view(c, -1)).sigmoid().view(-1, mh, mw)
     if len(masks) != 0:
-        masks = F.interpolate(
-            torch.from_numpy(masks[None]), shape, mode="bilinear", align_corners=False
-        )[0]
+        masks = F.interpolate(masks[None], shape, mode="bilinear", align_corners=False)[
+            0
+        ]
         masks = masks.numpy()
         masks = _crop_mask(masks, bbox)
-    return (masks >= 0.7)
-
-
+    return masks >= 0.5
 
 
 def _crop_mask(masks, boxes):

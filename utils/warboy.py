@@ -1,5 +1,6 @@
 import asyncio
 import os
+import queue
 import subprocess
 import threading
 import time
@@ -7,8 +8,8 @@ from typing import List
 
 from furiosa import runtime
 from furiosa.device.sync import list_devices
-from utils.mp_queue import MpQueue, QueueClosedError
 
+from utils.mp_queue import MpQueue, QueueClosedError
 
 
 class WarboyRunner:
@@ -19,16 +20,24 @@ class WarboyRunner:
         self.worker_num = worker_num
         self.device = device
 
-    def __call__(self, input_queue: MpQueue, output_queues: List[MpQueue], model_idx: int):
+    def __call__(
+        self, input_queue: MpQueue, output_queues: List[MpQueue], model_idx: int
+    ):
         asyncio.run(self.runner(input_queue, output_queues, model_idx))
 
-    async def runner(self, input_queue: MpQueue, output_queues: List[MpQueue], model_idx: int):
+    async def runner(
+        self, input_queue: MpQueue, output_queues: List[MpQueue], model_idx: int
+    ):
         async with runtime.create_queue(
             model=self.model_path, worker_num=self.worker_num, device=self.device
         ) as (submitter, receiver):
             len_videos = len(output_queues)
-            submit_task = asyncio.create_task(self.submit_with(submitter, input_queue, len_videos, model_idx))
-            recv_task = asyncio.create_task(self.recv_with(receiver, output_queues, model_idx))
+            submit_task = asyncio.create_task(
+                self.submit_with(submitter, input_queue, len_videos, model_idx)
+            )
+            recv_task = asyncio.create_task(
+                self.recv_with(receiver, output_queues, model_idx)
+            )
             await submit_task
             await recv_task
 
@@ -36,29 +45,31 @@ class WarboyRunner:
         idx = 0
         while True:
             try:
-                input_, contexts, img_idx, video_idx = input_queue[idx%len_videos][model_idx].get()
+                while True:
+                    try:
+                        input_, contexts, img_idx, video_idx = input_queue[
+                            idx % len_videos
+                        ][model_idx].get(False)
+                        break
+                    except queue.Empty:
+                        await asyncio.sleep(0)
+
             except QueueClosedError:
                 break
-                
+
             await submitter.submit(input_, context=(contexts, img_idx, video_idx))
             idx += 1
 
     async def recv_with(self, receiver, output_queues, model_idx):
         queue_len = len(output_queues[0][0])
         while True:
-            async def recv():
-                context, outputs = await receiver.recv()
-                return context, outputs
-            
             try:
-                recv_task = asyncio.create_task(recv())
-                (contexts, img_idx, video_idx), outputs = await asyncio.wait_for(
-                    recv_task, timeout=0.5
-                )
+                (contexts, img_idx, video_idx), outputs = await receiver.recv()
             except asyncio.TimeoutError:
                 break
             output_queue = output_queues[video_idx][model_idx]
             output_queue[img_idx % queue_len].put((outputs, contexts, img_idx))
+
 
 class WarboyDevice:
     def __init__(self):
@@ -67,7 +78,9 @@ class WarboyDevice:
         self.idx = 0
 
     def __call__(self):
-        power_info, util_info, temper_info, devices = get_warboy_info(self.warboy_devices, self.last_pc)
+        power_info, util_info, temper_info, devices = get_warboy_info(
+            self.warboy_devices, self.last_pc
+        )
         self.idx += 1
         return power_info, util_info, temper_info, self.idx, devices
 
@@ -83,7 +96,9 @@ def get_warboy_info(devices, last_pc):
         per_counters = device.performance_counters()
         if len(per_counters) != 0:
             fetcher = device.get_hwmon_fetcher()
-            peak_device_temper = int(str(fetcher.read_temperatures()[0]).split(" ")[-1])//1000
+            peak_device_temper = (
+                int(str(fetcher.read_temperatures()[0]).split(" ")[-1]) // 1000
+            )
             power_info = str(fetcher.read_powers_average()[0])
             p = int(float(power_info.split(" ")[-1]) / 1000000.0)
             powers.append(p)
@@ -103,7 +118,7 @@ def get_warboy_info(devices, last_pc):
                 t_utils += util
 
             last_pc[pe_name] = cur_pc
-        
+
         if len(per_counters) != 0:
             t_utils = int(t_utils * 100.0)
             utils.append(t_utils)
