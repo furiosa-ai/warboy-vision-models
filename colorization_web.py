@@ -52,15 +52,8 @@ ONNX_PATH = "colorization_after_1_best_i8_origin.onnx"
 
 DATA_PATHS = glob.glob("video/*.wmv")
 
-try:
-    shutil.rmtree(".tmp")
-    Path(".tmp").mkdir(parents=True, exist_ok=True)
-except:
-    pass
-
 
 warboy_device = WarboyDevice()
-MERGER = ImageMerger()
 
 
 def async_get_patch(video_Q, input_Q):
@@ -207,6 +200,8 @@ async def npu_worker(input_Q, output_Q, submitter):
 async def async_main():
     random.seed(42)
 
+    merger = ImageMerger()
+
     manager = mp.Manager()
     video_Q = manager.Queue(1024)
     patch_Q = manager.Queue(1024)
@@ -237,7 +232,7 @@ async def async_main():
                 for zip_l in zip(list(result_Qs.values()), list(gray_Qs.values()))
                 for i in zip_l
             ]
-            p_executor.submit(MERGER, "Pix2Pix", merger_l)
+            p_executor.submit(merger, "Pix2Pix", merger_l)
 
             postproc_task = asyncio.create_task(
                 async_gather_patch(output_Q, result_Qs, reciever)
@@ -364,4 +359,9 @@ async def destroy_npu_runner():
 
 
 if __name__ == "__main__":
+    try:
+        shutil.rmtree(".tmp")
+        Path(".tmp").mkdir(parents=True, exist_ok=True)
+    except:
+        pass
     uvicorn.run(app="colorization_web:app", host="0.0.0.0", port=20005, reload=False)
