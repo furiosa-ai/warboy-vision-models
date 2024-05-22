@@ -387,5 +387,4 @@ if __name__ == "__main__":
         )
     except:
         pass
-    finally:
-        NPU_runner.kill_child_processes(signal.SIGKILL)
+    NPU_runner.kill_child_processes(signal.SIGKILL)
