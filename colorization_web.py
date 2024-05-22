@@ -382,6 +382,10 @@ if __name__ == "__main__":
     try:
         shutil.rmtree(".tmp")
         Path(".tmp").mkdir(parents=True, exist_ok=True)
+        uvicorn.run(
+            app="colorization_web:app", host="0.0.0.0", port=20005, reload=False
+        )
     except:
         pass
-    uvicorn.run(app="colorization_web:app", host="0.0.0.0", port=20005, reload=False)
+    finally:
+        NPU_runner.kill_child_processes(signal.SIGKILL)
