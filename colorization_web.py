@@ -319,8 +319,8 @@ class NPU_runner:
         if not cls.npu_task:
             print("WARN: NPU runner not started yet. Ignore stopping NPU runner")
             return
-        cls.npu_task.cancel()
         cls.kill_child_processes(signal.SIGKILL)
+        # cls.npu_task.cancel()
 
 
 # >>> Web Handler >>>
