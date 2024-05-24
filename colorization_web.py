@@ -112,7 +112,7 @@ class Colorizer:
             )
         merger_l = [
             i
-            for zip_l in zip(list(self.result_Qs.values()), list(self.gray_Qs.values()))
+            for zip_l in zip(list(self.gray_Qs.values()), list(self.result_Qs.values()))
             for i in zip_l
         ]
         # Postprocessing
@@ -368,13 +368,18 @@ async def stream():
 
 @app.get("/chart_data")
 async def get_data():
-    def generate_data():
-        power, util, temp, se, devices = _warboy_device()
+    async def generate_data():
+        if warboy_device is None:
+            warboy_device = await WarboyDevice.create()
+        power, util, temp, se, devices = await warboy_device()
         return jsonable_encoder(
             {"power": power, "util": util, "temp": temp, "time": se, "devices": devices}
         )
 
-    d = generate_data()
+    t1 = time.time()
+    d = await generate_data()
+    t2 = time.time()
+    await asyncio.sleep(1 - (t2 - t1))
     return JSONResponse(content=d)
 
 
