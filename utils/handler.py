@@ -3,12 +3,12 @@ import os
 import subprocess
 import time
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 
 import cv2
 import numpy as np
 
-from utils.mp_queue import MpQueue, QueueClosedError
+from utils.mp_queue import MpQueue, QueueClosedError, QueueStopEle
 
 
 class JobHandler:
@@ -27,7 +27,7 @@ class JobHandler:
 class InputHandler(JobHandler):
     def __init__(
         self,
-        input_video_paths: List[str],
+        input_videos_info: List[str],
         input_queues: List[Tuple[MpQueue, MpQueue]],
         frame_queues: List[MpQueue],
         preprocessor,
@@ -37,13 +37,15 @@ class InputHandler(JobHandler):
             mp.Process(
                 target=self.video_to_input,
                 args=(
-                    input_video_path,
+                    input_video_info["input_path"],
                     video_idx,
                     input_queues[video_idx],
                     frame_queues[video_idx],
+                    input_video_info["type"],
+                    input_video_info["recursive"]
                 ),
             )
-            for video_idx, input_video_path in enumerate(input_video_paths)
+            for video_idx, input_video_info in enumerate(input_videos_info)
         ]
         super().__init__(self.video_handlers)
         self.input_shape = input_shape  # Shape for Model
@@ -55,27 +57,42 @@ class InputHandler(JobHandler):
         video_idx: int,
         input_queue: Tuple[MpQueue, MpQueue],
         frame_queue: MpQueue,
+        video_type: str = "file",
+        recursive: bool = True,
     ) -> None:
         video_name = get_video_name(input_video_path)
         img_idx = 0
         while True:
-            if ".mp4" in input_video_path:
+            if video_type == "file":
+                if not os.path.exists(input_video_path):
+                    raise Exception(f"{input_video_path} Video File is not found !!")
                 cap = cv2.VideoCapture(input_video_path, cv2.CAP_FFMPEG)  # video file
+            elif video_type == "webcam":
+                cap = cv2.VideoCapture(int(input_video_path))  # webcam
             else:
-                cap = cv2.VideoCapture(0)  # webcam
+                raise Exception(f"This {video_type} type is currently not supported !!")
+            
             while True:
                 hasFrame, frame = cap.read()
                 if not hasFrame:
                     break
+
                 frame_queue.put(frame)
 
                 for input_shape, iq in zip(self.input_shape, input_queue):
                     input_, contexts = self.preprocessor(frame, input_shape)
                     iq.put((input_, contexts, img_idx, video_idx))
                 img_idx += 1
-
+            
             if cap.isOpened():
                 cap.release()
+
+            if not recursive:
+                frame_queue.put(QueueStopEle)
+                for iq in input_queue:
+                    iq.put(QueueStopEle)
+                break
+
         print(f"{video_idx}th-Video Process End..")
         return
 
@@ -83,7 +100,7 @@ class InputHandler(JobHandler):
 class OutputHandler(JobHandler):
     def __init__(
         self,
-        input_video_paths: List[str],
+        input_videos_info: List[Dict[str, Any]],
         output_queues: List[Tuple[MpQueue, MpQueue]],
         frame_queues: List[MpQueue],
         result_queues: List[MpQueue],
@@ -94,13 +111,13 @@ class OutputHandler(JobHandler):
             mp.Process(
                 target=self.output_to_img,
                 args=(
-                    input_video_path,
+                    input_video_info["input_path"],
                     output_queues[video_idx],
                     frame_queues[video_idx],
                     result_queues[video_idx],
                 ),
             )
-            for video_idx, input_video_path in enumerate(input_video_paths)
+            for video_idx, input_video_info in enumerate(input_videos_info)
         ]
         super().__init__(self.output_handlers)
         self.postprocessor = postprocessor
@@ -157,18 +174,15 @@ class OutputHandler(JobHandler):
 
         while True:
             outputs = []
-            # while True:
-            #    if cidx.value % self.num_handler_process == current_idx:
-            #        break
-            #    continue
+
+            try:
+                img = frame_queue.get()
+            except QueueClosedError:
+                break
 
             for oq in output_queue:
-                try:
-                    outputs.append(oq[completed % q_len].get())
-                except QueueClosedError:
-                    break
+                outputs.append(oq[completed % q_len].get())
 
-            img = frame_queue.get()
             ## Make output image from predictions
             for postproc, (predictions, contexts, _) in zip(
                 self.postprocessor, outputs
@@ -190,6 +204,8 @@ class OutputHandler(JobHandler):
 
             completed += self.num_handler_process
             cidx.value += 1
+        
+        result_queue.put(QueueStopEle)
         return
 
 

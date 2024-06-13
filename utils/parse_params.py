@@ -37,7 +37,7 @@ def get_demo_params_from_cfg(cfg: str):
                     "model_path": app_config["model_path"],
                     "worker_num": int(app_config["num_worker"]),
                     "warboy_device": app_config["device"],
-                    "video_paths": app_config["video_path"],
+                    "videos_info": app_config["videos_info"],
                 }
             ) 
     return app_params, port,

@@ -27,7 +27,6 @@ class ImageMerger:
         ending_channel = 0
 
         num_grid, grid_shape = get_grid_info(num_channel, full_grid_shape)
-
         img_idx = [0 for _ in range(num_channel)]
         states = [True for _ in range(num_channel)]
         cnt = 0
@@ -40,14 +39,18 @@ class ImageMerger:
             grid_imgs = []
 
             while c_idx < num_channel:
+                if not states[c_idx]:
+                    grid_imgs.append(None)
+                    c_idx += 1
+                    continue
                 try:
                     out_img = result_queues[c_idx].get()
                 except QueueClosedError:
-                    c_idx += 1
                     if states[c_idx]:
                         states[c_idx] = False
                         ending_channel += 1
                     grid_imgs.append(None)
+                    c_idx += 1
                     continue
 
                 grid_img = cv2.resize(
@@ -66,6 +69,8 @@ class ImageMerger:
                 os.path.join(output_path, "%010d.bmp" % cnt),
             )
             cnt += 1
+        
+        cv2.imwrite(os.path.join(output_path, "%010d.bmp_" % (cnt-1)), img)
         return
 
 

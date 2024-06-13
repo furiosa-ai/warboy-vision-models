@@ -11,7 +11,7 @@ from furiosa import runtime
 # from furiosa.device.sync import list_devices
 from furiosa.device import list_devices
 
-from utils.mp_queue import MpQueue, QueueClosedError
+from utils.mp_queue import MpQueue, QueueClosedError, QueueStopEle
 
 
 class WarboyRunner:
@@ -45,33 +45,52 @@ class WarboyRunner:
 
     async def submit_with(self, submitter, input_queue, len_videos, model_idx):
         idx = 0
-        while True:
-            try:
-                while True:
-                    try:
-                        input_, contexts, img_idx, video_idx = input_queue[
-                            idx % len_videos
-                        ][model_idx].get(False)
-                        break
-                    except queue.Empty:
-                        await asyncio.sleep(0)
+        states = [True for _ in range(len_videos)]
+        num_stop_queue = 0
 
-            except QueueClosedError:
-                break
-
-            await submitter.submit(input_, context=(contexts, img_idx, video_idx))
+        while num_stop_queue < len_videos:
+            get_item = states[idx % len_videos]
+            while get_item:
+                try:
+                    input_, contexts, img_idx, video_idx = input_queue[
+                        idx % len_videos
+                    ][model_idx].get(False)
+                    break
+                except queue.Empty:
+                    await asyncio.sleep(0)
+                except QueueClosedError:
+                    if states[idx % len_videos]:
+                        states[idx % len_videos] = False
+                        num_stop_queue += 1
+                        get_item = False
+                    break
             idx += 1
+            if not get_item:
+                continue
+            await submitter.submit(input_, context=(contexts, img_idx, video_idx))
+
 
     async def recv_with(self, receiver, output_queues, model_idx):
+        async def recv():
+            context, outputs = await receiver.recv()
+            return context, outputs
+
         queue_len = len(output_queues[0][0])
         while True:
             try:
-                (contexts, img_idx, video_idx), outputs = await receiver.recv()
+                recv_task = asyncio.create_task(recv())
+                (contexts, img_idx, video_idx), outputs = await asyncio.wait_for(
+                    recv_task, timeout=1
+                )
             except asyncio.TimeoutError:
                 break
             output_queue = output_queues[video_idx][model_idx]
             output_queue[img_idx % queue_len].put((outputs, contexts, img_idx))
-
+        
+        for output_queue in output_queues:
+            for output_q in output_queue:
+                for oq in output_q:
+                    oq.put(QueueStopEle)
 
 class WarboyDevice:
     def __init__(self):

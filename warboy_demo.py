@@ -31,20 +31,19 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="templates/static"))
 warboy_device = None
 
-
 class AppRunner:
     def __init__(self, param, result_queues):
         self.app_type = param["app"]
-        self.video_paths = param["video_paths"]
+        self.videos_info = param["videos_info"]
         self.runtime_params = param["runtime_params"]
         self.input_queues = [
             [MpQueue(25) for _ in range(len(self.app_type))]
-            for _ in range(len(self.video_paths))
+            for _ in range(len(self.videos_info))
         ]
-        self.frame_queues = [MpQueue(50) for _ in range(len(self.video_paths))]
+        self.frame_queues = [MpQueue(50) for _ in range(len(self.videos_info))]
         self.output_queues = [
             [[MpQueue(50) for _ in range(5)] for _ in range(len(self.app_type))]
-            for _ in range(len(self.video_paths))
+            for _ in range(len(self.videos_info))
         ]
         self.result_queues = result_queues
         self.furiosa_runtimes = [
@@ -68,14 +67,14 @@ class AppRunner:
         ]
 
         self.input_handler = InputHandler(
-            self.video_paths,
+            self.videos_info,
             self.input_queues,
             self.frame_queues,
             self.preprocessor,
             param["input_shape"],
         )
         self.output_handler = OutputHandler(
-            self.video_paths,
+            self.videos_info,
             self.output_queues,
             self.frame_queues,
             self.result_queues,
@@ -99,24 +98,11 @@ class AppRunner:
         for warboy_runtime_process in warboy_runtime_processes:
             warboy_runtime_process.start()
         self.output_handler.start()
-        self.input_handler.join()
-        for input_q in self.input_queues:
-            for iq in input_q:
-                iq.put(QueueStopEle)
-
-        for frame_queue in self.frame_queues:
-            frame_queue.put(QueueStopEle)
-
         for warboy_runtime_process in warboy_runtime_processes:
             warboy_runtime_process.join()
-        for output_queue in self.output_queues:
-            for oq in output_queue:
-                for o in oq:
-                    o.put(QueueStopEle)
+        
         self.output_handler.join()
 
-        for result_queue in self.result_queues:
-            result_queue.put(QueueStopEle)
 
         print(f"Application -> {self.app_type} End!!")
 
@@ -132,7 +118,7 @@ class DemoApplication:
             for demo_param in self.demo_params
         ]
         for param in self.demo_params:
-            app_result_queues = [MpQueue(50) for _ in range(len(param["video_paths"]))]
+            app_result_queues = [MpQueue(50) for _ in range(len(param["videos_info"]))]
             self.app_runners.append(AppRunner(param, app_result_queues))
             self.result_queues += app_result_queues
 
@@ -167,6 +153,7 @@ def run_demo_thread(demo_application):
     return t.native_id
 
 
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -177,6 +164,8 @@ def getByteFrame():
     while True:
         img_path = os.path.join(".tmp", "%010d.bmp" % cnt)
         if not os.path.exists(img_path):
+            if os.path.exists(os.path.join(".tmp", "%010d.bmp_" % (cnt-1))):
+                break
             continue
         out_img = cv2.imread(img_path)
         ret, out_img = cv2.imencode(".jpg", out_img)
@@ -187,6 +176,9 @@ def getByteFrame():
         )
         os.remove(img_path)
         cnt += 1
+
+    with open(os.path.join(".tmp", "end.txt"), mode="w") as f:
+        f.write("end")
 
 
 @app.get("/video_feed")
@@ -209,10 +201,10 @@ async def generate_data():
 @app.get("/chart_data")
 async def get_data():
     t1 = time.time()
-    d = await generate_data()
+    datas = await generate_data()
     t2 = time.time()
     await asyncio.sleep(1 - (t2 - t1))
-    return JSONResponse(content=d)
+    return JSONResponse(content=datas)
 
 
 def inside_func(*args, **kwargs):
@@ -268,11 +260,12 @@ if __name__ == "__main__":
     proc = run_web_server(port)
 
     try:
-        while True:
+        while not os.path.exists(os.path.join(".tmp", "end.txt")):
             time.sleep(1)
+        shutdown_web_server(proc)
     except KeyboardInterrupt:
-        subprocess.run(["rm", "-rf", ".tmp"])
         shutdown_web_server(proc)
         pass
     subprocess.run(["rm", "-rf", ".tmp"])
-    print("EXIT!!!!")
+    print("Warboy Application End!!!!")
+

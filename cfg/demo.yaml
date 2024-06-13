@@ -1,19 +1,21 @@
 app_config:
   - application:
       - object_detection
-      - instance_segmentation
     model_config:
-      - ./cfg/face_model_config.yaml
-      - ./cfg/instance_segmentation_model.yaml
+      - ./cfg/object_detection_model.yaml
     model_path:
-      - yolov8n-face.enf
-      - yolov9c_seg_person_single_pe.enf
+      - /home/ubuntu/models/yolov8s_od.enf
     num_worker: 8
     device:
       - npu0pe0
-      - npu0pe1
-    video_path:
-      - /home/ubuntu/demo_videos/input_videos_4/Basket_5.mp4
-      - /home/ubuntu/demo_videos/input_videos_4/Box_1.mp4
+    videos_info:
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/elephant_1.mp4
+        type: file
+        recursive: False
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_1.mp4
+        type: file
+        recursive: False
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_2.mp4
+        type: file
+        recursive: False
 port: 20001
-recursive: 1 #

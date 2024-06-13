@@ -16,7 +16,7 @@ class MpQueue:
         self.put_lk, self.get_lk = _MPLock(), _MPLock()
 
     def put(self, item, block=True, timeout=None) -> None:
-        assert item is not QueueStopEle
+        #assert item is not QueueStopEle
         return self._put(item, block, timeout)
 
     def _put(self, item, block=True, timeout=None) -> None:
@@ -32,7 +32,6 @@ class MpQueue:
             if item is QueueStopEle:
                 if self.qu is not None:
                     self.qu.put(item)  # propagate if multiple threads are using same qu
-                    # self.qu = None
                 raise QueueClosedError
 
         return item
