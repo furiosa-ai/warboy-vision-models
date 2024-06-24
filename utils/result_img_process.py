@@ -5,8 +5,8 @@ from typing import List, Tuple
 
 import cv2
 import numpy as np
-from furiosa.device.sync import list_devices
 
+from furiosa.device.sync import list_devices
 from utils.mp_queue import *
 
 
@@ -29,7 +29,6 @@ class ImageMerger:
         num_grid, grid_shape = get_grid_info(num_channel, full_grid_shape)
         img_idx = [0 for _ in range(num_channel)]
         states = [True for _ in range(num_channel)]
-        cnt = 0
 
         warboy_devices = list_devices()
         last_pc = {}
@@ -62,16 +61,7 @@ class ImageMerger:
                 c_idx += 1
 
             img = make_full_grid(grid_imgs, num_grid, grid_shape, full_grid_shape)
-            output_path = ".tmp"
-            cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt), img)
-            os.rename(
-                os.path.join(output_path, ".%010d.bmp" % cnt),
-                os.path.join(output_path, "%010d.bmp" % cnt),
-            )
-            cnt += 1
-        
-        cv2.imwrite(os.path.join(output_path, "%010d.bmp_" % (cnt-1)), img)
-        return
+            yield img
 
 
 def get_grid_info(num_channel: int, full_grid_shape: Tuple[int, int]):
@@ -90,9 +80,7 @@ def make_full_grid(
     full_grid_shape: Tuple[int, int],
 ) -> np.ndarray:
     pad = 10  # int(full_grid_shape[0] * 0.1)
-    full_grid = np.zeros(
-        (full_grid_shape[0] + pad, full_grid_shape[1] + pad, 3), np.uint8
-    )
+    full_grid = np.zeros((full_grid_shape[0] + pad, full_grid_shape[1] + pad, 3), np.uint8)
 
     for i, grid_img in enumerate(grid_imgs):
         if grid_img is None:

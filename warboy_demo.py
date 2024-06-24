@@ -9,14 +9,14 @@ import threading
 import time
 
 import cv2
-import psutil
-import typer
-import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+import psutil
+import typer
+import uvicorn
 
 from utils.handler import InputHandler, OutputHandler
 from utils.mp_queue import MpQueue, QueueStopEle
@@ -31,14 +31,17 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="templates/static"))
 warboy_device = None
 
+app.state.model_names = list()
+app.state.result_queues = list()
+
+
 class AppRunner:
     def __init__(self, param, result_queues):
         self.app_type = param["app"]
         self.videos_info = param["videos_info"]
         self.runtime_params = param["runtime_params"]
         self.input_queues = [
-            [MpQueue(25) for _ in range(len(self.app_type))]
-            for _ in range(len(self.videos_info))
+            [MpQueue(25) for _ in range(len(self.app_type))] for _ in range(len(self.videos_info))
         ]
         self.frame_queues = [MpQueue(50) for _ in range(len(self.videos_info))]
         self.output_queues = [
@@ -100,9 +103,8 @@ class AppRunner:
         self.output_handler.start()
         for warboy_runtime_process in warboy_runtime_processes:
             warboy_runtime_process.join()
-        
-        self.output_handler.join()
 
+        self.output_handler.join()
 
         print(f"Application -> {self.app_type} End!!")
 
@@ -117,32 +119,27 @@ class DemoApplication:
             [model_name for model_name in demo_param["model_name"]]
             for demo_param in self.demo_params
         ]
+
+        manager = mp.Manager()
         for param in self.demo_params:
-            app_result_queues = [MpQueue(50) for _ in range(len(param["videos_info"]))]
+            app_result_queues = [manager.Queue(8192) for _ in range(len(param["videos_info"]))]
             self.app_runners.append(AppRunner(param, app_result_queues))
             self.result_queues += app_result_queues
 
         self.app_threads = [
-            threading.Thread(target=app_runner, args=())
-            for app_runner in self.app_runners
+            threading.Thread(target=app_runner, args=()) for app_runner in self.app_runners
         ]
 
     def run(
         self,
     ):
-        merge_proc = mp.Process(
-            target=self.merger,
-            args=(
-                self.model_names,
-                self.result_queues,
-            ),
-        )
+        app.state.model_names = self.model_names
+        app.state.result_queues = self.result_queues
+
         for app_thread in self.app_threads:
             app_thread.start()
-        merge_proc.start()
         for app_thread in self.app_threads:
             app_thread.join()
-        merge_proc.join()
         return
 
 
@@ -153,96 +150,56 @@ def run_demo_thread(demo_application):
     return t.native_id
 
 
-
 @app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
+def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
 def getByteFrame():
-    cnt = 0
-    while True:
-        img_path = os.path.join(".tmp", "%010d.bmp" % cnt)
-        if not os.path.exists(img_path):
-            if os.path.exists(os.path.join(".tmp", "%010d.bmp_" % (cnt-1))):
-                break
-            continue
-        out_img = cv2.imread(img_path)
+    merger = ImageMerger()
+    model_names = app.state.model_names
+    result_queues = app.state.result_queues
+
+    for out_img in merger(model_names, result_queues):
         ret, out_img = cv2.imencode(".jpg", out_img)
         out_frame = out_img.tobytes()
-        yield (
-            b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n" + bytearray(out_frame) + b"\r\n"
-        )
-        os.remove(img_path)
-        cnt += 1
-
-    with open(os.path.join(".tmp", "end.txt"), mode="w") as f:
-        f.write("end")
+        yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + bytearray(out_frame) + b"\r\n")
 
 
 @app.get("/video_feed")
-async def stream():
-    return StreamingResponse(
-        getByteFrame(), media_type="multipart/x-mixed-replace; boundary=frame"
-    )
+def stream():
+    return StreamingResponse(getByteFrame(), media_type="multipart/x-mixed-replace; boundary=frame")
 
 
-async def generate_data():
+def generate_data():
     global warboy_device
     if warboy_device is None:
-        warboy_device = await WarboyDevice.create()
-    power, util, temp, se, devices = await warboy_device()
+        warboy_device = asyncio.run(WarboyDevice.create())
+    power, util, temp, se, devices = asyncio.run(warboy_device())
     return jsonable_encoder(
         {"power": power, "util": util, "temp": temp, "time": se, "devices": devices}
     )
 
 
 @app.get("/chart_data")
-async def get_data():
+def get_data():
     t1 = time.time()
-    datas = await generate_data()
+    datas = generate_data()
     t2 = time.time()
-    await asyncio.sleep(1 - (t2 - t1))
+    time.sleep(1 - (t2 - t1))
     return JSONResponse(content=datas)
 
 
-def inside_func(*args, **kwargs):
-    try:
-        uvicorn.run(*args, **kwargs)
-    except Exception as e:
-        print(e, flush=True)
-        with open("a.txt", "w") as f:
-            print(e, file=f)
+def run_web_server():
+    uvicorn.run(app, host="0.0.0.0", port=int(port))
 
 
-def run_web_server(port):
+def spawn_web_server(port):
     proc = mp.Process(
-        target=inside_func,
-        args=("warboy_demo:app",),
-        kwargs={
-            "host": "0.0.0.0",
-            "port": int(port),
-        },
+        target=run_web_server,
     )
     proc.start()
     return proc
-
-
-def shutdown_web_server(proc):
-    pid = proc.pid
-    parent = psutil.Process(pid)
-    for child in parent.children(recursive=True):
-        child.kill()
-    proc.terminate()
-    for _ in range(5):
-        if proc.is_alive():
-            time.sleep(1)
-            print("Alive Web Server..")
-
-    if proc.is_alive():
-        subprocess.run(["kill", "-9", str(pid)])
-    return
 
 
 if __name__ == "__main__":
@@ -250,22 +207,9 @@ if __name__ == "__main__":
         len(sys.argv) == 2
     ), "A config file path is only needed! (e.g., python warboy_demo.py [config_file])"
 
-    if os.path.exists(".tmp"):
-        subprocess.run(["rm", "-rf", ".tmp"])
-    os.makedirs(".tmp")
-
     demo_params, port = get_demo_params_from_cfg(sys.argv[1])
     demo_app = DemoApplication(demo_params)
     run_demo_thread(demo_app)
-    proc = run_web_server(port)
+    run_web_server()
 
-    try:
-        while not os.path.exists(os.path.join(".tmp", "end.txt")):
-            time.sleep(1)
-        shutdown_web_server(proc)
-    except KeyboardInterrupt:
-        shutdown_web_server(proc)
-        pass
-    subprocess.run(["rm", "-rf", ".tmp"])
     print("Warboy Application End!!!!")
-
