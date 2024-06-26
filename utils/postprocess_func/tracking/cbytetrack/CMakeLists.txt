@@ -19,3 +19,4 @@ add_library(bytetrack SHARED ${My_Source_Files})
 # target_link_libraries(bytetrack /Users/kevin/anaconda3/envs/py39torch/lib/python3.9/site-packages/cv2/cv2.abi3.so)
 
 add_definitions(-O2 -pthread)
+install(TARGETS bytetrack)
