@@ -40,12 +40,12 @@ setup(
     include_package_data=True,
     ext_modules=[
         CTypesExtension(
-            "cpose_decode",
+            f"{postproc_root}.cpose_decode.cpose_decode",
             [f"{postproc_root}/cpose_decode/pose_decode.cpp"],
             extra_compile_args=["-ffast-math", "-O3"],
         ),
         CTypesExtension(
-            "cbox_decode",
+            f"{postproc_root}.cbox_decode.cbox_decode",
             [f"{postproc_root}/cbox_decode/box_decode.cpp"],
             extra_compile_args=["-ffast-math", "-O3"],
         ),
