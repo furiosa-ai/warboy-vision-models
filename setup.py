@@ -1,7 +1,12 @@
 from distutils.command.build_ext import build_ext as build_ext_orig
+from distutils.dir_util import mkpath
 
 from setuptools import Extension, find_packages
 from skbuild import setup
+
+postproc_root = "utils/postprocess_func/"
+
+mkpath(f"{postproc_root}/tracking/cbytetrack/build")
 
 
 class CTypesExtension(Extension):
@@ -29,21 +34,19 @@ setup(
     version="v0.1.0",
     packages=find_packages(""),
     package_dir={"": ""},
-    cmake_source_dir="utils/postprocess_func/tracking/cbytetrack",
-    cmake_install_dir="utils/postprocess_func/tracking/cbytetrack/build",
-    cmake_args=[
-        # 여기서 추가 CMake 인자를 지정할 수 있습니다.
-    ],
+    cmake_source_dir=f"{postproc_root}/tracking/cbytetrack",
+    cmake_install_dir=f"{postproc_root}/tracking/cbytetrack/build",
+    cmake_args=[],
     include_package_data=True,
     ext_modules=[
         CTypesExtension(
             "cpose_decode",
-            ["utils/postprocess_func/cpose_decode/pose_decode.cpp"],
+            [f"{postproc_root}/cpose_decode/pose_decode.cpp"],
             extra_compile_args=["-ffast-math", "-O3"],
         ),
         CTypesExtension(
             "cbox_decode",
-            ["utils/postprocess_func/cbox_decode/box_decode.cpp"],
+            [f"{postproc_root}/cbox_decode/box_decode.cpp"],
             extra_compile_args=["-ffast-math", "-O3"],
         ),
     ],

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=57.0.0", "wheel", "scikit-build"]
+requires = ["setuptools>=57.0.0", "wheel", "scikit-build", "cmake"]
 build-backend = "setuptools.build_meta"
 
 [project]
