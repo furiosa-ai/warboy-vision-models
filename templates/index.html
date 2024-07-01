@@ -52,6 +52,22 @@
             .graph {
                 width: 8%;
             }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat({{ num_cols }}, 1fr);
+                grid-gap: 10px;
+                padding: 10px;
+            }
+
+            .cell {
+                width: 100%;
+                height: 100%;
+                background-color: #000;
+            }
+            .cell img {
+                width: 100%;
+                height: 100%;
+            }
 
             @media (min-width: 768px) {
                 .logo_image {
@@ -66,10 +82,7 @@
         </span>
     </header>
     <div style="display: flex; justify-content: left; background-color: black; margin-top: 1.5%; width: 95%;">
-        <div style="margin-left: 2%;">
-            <div>
-                <img src="/video_feed" alt="Inference Image" class="demo_image">
-            </div>
+        <div class="grid" id="video-feed">
         </div>
         <div style="display: grid; justify-content: left; background-color: black; margin-top: -2%">
             <div>
@@ -88,6 +101,21 @@
     </div>
 
     <script>
+        // video-feed
+        document.addEventListener("DOMContentLoaded", function() {
+            const videoFeed = document.getElementById("video-feed");
+
+            for (let id = 0; id < {{ num_channel }}; id++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+
+                const img = document.createElement("img");
+                img.src = `/video_feed/${id}`;
+                cell.appendChild(img);
+
+                videoFeed.appendChild(cell);
+            }
+        });
         // Chart.js를 사용하여 그래프 생성
         var ctx_1 = document.getElementById('power').getContext('2d');
         var ctx_2 = document.getElementById('util').getContext('2d');

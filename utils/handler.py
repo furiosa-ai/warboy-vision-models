@@ -3,7 +3,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
 
 import cv2
 import numpy as np
@@ -42,7 +42,7 @@ class InputHandler(JobHandler):
                     input_queues[video_idx],
                     frame_queues[video_idx],
                     input_video_info["type"],
-                    input_video_info["recursive"]
+                    input_video_info["recursive"],
                 ),
             )
             for video_idx, input_video_info in enumerate(input_videos_info)
@@ -71,7 +71,7 @@ class InputHandler(JobHandler):
                 cap = cv2.VideoCapture(int(input_video_path))  # webcam
             else:
                 raise Exception(f"This {video_type} type is currently not supported !!")
-            
+
             while True:
                 hasFrame, frame = cap.read()
                 if not hasFrame:
@@ -83,7 +83,7 @@ class InputHandler(JobHandler):
                     input_, contexts = self.preprocessor(frame, input_shape)
                     iq.put((input_, contexts, img_idx, video_idx))
                 img_idx += 1
-            
+
             if cap.isOpened():
                 cap.release()
 
@@ -200,11 +200,13 @@ class OutputHandler(JobHandler):
                 dummy_img = np.zeros((h + dh, w, c)).astype(np.uint8)
                 dummy_img[dh:, :, :] = img
                 img = put_fps_to_img(dummy_img, FPS)
-            result_queue.put(img)
+
+            ret, out_img = cv2.imencode(".jpeg", img)
+            result_queue.put(out_img)
 
             completed += self.num_handler_process
             cidx.value += 1
-        
+
         result_queue.put(QueueStopEle)
         return
 
