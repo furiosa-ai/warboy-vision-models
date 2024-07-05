@@ -19,7 +19,14 @@ class WarboyRuntimeQueue:
     Methods:
 
     """
-    def __init__(self, model_path: str, worker_num: int = 8, device: str = "warboy(2)*1", midx: int = 0) -> None:
+
+    def __init__(
+        self,
+        model_path: str,
+        worker_num: int = 8,
+        device: str = "warboy(2)*1",
+        midx: int = 0,
+    ) -> None:
         self.model_path = model_path
         self.worker_num = worker_num
         self.device = device
@@ -28,9 +35,11 @@ class WarboyRuntimeQueue:
     def __call__(self, input_queue: MpQueue, output_queues: List[MpQueue]):
         asyncio.run(self.run(input_queue, output_queues))
 
-    async def run(self, input_queues: List[List[MpQueue]], output_queues: List[List[MpQueue]]) -> None:
+    async def run(
+        self, input_queues: List[List[MpQueue]], output_queues: List[List[MpQueue]]
+    ) -> None:
         async with create_queue(
-            model = self.model_path, worker_num = self.worker_num, device = self.device
+            model=self.model_path, worker_num=self.worker_num, device=self.device
         ) as (submitter, receiver):
             submit_task = asyncio.create_task(self.submit_with(submitter, input_queues))
             recv_task = asyncio.create_task(self.recv_with(receiver, output_queues))
@@ -38,12 +47,12 @@ class WarboyRuntimeQueue:
             await recv_task
 
     async def submit_with(self, submitter, input_queues: List[List[MpQueue]]) -> None:
-        vidx = 0 
+        vidx = 0
         num_stop_queues = 0
         num_videos = len(input_queues)
         queue_states = [True for _ in range(num_videos)]
         while num_stop_queues < num_videos:
-            vidx = (vidx % num_videos)
+            vidx = vidx % num_videos
             state = queue_states[vidx]
 
             while state:
@@ -60,7 +69,7 @@ class WarboyRuntimeQueue:
         return
 
     async def recv_with(self, receiver, output_queues: List[List[MpQueue]]) -> None:
-        
+
         while True:
             try:
                 video_idx, outputs = await receiver.recv()
@@ -73,28 +82,44 @@ class WarboyRuntimeQueue:
                 oq.put(QueueStopEle)
         return
 
-            
 
 class WarboyRuntimeRunner:
-    def __init__(self, model_path: str, worker_num: int = 8, device: str = "warboy(2)*1", midx: int = 0) -> None:
+    def __init__(
+        self,
+        model_path: str,
+        worker_num: int = 8,
+        device: str = "warboy(2)*1",
+        midx: int = 0,
+    ) -> None:
         self.model_path = model_path
         self.worker_num = worker_num
         self.device = device
         self.midx = midx
         self.num_task = None
 
-
     def __call__(self, input_queue: MpQueue, output_queues: List[MpQueue]):
         asyncio.run(self.run(input_queue, output_queues))
 
-
-    async def run(self, input_queues: List[List[MpQueue]], output_queues: List[List[MpQueue]]) -> None:
+    async def run(
+        self, input_queues: List[List[MpQueue]], output_queues: List[List[MpQueue]]
+    ) -> None:
         num_task = len(input_queues)
         self.num_task = len(input_queues)
         print(self.num_task)
-        async with create_runner(self.model_path, worker_num = self.worker_num, device = self.device) as runner:
-            await asyncio.gather(*(self.task(runner, input_queues[idx][self.midx], output_queues[idx][self.midx]) for idx in range(num_task)))
-        return   
+        async with create_runner(
+            self.model_path, worker_num=self.worker_num, device=self.device
+        ) as runner:
+            await asyncio.gather(
+                *(
+                    self.task(
+                        runner,
+                        input_queues[idx][self.midx],
+                        output_queues[idx][self.midx],
+                    )
+                    for idx in range(num_task)
+                )
+            )
+        return
 
     async def task(self, runner, input_queue: MpQueue, output_queue: MpQueue):
         while True:
@@ -104,7 +129,7 @@ class WarboyRuntimeRunner:
                 output_queue.put((preds))
             except queue.Empty:
                 await asyncio.sleep(0)
-            except QueueClosedError: 
+            except QueueClosedError:
                 break
 
         output_queue.put(QueueStopEle)

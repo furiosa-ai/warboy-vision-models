@@ -26,13 +26,18 @@ def getByteFrame():
     for full_grid_img in result_img_handler(result_queus):
         _, full_grid_img = cv2.imencode(".jpg", full_grid_img)
         out_frame = full_grid_img.tobytes()
-        yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + bytearray(out_frame) + b"\r\n")
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + bytearray(out_frame) + b"\r\n"
+        )
+
 
 @app.get("/video_feed")
 async def video_stream():
     return StreamingResponse(
         getByteFrame(), media_type="multipart/x-mixed-replace; boundary=frame"
     )
+
 
 async def get_device_info():
     if app.state.warboy_device is None:
@@ -42,12 +47,14 @@ async def get_device_info():
         {"power": power, "util": util, "temp": temp, "time": se, "devices": devices}
     )
 
+
 @app.get("/chart_data")
 async def get_warboy_status():
     start_time = time.time()
     warboy_status = await get_device_info()
-    await asyncio.sleep(1 - (time.time()-start_time))
+    await asyncio.sleep(1 - (time.time() - start_time))
     return JSONResponse(content=warboy_status)
+
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
@@ -57,16 +64,13 @@ def read_root(request: Request):
 def run_viewer(*args, **kwargs):
     uvicorn.run(*args, **kwargs)
 
+
 def spawn_web_viewer(port: str, result_queues):
     app.state.result_queues = result_queues
     viewer_proc = mp.Process(
-        target = run_viewer,
+        target=run_viewer,
         args=("warboy.viewer:app",),
-        kwargs={
-            "host": "0.0.0.0",
-            "port": int(port),
-        },
+        kwargs={"host": "0.0.0.0", "port": int(port)},
     )
     viewer_proc.start()
     return viewer_proc
-

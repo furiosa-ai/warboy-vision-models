@@ -40,22 +40,24 @@ class WARBOY_YOLO:
     def export_onnx(self, need_edit: bool = True, edit_info: Dict[str, List] = None):
         print(f"Load PyTorch Model from {self.weight}...")
         torch_model = self._load_torch_model().eval()
-        
+
         print(f"Export ONNX {self.onnx_path}...")
         dummy_input = torch.zeros(*self.input_shape).to(torch.device("cpu"))
-        
+
         torch.onnx.export(
             torch_model,
             dummy_input,
             self.onnx_path,
-            opset_version = self.opset_version,
-            input_names = ["images"],
-            output_names = ["outputs"]
+            opset_version=self.opset_version,
+            input_names=["images"],
+            output_names=["outputs"],
         )
 
         if need_edit:
             edited_model = self._edit_onnx(edit_info)
-            onnx.save(onnx.save(onnx.shape_inference.infer_shapes(edited_model), onnx_path))
+            onnx.save(
+                onnx.save(onnx.shape_inference.infer_shapes(edited_model), onnx_path)
+            )
 
         print(f"Export ONNX for {self.model_name} >> {self.onnx_path}")
         return
@@ -67,9 +69,11 @@ class WARBOY_YOLO:
         """
         """
         from ultralytics import YOLO
-        
+
         if not self.model_name in MODEL_LIST[self.task]:
-            raise ValueError(f"Supported Model List (model_name) for {self.task}:\n {','.join(MODEL_LIST[self.task])}\n")
+            raise ValueError(
+                f"Supported Model List (model_name) for {self.task}:\n {','.join(MODEL_LIST[self.task])}\n"
+            )
 
         yolo_version = self._check_yolo_version()
 
@@ -101,8 +105,8 @@ class WARBOY_YOLO:
         Qauntize the model using FuriosaAI SDK.
         """
         if not os.path.exists(self.onnx_path):
-            raise FileNotFoundError(f"{self.onnx_path} is not found!")  
-        
+            raise FileNotFoundError(f"{self.onnx_path} is not found!")
+
         from furiosa.optimizer import optimize_model
         from furiosa.quantizer import (
             CalibrationMethod,
@@ -115,13 +119,14 @@ class WARBOY_YOLO:
 
         onnx_model = onnx.load(self.onnx_path)
         onnx_model = optimize_model(
-            model = onnx_model, opset_version = self.opset_version, input_shapes = {"images": [1, 3, *self.input_shape]}
-        )   
+            model=onnx_model,
+            opset_version=self.opset_version,
+            input_shapes={"images": [1, 3, *self.input_shape]},
+        )
 
-        calibrator = Calibrator(model, CalibrationMethod._member_map_[self.calibration_method])
-
-        
-
+        calibrator = Calibrator(
+            model, CalibrationMethod._member_map_[self.calibration_method]
+        )
 
         if use_model_editor:
             editor = ModelEditor(onnx_model)
@@ -130,13 +135,12 @@ class WARBOY_YOLO:
             for input_name in input_names:
                 editor.convert_input_type(input_name, TensorType.UINT8)
 
-
         calib_range = calibrator.compute_range()
         quantized_model = quantize(onnx_model, calib_range)
 
         with open(self.onnx_i8_path, "wb") as f:
             f.write(bytes(quantized_model))
-    
+
         print(f"Quantization completd >> {self.onnx_i8_path}")
         return
 

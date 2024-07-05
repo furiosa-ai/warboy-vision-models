@@ -97,7 +97,7 @@ class InsSegPostProcess:
 
         predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
         assert len(predictions) == 1, f"{len(predictions)}!=1"
-    
+
         predictions = predictions[0]
         bbox, ins_mask = predictions
         num_prediction = bbox.shape[0]
@@ -105,7 +105,7 @@ class InsSegPostProcess:
         if num_prediction == 0 or ins_mask is None:
             return img
 
-        #ins_mask_img = draw_instance_mask(img, ins_mask, bbox, self.class_names)
+        # ins_mask_img = draw_instance_mask(img, ins_mask, bbox, self.class_names)
         ins_mask_img = draw_contours(img, ins_mask, bbox, self.class_names)
         ins_mask_img = draw_bbox(ins_mask_img, bbox, self.class_names)
         return ins_mask_img
@@ -170,18 +170,17 @@ def draw_instance_mask(
     ## Draw instance mask
     if len(bbox[0]) != 6:
         masks = masks[bbox[:, -2].astype(np.uint8)]
-    class_ids = bbox[:,-1]
-    masks = masks * (class_ids[..., np.newaxis, np.newaxis]+1)
-    masks = masks.max(0) 
+    class_ids = bbox[:, -1]
+    masks = masks * (class_ids[..., np.newaxis, np.newaxis] + 1)
+    masks = masks.max(0)
     colors = np.array(COLORS)
-    hot_masks = (masks != 0)
+    hot_masks = masks != 0
     color = colors[masks[hot_masks].astype(np.uint8) % len(COLORS)]
     img[hot_masks] = img[hot_masks] * beta + color * alpha
 
     return img
 
 
-    
 def draw_contours(
     img: np.ndarray,
     masks: np.ndarray,
@@ -203,13 +202,12 @@ def draw_contours(
             color = COLORS[tracking_id % len(COLORS)]
 
         contours, _ = cv2.findContours(
-            (mask).astype(np.uint8),
-            cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            (mask).astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
 
         cv2.drawContours(img, contours, -1, color, 2)
 
     return img
-
 
 
 def draw_pose(

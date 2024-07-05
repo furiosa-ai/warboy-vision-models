@@ -1,5 +1,6 @@
 from furiosa.device import list_devices
 
+
 class WARBOYDevice:
     def __init__(self):
         pass
@@ -13,12 +14,12 @@ class WARBOYDevice:
         return self
 
     async def __call__(self):
-        power_info, util_info, temper_info, devices = await self._get_warboy_device_status(
+        power_info, util_info, temper_info, devices = (
+            await self._get_warboy_device_status()
         )
         self.time_count += 1
         return power_info, util_info, temper_info, self.time_count, devices
 
-    
     async def _get_warboy_device_status(self,):
         status = [[] for _ in range(4)]
 
@@ -33,11 +34,11 @@ class WARBOYDevice:
                 peak_device_temper = int(str(temper[0]).split(" ")[-1]) // 1000
                 power_info = str((await fetcher.read_powers_average())[0])
                 p = int(float(power_info.split(" ")[-1]) / 1000000.0)
-                
+
                 status[0].append(p)
                 status[2].append(peak_device_temper)
                 status[3].append(device_idx)
-                
+
             t_utils = 0.0
             for pc in per_counters:
                 pe_name = str(pc[0])

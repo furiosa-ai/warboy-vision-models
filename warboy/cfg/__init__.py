@@ -2,11 +2,24 @@ TASKS = {"object_detection", "pose_estimation", "instance_segmentation"}
 
 MODEL_LIST = {
     "object_detection": ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolov8x"],
-    "pose_estimation": ["yolov8n-pose", "yolov8s-pose", "yolov8m-pose", "yolov8l-pose", "yolov8x-pose"],
-    "instance_segmentation": ["yolov8n-seg", "yolov8s-seg", "yolov8m-seg", "yolov8l-seg", "yolov8x-seg"]
+    "pose_estimation": [
+        "yolov8n-pose",
+        "yolov8s-pose",
+        "yolov8m-pose",
+        "yolov8l-pose",
+        "yolov8x-pose",
+    ],
+    "instance_segmentation": [
+        "yolov8n-seg",
+        "yolov8s-seg",
+        "yolov8m-seg",
+        "yolov8l-seg",
+        "yolov8x-seg",
+    ],
 }
 import yaml
 from typing import Dict, Any
+
 
 def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
     """
@@ -32,7 +45,9 @@ def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
             "model_names": [],
         }
         for model_cfg in app_config["model_cfg"]:
-            model_params, model_name, input_shape, class_name = get_model_params_from_cfg(model_cfg)
+            model_params, model_name, input_shape, class_name = get_model_params_from_cfg(
+                model_cfg
+            )
             param["model_params"].append(model_params)
             param["model_names"].append(model_name)
             param["input_shapes"].append(input_shape)
@@ -40,6 +55,7 @@ def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
         params.append(param)
 
     return params
+
 
 def get_model_params_from_cfg(cfg: str) -> Dict[str, Any]:
     """
@@ -53,21 +69,25 @@ def get_model_params_from_cfg(cfg: str) -> Dict[str, Any]:
     cfg_file.close()
 
     param = {
-        "task": model_cfg["task"], 
-        "model_name": model_cfg["model_name"], 
+        "task": model_cfg["task"],
+        "model_name": model_cfg["model_name"],
         "weight": model_cfg["weight"],
         "onnx_path": model_cfg["onnx_path"],
         "onnx_i8_path": model_cfg["onnx_i8_path"],
-    }  
-    '''
+    }
+    """
     add
-    '''
+    """
 
     param = [
-        {"conf_thres": model_cfg["conf_thres"], "iou_thres": model_cfg["iou_thres"], "anchors": model_cfg["anchors"]},
+        {
+            "conf_thres": model_cfg["conf_thres"],
+            "iou_thres": model_cfg["iou_thres"],
+            "anchors": model_cfg["anchors"],
+        },
         model_cfg["model_name"],
         model_cfg["input_shape"],
-        model_cfg["class_names"]
+        model_cfg["class_names"],
     ]
     return param
 
@@ -152,7 +172,7 @@ COLORS = [
     (244, 164, 96),
     (210, 105, 30),
 ]
-'''
+"""
 PALETTE = np.array(
     [
         [255, 128, 0],
@@ -178,7 +198,7 @@ PALETTE = np.array(
     ],
     np.int32,
 )
-'''
+"""
 PALETTE = np.array(
     [
         [58, 200, 253],

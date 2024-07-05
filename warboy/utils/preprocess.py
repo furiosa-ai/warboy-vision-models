@@ -41,7 +41,7 @@ class YOLOPreProcessor:
         with_scaling: bool = False,
     ) -> Tuple[np.ndarray, List[Dict[str, Any]]]:
         img, ratio, (padw, padh) = letterbox(images, new_shape)
-        img = img.transpose([2, 0, 1])[::-1] # HWC -> CHW
+        img = img.transpose([2, 0, 1])[::-1]  # HWC -> CHW
         preproc_params = {"ratio": ratio, "pad": (padw, padh)}
         if tensor_type == "uint8":
             input_ = np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.uint8)

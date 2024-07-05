@@ -12,48 +12,62 @@ from warboy.runtime.mp_queue import MpQueue, QueueClosedError, QueueStopEle
 from warboy.utils.postprocess import getPostProcesser
 from warboy.utils.preprocess import YOLOPreProcessor
 
+
 class Handler:
     """
 
     """
-    def __init__(self, input_queues: List[List[MpQueue]], output_queues: List[List[MpQueue]], result_queues: List[MpQueue], param: Dict[str, Any]) -> None:
+
+    def __init__(
+        self,
+        input_queues: List[List[MpQueue]],
+        output_queues: List[List[MpQueue]],
+        result_queues: List[MpQueue],
+        param: Dict[str, Any],
+    ) -> None:
         self.video_processors = [
             mp.Process(
-                target = self.video_task,
-                args = (
-                    video_info, 
-                    input_queue,
-                    output_queue,
-                    result_queue
-                )
+                target=self.video_task,
+                args=(video_info, input_queue, output_queue, result_queue),
             )
-            for (video_info, input_queue, output_queue, result_queue) in zip(param["videos_info"], input_queues, output_queues, result_queues) 
+            for (video_info, input_queue, output_queue, result_queue) in zip(
+                param["videos_info"], input_queues, output_queues, result_queues
+            )
         ]
         self.input_shapes = param["input_shapes"]
         self.preprocessor = YOLOPreProcessor()
         self.postprocessor = [
-            getPostProcesser(
-                task, model_name, runtime_params, class_names,
-            ) for task, model_name, runtime_params, class_names in zip(param["task"], param["model_names"], param["model_params"], param["class_names"])
+            getPostProcesser(task, model_name, runtime_params, class_names)
+            for task, model_name, runtime_params, class_names in zip(
+                param["task"],
+                param["model_names"],
+                param["model_params"],
+                param["class_names"],
+            )
         ]
 
     def start(self):
         for proc in self.video_processors:
             proc.start()
-        
+
     def join(self):
         for proc in self.video_processors:
             proc.join()
 
-
-    def video_task(self, video_info: Dict[str, Any], input_queue: List[MpQueue], output_queue: List[MpQueue], result_queue: MpQueue) -> None:
+    def video_task(
+        self,
+        video_info: Dict[str, Any],
+        input_queue: List[MpQueue],
+        output_queue: List[MpQueue],
+        result_queue: MpQueue,
+    ) -> None:
         """
 
         """
         video_path, video_type, recursive = video_info.values()
         running = True
         img_idx = 0
-        num_completed = 0 
+        num_completed = 0
         FPS = 0.0
         start_time = time.time()
         while running:
@@ -67,7 +81,7 @@ class Handler:
                     contexts = self._put_input_to_queue(frame, input_queue)
                     out_img = self._get_output_from_queue(frame, output_queue, contexts)
                     if out_img is None:
-                        break     
+                        break
 
                     if time.time() - start_time > 1.0:
                         FPS = (img_idx - num_completed) / (time.time() - start_time)
@@ -84,7 +98,6 @@ class Handler:
             running = recursive
             if cap.isOpened():
                 cap.release()
-        
 
     def _put_input_to_queue(self, frame: np.ndarray, input_queue: List[MpQueue]):
         contexts = []
@@ -94,7 +107,12 @@ class Handler:
             iq.put(input_)
         return contexts
 
-    def _get_output_from_queue(self, frame: np.ndarray, output_queue: List[MpQueue], contexts: List[Dict[str, Any]]):
+    def _get_output_from_queue(
+        self,
+        frame: np.ndarray,
+        output_queue: List[MpQueue],
+        contexts: List[Dict[str, Any]],
+    ):
         out_img = frame
         for postprocess, oq, context in zip(self.postprocessor, output_queue, contexts):
             while True:
@@ -110,16 +128,16 @@ class Handler:
 
     def _put_fps_to_img(self, img, FPS):
         h, w, _ = img.shape
-        c1 = (int(0.01 * h)+2, int(0.05 * w) + 5)
+        c1 = (int(0.01 * h) + 2, int(0.05 * w) + 5)
         tl = min(int(c1[1] * 0.1), 3)
-        tf = max(tl-1, 1)
+        tf = max(tl - 1, 1)
         t_size = cv2.getTextSize(FPS, 0, fontScale=tl / 3, thickness=tf)[0]
-        c2 = c1[0] + int(t_size[0]*1.5), c1[1] - t_size[1]-int(0.05 * h) + 5
-        cv2.rectangle(img, (c1[0], c1[1]+5), c2, (0,0,0), -1)  # filled
+        c2 = c1[0] + int(t_size[0] * 1.5), c1[1] - t_size[1] - int(0.05 * h) + 5
+        cv2.rectangle(img, (c1[0], c1[1] + 5), c2, (0, 0, 0), -1)  # filled
         cv2.putText(
             img,
             FPS,
-            (c1[0], c1[1]+2),
+            (c1[0], c1[1] + 2),
             cv2.FONT_HERSHEY_PLAIN,
             tl,
             (255, 255, 255),
@@ -145,21 +163,26 @@ class ImageHandler:
     """
 
     """
-    def __init__(self, full_grid_shape: Tuple[int,int] = (720, 1280), num_grid: Tuple[int,int] = None):
+
+    def __init__(
+        self,
+        full_grid_shape: Tuple[int, int] = (720, 1280),
+        num_grid: Tuple[int, int] = None,
+    ):
         self.full_grid_shape = full_grid_shape
-        self.num_grid = num_grid # row, column
+        self.num_grid = num_grid  # row, column
         self.pad = 10
 
     def __call__(self, result_queues: List[MpQueue]):
         num_channel = len(result_queues)
         num_end_channel = 0
-        #cnt = 0
+        # cnt = 0
 
         grid_shape = self._get_grid_info(num_channel)
         while num_end_channel < num_channel:
             idx = 0
             grid_imgs = []
-            
+
             while idx < num_channel:
                 out_img = None
                 while True:
@@ -173,30 +196,31 @@ class ImageHandler:
                         states[idx] = False
                         break
                 if not out_img is None:
-                    out_img = cv2.resize(out_img, grid_shape, interpolation=cv2.INTER_LINEAR)
+                    out_img = cv2.resize(
+                        out_img, grid_shape, interpolation=cv2.INTER_LINEAR
+                    )
                 grid_imgs.append(out_img)
                 idx += 1
             full_grid_img = self._get_full_grid_img(grid_imgs, grid_shape)
             yield full_grid_img
-            #output_path = ".tmp"
-            #cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt), full_grid_img)
-            #os.rename(
+            # output_path = ".tmp"
+            # cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt), full_grid_img)
+            # os.rename(
             #    os.path.join(output_path, ".%010d.bmp" % cnt),
             #    os.path.join(output_path, "%010d.bmp" % cnt),
-            #)
-            #cnt += 1
-
+            # )
+            # cnt += 1
 
     def _get_grid_info(self, num_channel):
         if self.num_grid is None:
             n = math.ceil(math.sqrt(num_channel))
             self.num_grid = (n, n)
         grid_shape = (
-            int((self.full_grid_shape[1]) / self.num_grid[1])-self.pad//2,
-            int((self.full_grid_shape[0]) / self.num_grid[0])-self.pad//2
+            int((self.full_grid_shape[1]) / self.num_grid[1]) - self.pad // 2,
+            int((self.full_grid_shape[0]) / self.num_grid[0]) - self.pad // 2,
         )
         return grid_shape
-    
+
     def _get_full_grid_img(self, grid_imgs, grid_shape):
         full_grid_img = np.zeros(
             (self.full_grid_shape[0], self.full_grid_shape[1], 3), np.uint8
@@ -208,7 +232,6 @@ class ImageHandler:
             c = i % self.num_grid[0]
             r = i // self.num_grid[0]
 
-
             x0 = c * grid_shape[1] + (c + 1) * (self.pad // 2)
             x1 = (c + 1) * grid_shape[1] + (c + 1) * (self.pad // 2)
 
@@ -216,5 +239,5 @@ class ImageHandler:
             y1 = (r + 1) * grid_shape[0] + (r + 1) * (self.pad // 2)
 
             full_grid_img[x0:x1, y0:y1] = grid_img
-        
+
         return full_grid_img

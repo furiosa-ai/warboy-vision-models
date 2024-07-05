@@ -4,6 +4,7 @@ from warboy.cfg import get_demo_params_from_cfg
 from warboy.warboy_api import WARBOY_APP
 from warboy.viewer import spawn_web_viewer
 
+
 def run_warboy_app(warboy_app):
     t = threading.Thread(target=warboy_app.run_application)
     t.daemon = True
