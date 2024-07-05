@@ -1,4 +1,4 @@
-application: object_detection   #
+task: object_detection   #
 model_name: yolov8l
 weight: yolov8n.pt                       # weight file path
 onnx_path: yolov8n.onnx                  # onnx model path

@@ -1,4 +1,4 @@
-application: pose_estimation   #
+task: pose_estimation   #
 model_name: yolov8n-pose
 weight: yolov8n.pt                       # weight file path
 onnx_path: yolov8n.onnx                  # onnx model path

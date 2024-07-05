@@ -1,14 +1,14 @@
 app_config:
-  - application:
+  - task:
       - object_detection
-    model_config:
+    model_cfg:
       - ./cfg/object_detection_model.yaml
     model_path:
       - /home/ubuntu/models/yolov8s_od.enf
     num_worker: 8
-    device:
+    npu_device:
       - npu0pe0
-    videos_info:
+    video_params:
       - input_path: /home/ubuntu/video_files_0523/detection_videos/elephant_1.mp4
         type: file
         recursive: False

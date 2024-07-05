@@ -1,0 +1,1 @@
+from .pose_decode_wrapper import yolov5_pose_decode, yolov8_pose_decode

@@ -1,0 +1,25 @@
+app_config:
+  - application:
+      - object_detection
+      - pose_estimation
+    model_config:
+      - ./cfg/object_detection_model.yaml
+      - ./cfg/pose_estimation_model.yaml
+    model_path:
+      - []
+      - []
+    num_worker: 8
+    device:
+      - warboy(1)*1
+      - warboy(1)*1
+    videos_info:
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/elephant_1.mp4
+        type: file
+        recursive: False
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_1.mp4
+        type: file
+        recursive: False
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_2.mp4
+        type: file
+        recursive: False
+port: 20001
