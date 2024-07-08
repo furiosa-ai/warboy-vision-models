@@ -2,20 +2,69 @@ app_config:
   - task:
       - object_detection
     model_cfg:
-      - ./warboy/cfg/model_config/object_detection_model.yaml
+      - ./cfg/object_detection_model.yaml
     model_path:
       - /home/ubuntu/models/yolov8s_od.enf
-    num_worker: 8
+    num_worker: 32
     npu_device:
       - npu0pe0
     video_params:
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/car_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/cow_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/cow_2.mp4
+        type: file
+        recursive: True
       - input_path: /home/ubuntu/video_files_0523/detection_videos/elephant_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/dog_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/walking_2.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_2.mp4
         type: file
         recursive: True
       - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_1.mp4
         type: file
         recursive: True
-      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_2.mp4
+  - task:
+      - pose_estimation
+    model_cfg:
+      - ./cfg/pose_estimation_model.yaml
+    model_path:
+      - /home/ubuntu/models/yolov8n-pose.enf
+    num_worker: 32
+    npu_device:
+      - npu0pe1
+    video_params:
+      - input_path: /home/ubuntu/video_files_0523/pose_videos/bmx_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/pose_videos/dance_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/pose_videos/dance_2.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/pose_videos/shoot_2.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/pose_videos/surfing_4.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/pose_videos/volleyball_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/pose_videos/Taekwondo_2.mp4
+        type: file
+        recursive: True
+      - input_path: /home/ubuntu/video_files_0523/pose_videos/walking_1.mp4
         type: file
         recursive: True
 port: 20001

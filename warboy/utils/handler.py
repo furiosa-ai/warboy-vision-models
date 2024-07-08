@@ -89,7 +89,7 @@ class Handler:
                         num_completed = img_idx
 
                     out_img = self._put_fps_to_img(out_img, f"FPS: {FPS:.1f}")
-                    result_queue.put(out_img)
+                    result_queue.put((out_img, FPS))
                     img_idx += 1
                 except Exception as e:
                     result_queue.put(QueueStopEle)
@@ -182,12 +182,12 @@ class ImageHandler:
         while num_end_channel < num_channel:
             idx = 0
             grid_imgs = []
-
+            total_fps = 0
             while idx < num_channel:
                 out_img = None
                 while True:
                     try:
-                        out_img = result_queues[idx].get(False)
+                        out_img, FPS = result_queues[idx].get(False)
                         break
                     except queue.Empty:
                         time.sleep(0)
@@ -200,8 +200,11 @@ class ImageHandler:
                         out_img, grid_shape, interpolation=cv2.INTER_LINEAR
                     )
                 grid_imgs.append(out_img)
+                total_fps += FPS
                 idx += 1
-            full_grid_img = self._get_full_grid_img(grid_imgs, grid_shape)
+            full_grid_img = self._get_full_grid_img(
+                grid_imgs, grid_shape, total_fps, num_channel - num_end_channel
+            )
             yield full_grid_img
             # output_path = ".tmp"
             # cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt), full_grid_img)
@@ -221,9 +224,11 @@ class ImageHandler:
         )
         return grid_shape
 
-    def _get_full_grid_img(self, grid_imgs, grid_shape):
+    def _get_full_grid_img(self, grid_imgs, grid_shape, total_fps=0.0, num_videos=0):
+        height_pad = int(self.full_grid_shape[0] * 0.06)
+
         full_grid_img = np.zeros(
-            (self.full_grid_shape[0], self.full_grid_shape[1], 3), np.uint8
+            (self.full_grid_shape[0] + height_pad, self.full_grid_shape[1], 3), np.uint8
         )
         for i, grid_img in enumerate(grid_imgs):
             if grid_img is None:
@@ -232,12 +237,26 @@ class ImageHandler:
             c = i % self.num_grid[0]
             r = i // self.num_grid[0]
 
-            x0 = c * grid_shape[1] + (c + 1) * (self.pad // 2)
-            x1 = (c + 1) * grid_shape[1] + (c + 1) * (self.pad // 2)
+            x0 = c * grid_shape[1] + (c + 1) * (self.pad // 2) + height_pad
+            x1 = (c + 1) * grid_shape[1] + (c + 1) * (self.pad // 2) + height_pad
 
             y0 = r * grid_shape[0] + (r + 1) * (self.pad // 2)
             y1 = (r + 1) * grid_shape[0] + (r + 1) * (self.pad // 2)
 
             full_grid_img[x0:x1, y0:y1] = grid_img
+
+        h, w, _ = full_grid_img.shape
+        org = (5, int(0.05 * h) - 5)
+        scale = min(int((int(0.05 * w) - 5) * 0.04), 3)
+        full_grid_img = cv2.putText(
+            full_grid_img,
+            f"TOTAL FPS: {total_fps:.2f}",
+            org,
+            cv2.FONT_HERSHEY_PLAIN,
+            scale,
+            (255, 255, 255),
+            scale,
+            cv2.LINE_AA,
+        )
 
         return full_grid_img

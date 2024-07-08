@@ -6,7 +6,7 @@ from warboy.runtime.mp_queue import MpQueue, QueueClosedError, QueueStopEle
 from warboy.runtime.warboy_runtime import WarboyRuntimeQueue, WarboyRuntimeRunner
 from warboy.utils.handler import Handler
 
-QUEUE_SIZE = 50
+QUEUE_SIZE = 100
 
 
 class AppRunner:
@@ -101,8 +101,7 @@ class WARBOY_APP:
     def get_result_queues(self):
         return self.result_queues
 
-    def run_application(self):
-
+    def __call__(self):
         for app_runner_thread in self.app_runner_threads:
             app_runner_thread.start()
 

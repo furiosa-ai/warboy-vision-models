@@ -37,20 +37,19 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-
 <body bgcolor="black">
-    <header style="display: flex; margin-left: 3%; margin-top: 0.8%;">
+    <header style="display: flex; margin-left: 3%;">
         <style>
             .logo_image {
                 width: 12%;
             }
 
             .demo_image {
-                width: 99%;
+                width: 72.5vw;
             }
 
-            .graph {
-                width: 8%;
+            .device {
+                width: 20vw;
             }
 
             @media (min-width: 768px) {
@@ -58,31 +57,46 @@
                     width: 12%;
                 }
             }
+
+            @media (min-width: 18vw) {
+                .device {
+                    width: 1fr;
+                }
+            }
         </style>
         <img src="/static/img/Furiosa_AI_h_w.svg" alt="Why" class="logo_image">
         <span
-            style="margin-top: 0.2%; font-family: 'IBMPlexSans BoldItalic' !important; color:white; text-align: left; margin-left: 1%; font-size: 2.5rem; align-content: center;">
-            WARBOY Demo
+            style="font-family: 'IBMPlexSans BoldItalic' !important; color:white; text-align: left; margin-left: 1%; font-size: 2.5rem; align-content: center;">
+            1st NPU CARD - WARBOY VISION DEMO
         </span>
     </header>
-    <div style="display: flex; justify-content: left; background-color: black; margin-top: 1.5%; width: 95%;">
+    <div style="display: flex; justify-content: left; background-color: black; margin-top: 1%;">
         <div style="margin-left: 2%;">
             <div>
                 <img src="/video_feed" alt="Inference Image" class="demo_image">
             </div>
         </div>
-        <div style="display: grid; justify-content: left; background-color: black; margin-top: -2%">
+        <div style="display: grid; justify-content: right; background-color: black; margin-left: 1.5vw;">
             <div>
-                <p style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Power (W)</p>
-                <canvas id="power" class="graph"></canvas>
+                <img src="/static/img/warboy.svg" alt="Why" class="device">
+                <!--<img src="/static/img/warboy.gif" alt="Why" class="device">-->
+                <!--<video fetchpriority="high" aria-label="Black anim" class="device" src="/static/img/warboy2.mp4"
+                    autoplay="" muted="" loop="" playsinline=""></video>-->
             </div>
             <div>
-                <p style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Utilization (%)</p>
-                <canvas id="util" class="graph"></canvas>
+                <p id="DecPower" style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Power (W)
+                </p>
+                <canvas id="power" class="graph" style="height: 6vw; width: 18vw;"></canvas>
             </div>
             <div>
-                <p style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Temperature (°C)</p>
-                <canvas id="temp" class="graph"></canvas>
+                <p id="DecUtil" style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Utilization
+                    (%)</p>
+                <canvas id="util" class="graph" style="height: 6vw; width: 18vw;"></canvas>
+            </div>
+            <div>
+                <p id="DecTemp" style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU Temperature
+                    (°C)</p>
+                <canvas id="temp" class="graph" style="height: 6vw; width: 18vw;"></canvas>
             </div>
         </div>
     </div>
@@ -92,6 +106,9 @@
         var ctx_1 = document.getElementById('power').getContext('2d');
         var ctx_2 = document.getElementById('util').getContext('2d');
         var ctx_3 = document.getElementById('temp').getContext('2d');
+        var dec_1 = document.getElementById('DecPower').textContent;
+        var dec_2 = document.getElementById('DecUtil').textContent;
+        var dec_3 = document.getElementById('DecTemp').textContent;
         var borderColors = [
             'rgba(255, 99, 132, 1)', 'rgba(3, 201, 169, 1)', 'rgba(4, 85, 255, 1)',
             'rgba(255, 165, 0, 1)', 'rgba(106, 90, 205, 1)', 'rgba(238, 130, 238, 1)',
