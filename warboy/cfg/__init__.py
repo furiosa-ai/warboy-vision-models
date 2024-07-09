@@ -45,7 +45,7 @@ def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
             "model_names": [],
         }
         for model_cfg in app_config["model_cfg"]:
-            model_params, model_name, input_shape, class_name = get_model_params_from_cfg(
+            model_params, model_name, input_shape, class_name = _get_model_params_from_cfg(
                 model_cfg
             )
             param["model_params"].append(model_params)
@@ -55,6 +55,30 @@ def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
         params.append(param)
 
     return params
+
+
+def _get_model_params_from_cfg(cfg: str) -> Dict[str, Any]:
+    """
+    function for parsing model configuration parameters from config file (.yaml)
+
+    args:
+        cfg(str) : path of configuaration file (.yaml)
+    """
+    cfg_file = open(cfg)
+    model_cfg = yaml.full_load(cfg_file)
+    cfg_file.close()
+
+    param = [
+        {
+            "conf_thres": model_cfg["conf_thres"],
+            "iou_thres": model_cfg["iou_thres"],
+            "anchors": model_cfg["anchors"],
+        },
+        model_cfg["model_name"],
+        model_cfg["input_shape"][2:],
+        model_cfg["class_names"],
+    ]
+    return param
 
 
 def get_model_params_from_cfg(cfg: str) -> Dict[str, Any]:
@@ -67,29 +91,10 @@ def get_model_params_from_cfg(cfg: str) -> Dict[str, Any]:
     cfg_file = open(cfg)
     model_cfg = yaml.full_load(cfg_file)
     cfg_file.close()
-
-    param = {
-        "task": model_cfg["task"],
-        "model_name": model_cfg["model_name"],
-        "weight": model_cfg["weight"],
-        "onnx_path": model_cfg["onnx_path"],
-        "onnx_i8_path": model_cfg["onnx_i8_path"],
-    }
     """
     add
     """
-
-    param = [
-        {
-            "conf_thres": model_cfg["conf_thres"],
-            "iou_thres": model_cfg["iou_thres"],
-            "anchors": model_cfg["anchors"],
-        },
-        model_cfg["model_name"],
-        model_cfg["input_shape"],
-        model_cfg["class_names"],
-    ]
-    return param
+    return model_cfg
 
 
 import numpy as np

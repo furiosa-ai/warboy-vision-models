@@ -26,7 +26,7 @@ class WARBOY_YOLO:
         ValueError: 
     """
 
-    def __init__(self, cfg: str) -> None:
+    def __init__(self, cfg: str, edit_info=None) -> None:
         params = get_model_params_from_cfg(cfg)
         self.task = params["task"]
         self.model_name = params["model_name"]
@@ -34,10 +34,16 @@ class WARBOY_YOLO:
         self.onnx_path = params["onnx_path"]
         self.input_shape = params["input_shape"]
         self.onnx_i8_path = params["onnx_i8_path"]
-        self.calibration_method = params[""]
+        self.calibration_method, self.calibration_data, self.num_calibration_data = params[
+            "calibration_params"
+        ].values()
+        self.anchors = params["anchors"]
+        self.edit_info = (
+            self.params["edit_info"] if "edit_info" in params else edit_info
+        )
         return
 
-    def export_onnx(self, need_edit: bool = True, edit_info: Dict[str, List] = None):
+    def export_onnx(self, need_edit: bool = True):
         print(f"Load PyTorch Model from {self.weight}...")
         torch_model = self._load_torch_model().eval()
 
@@ -54,7 +60,7 @@ class WARBOY_YOLO:
         )
 
         if need_edit:
-            edited_model = self._edit_onnx(edit_info)
+            edited_model = self._edit_onnx(self.edit_info)
             onnx.save(
                 onnx.save(onnx.shape_inference.infer_shapes(edited_model), onnx_path)
             )
@@ -63,7 +69,27 @@ class WARBOY_YOLO:
         return
 
     def _edit_onnx(self, edit_info: Dict[str, List] = None):
-        return
+        from onnx.utils import Extractor
+
+        onnx_graph = onnx.load(self.onnx_path)
+        input_to_shape, output_to_shape = _get_onnx_graph_info(
+            self.task, onnx_graph, edit_info
+        )
+        edited_graph = Extractor(onnx_graph).extract_model(
+            input_names=list(input_to_shape), output_names=list(output_to_shape)
+        )
+
+        for value_info in edited_graph.graph.input:
+            del value_info.type.tensor_type.shape.dim[:]
+            value_info.type.tensor_type.shape.dim.extend(
+                input_to_shape[value_info.name]
+            )
+        for value_info in edited_graph.graph.output:
+            del value_info.type.tensor_type.shape.dim[:]
+            value_info.type.tensor_type.shape.dim.extend(
+                output_to_shape[value_info.name]
+            )
+        return edited_graph
 
     def _load_torch_model(self):
         """
@@ -91,14 +117,15 @@ class WARBOY_YOLO:
     @property
     def _check_yolo_version(self):
         if "yolov9" in self.model_name:
-            pass
+            return 9
         elif "yolov8" in self.model_name:
-            pass
+            return 8
         elif "yolov7" in self.model_name:
-            pass
+            return 7
         elif "yolov5" in self.model_name:
-            pass
-        return True
+            return 5
+        else:
+            return -1
 
     def quantize(self, use_model_editor: bool = True):
         """

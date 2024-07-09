@@ -18,12 +18,14 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="templates/static"))
 app.state.result_queues = list()
 app.state.warboy_device = None
+app.state.fps = 0
 
 
 def getByteFrame():
     result_img_handler = ImageHandler()
     result_queus = app.state.result_queues
-    for full_grid_img in result_img_handler(result_queus):
+    for full_grid_img, fps in result_img_handler(result_queus):
+        app.state.fps = fps
         _, full_grid_img = cv2.imencode(".jpg", full_grid_img)
         out_frame = full_grid_img.tobytes()
         yield (
@@ -44,7 +46,14 @@ async def get_device_info():
         app.state.warboy_device = await WARBOYDevice.create()
     power, util, temp, se, devices = await app.state.warboy_device()
     return jsonable_encoder(
-        {"power": power, "util": util, "temp": temp, "time": se, "devices": devices}
+        {
+            "power": power,
+            "util": util,
+            "temp": temp,
+            "time": se,
+            "devices": devices,
+            "fps": f"{app.state.fps:.1f}",
+        }
     )
 
 

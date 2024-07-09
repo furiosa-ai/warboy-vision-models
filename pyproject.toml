@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=57.0.0", "wheel", "scikit-build", "cmake"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "warboy-vision-models"
+# dynamic = ["version"]
+version = "v0.1.0"
+description = "Project for vision demo with FuriosaAI WARBOY"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { "text" = "Apache-2.0" }
+keywords = ["machine-learning", "deep-learning", "computer-vision", "ML", "DL", "AI", "NPU", "FuriosaAI", "WARBOY"]
+
+dependencies = [
+    "furiosa-sdk[full] ~= 0.10",
+    "opencv-python ~= 4.9",
+    "torch ~= 1.13",
+    "uvloop ~= 0.19",
+    "torchvision ~= 0.14",
+    "ultralytics ~= 8.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "isort",
+    "black",
+]
+
+[project.scripts]
+warboy-quantize = "tools.furiosa_quantizer:app"
+warboy-demo = "warboy_demo:app"

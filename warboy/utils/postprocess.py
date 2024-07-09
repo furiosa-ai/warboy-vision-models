@@ -1,9 +1,8 @@
-from typing import Dict, List, Sequence, Tuple
-
 import cv2
 import numpy as np
+from typing import Dict, List, Sequence, Tuple, Any
 
-from warboy.cfg import COLORS, POSE_LIMB_COLOR, SKELETONS
+from warboy.cfg import COLORS, POSE_LIMB_COLOR, SKELETONS, TASKS
 from warboy.utils.decoder.yolo_decoder import (
     InsSegDecoder,
     ObjDetDecoder,
@@ -11,19 +10,31 @@ from warboy.utils.decoder.yolo_decoder import (
 )
 
 
-def getPostProcesser(app_type, model_name, model_cfg, class_names, use_tracking=True):
-    assert app_type in [
-        "object_detection",
-        "pose_estimation",
-        "instance_segmentation",
-    ], "sdfasd"
-    if app_type == "object_detection":
-        postproc = ObjDetPostprocess(model_name, model_cfg, class_names, use_tracking)
-    elif app_type == "pose_estimation":
-        postproc = PoseEstPostprocess(model_name, model_cfg, class_names, use_tracking)
-    elif app_type == "instance_segmentation":
-        postproc = InsSegPostProcess(model_name, model_cfg, class_names, use_tracking)
-    return postproc
+def getPostProcesser(
+    task: str,
+    model_name: str,
+    model_cfg: Dict[str, Any],
+    class_names: List[str],
+    is_tracking: bool = True,
+):
+    """
+    Function for returning postprocess function.
+    
+    Args:
+        task (str): task for application
+        model_name (str): base model name of yolo
+        model_cfg (Dict): model configuration
+        class_names (List): list of class names for task
+        is_trakcing(bool) : whether using tracking algorithm
+    """
+    if task == "object_detection":
+        return ObjDetPostprocess(model_name, model_cfg, class_names, is_tracking)
+    elif task == "pose_estimation":
+        return PoseEstPostprocess(model_name, model_cfg, class_names, is_tracking)
+    elif task == "instance_segmentation":
+        return InsSegPostProcess(model_name, model_cfg, class_names, is_tracking)
+    else:
+        raise f"Not supporting {task} task, you have set task among {TASKS}"
 
 
 # Postprocess for Object Detection

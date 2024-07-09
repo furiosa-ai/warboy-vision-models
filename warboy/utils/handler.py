@@ -133,14 +133,14 @@ class Handler:
         tf = max(tl - 1, 1)
         t_size = cv2.getTextSize(FPS, 0, fontScale=tl / 3, thickness=tf)[0]
         c2 = c1[0] + int(t_size[0] * 1.5), c1[1] - t_size[1] - int(0.05 * h) + 5
-        cv2.rectangle(img, (c1[0], c1[1] + 5), c2, (0, 0, 0), -1)  # filled
+        # cv2.rectangle(img, (c1[0], c1[1] + 5), c2, (0, 0, 0), -1)  # filled
         cv2.putText(
             img,
             FPS,
             (c1[0], c1[1] + 2),
             cv2.FONT_HERSHEY_PLAIN,
             tl,
-            (255, 255, 255),
+            (0, 0, 0),
             thickness=tl,
             lineType=cv2.LINE_AA,
         )
@@ -176,7 +176,6 @@ class ImageHandler:
     def __call__(self, result_queues: List[MpQueue]):
         num_channel = len(result_queues)
         num_end_channel = 0
-        # cnt = 0
 
         grid_shape = self._get_grid_info(num_channel)
         while num_end_channel < num_channel:
@@ -205,14 +204,7 @@ class ImageHandler:
             full_grid_img = self._get_full_grid_img(
                 grid_imgs, grid_shape, total_fps, num_channel - num_end_channel
             )
-            yield full_grid_img
-            # output_path = ".tmp"
-            # cv2.imwrite(os.path.join(output_path, ".%010d.bmp" % cnt), full_grid_img)
-            # os.rename(
-            #    os.path.join(output_path, ".%010d.bmp" % cnt),
-            #    os.path.join(output_path, "%010d.bmp" % cnt),
-            # )
-            # cnt += 1
+            yield full_grid_img, total_fps
 
     def _get_grid_info(self, num_channel):
         if self.num_grid is None:
@@ -225,7 +217,7 @@ class ImageHandler:
         return grid_shape
 
     def _get_full_grid_img(self, grid_imgs, grid_shape, total_fps=0.0, num_videos=0):
-        height_pad = int(self.full_grid_shape[0] * 0.06)
+        height_pad = 0  # int(self.full_grid_shape[0] * 0.06)
 
         full_grid_img = np.zeros(
             (self.full_grid_shape[0] + height_pad, self.full_grid_shape[1], 3), np.uint8
@@ -244,7 +236,7 @@ class ImageHandler:
             y1 = (r + 1) * grid_shape[0] + (r + 1) * (self.pad // 2)
 
             full_grid_img[x0:x1, y0:y1] = grid_img
-
+        """
         h, w, _ = full_grid_img.shape
         org = (5, int(0.05 * h) - 5)
         scale = min(int((int(0.05 * w) - 5) * 0.04), 3)
@@ -258,5 +250,5 @@ class ImageHandler:
             scale,
             cv2.LINE_AA,
         )
-
+        """
         return full_grid_img
