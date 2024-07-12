@@ -1,0 +1,102 @@
+import asyncio
+import uvicorn
+import time
+import cv2
+import queue
+import multiprocessing as mp
+
+from fastapi import FastAPI, Request, Response, WebSocket
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+
+from warboy.utils.handler import ImageHandler
+from warboy.utils.monitor_npu import WARBOYDevice
+
+app = FastAPI()
+
+# CORS 설정 추가
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 필요한 도메인으로 변경 가능
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.state.result_queues = list()
+
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket Image Stream</title>
+    </head>
+    <body>
+        <h1>WebSocket Image Stream</h1>
+        <img id="image" width="640" height="480" />
+        <script>
+            let ws = new WebSocket("ws://172.200.0.75:20001/ws/1");
+            let image = document.getElementById("image");
+
+            ws.onmessage = function(event) {
+                let blob = event.data;
+                let url = URL.createObjectURL(blob);
+                image.src = url;
+            };
+
+            ws.onopen = function(event) {
+                console.log("WebSocket is open now.");
+            };
+
+            ws.onclose = function(event) {
+                console.log("WebSocket is closed now.");
+            };
+        </script>
+    </body>
+</html>
+"""
+
+@app.get("/")
+async def get():
+    return HTMLResponse(html)
+
+@app.websocket("/ws/1")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    result_queue = app.state.result_queues[0]
+    
+    FPS = 0.0
+    try:
+        while True:
+            while True:
+                try:
+                    out_frame, FPS = result_queue.get(False)
+                    break
+                except queue.Empty:
+                    await asyncio.sleep(0)
+                except QueueClosedError:
+                    break
+            _, grid_img = cv2.imencode(".jpg", out_frame)
+            out_frame = grid_img.tobytes()
+            await websocket.send_bytes(out_frame)
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        await websocket.close()
+
+
+def run_viewer(*args, **kwargs):
+    uvicorn.run(*args, **kwargs)
+
+
+def spawn_web_viewer(port: str, result_queues):
+    app.state.result_queues = result_queues
+    viewer_proc = mp.Process(
+        target=run_viewer,
+        args=("warboy.viewer:app",),
+        kwargs={"host": "0.0.0.0", "port": int(port), },
+    )
+    viewer_proc.start()
+    return viewer_proc

@@ -82,6 +82,16 @@
                     width: 1fr;
                 }
             }
+
+            .channel {
+                display: inline-block;
+                margin: 10px;
+            }
+
+            .channel img {
+                width: 320px;
+                height: 240px;
+            }
         </style>
         <img src="/static/img/Furiosa_AI_h_w.svg" alt="Why" class="logo_image">
         <span
@@ -95,7 +105,48 @@
                 <span id="fps" style="color:white; text-align: left; font-family: IBMPlexSans Light; font-size: 2vw;">
                     TOTAL FPS: 0
                 </span>
-                <img src=" /video_feed" alt="Inference Image" class="demo_image">
+                <div id="channels"></div> <!--<img src=" /video_feed" alt="Inference Image" class="demo_image">-->
+                <script>
+                    async function fetchChannels() {
+                        const response = await fetch('/channels');
+                        const data = await response.json();
+                        return data.channels;
+                    }
+                    function startWebSocket() {
+                        let ws = new WebSocket(`ws://172.200.0.75:20001/ws`);
+                        ws.onopen = function (event) {
+                            console.log(`WebSocket openned`);
+                        }
+                        ws.onmessage = function (event) {
+                            let datas = JSON.parse(event.data);
+                            Object.keys(datas).forEach(camera => {
+                                let img = document.getElementById(camera);
+                                const imgElement = document.getElementById(camera);
+                                let url = URL.createObjectURL(new Blob([new Uint8Array(datas[camera])], { type: "image/jpeg" }));
+                                imgElement.src = url;
+                            });
+                        };
+                        ws.onclose = function (event) {
+                            console.log(`WebSocket closed for channel`);
+                        };
+                    }
+                    async function initialize() {
+                        const channels = await fetchChannels();
+                        const channelsDiv = document.getElementById('channels');
+                        channels.forEach(channel => {
+                            const channelDiv = document.createElement('div');
+                            channelDiv.className = 'channel';
+                            channelDiv.id = `channel-${channel}`;
+                            channelDiv.innerHTML = `
+                            <h2>Channel ${channel}</h2>
+                            <img id="camera_${channel}" alt="Channel ${channel}">
+                        `;
+                            channelsDiv.appendChild(channelDiv);
+                        });
+                        startWebSocket();
+                    }
+                    initialize();
+                </script>
             </div>
         </div>
         <div style="display: grid; justify-content: right; background-color: black; margin-left: 2.0vw;">
@@ -160,7 +211,6 @@
             };
 
             var stat = {}
-
             var myChart_1 = new Chart(ctx_1, {
                 type: 'line',
                 data: power_data,

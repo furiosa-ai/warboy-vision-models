@@ -45,6 +45,10 @@ class Handler:
                 param["class_names"],
             )
         ]
+        self.full_grid_shape = (720, 1280)
+        self.num_grid = None
+        self.pad = 10
+        self.grid_shape = self._get_grid_info(len(result_queues))
 
     def start(self):
         for proc in self.video_processors:
@@ -89,6 +93,12 @@ class Handler:
                         num_completed = img_idx
 
                     out_img = self._put_fps_to_img(out_img, f"FPS: {FPS:.1f}")
+
+                    out_img = cv2.resize(
+                        out_img, self.grid_shape, interpolation=cv2.INTER_LINEAR
+                    )
+                    _, grid_img = cv2.imencode(".jpg", out_img)
+                    out_img = grid_img.tobytes()
                     result_queue.put((out_img, FPS))
                     img_idx += 1
                 except Exception as e:
@@ -157,6 +167,16 @@ class Handler:
         else:
             raise "Not Supported Video Type ()"
         return cap
+
+    def _get_grid_info(self, num_channel):
+        if self.num_grid is None:
+            n = math.ceil(math.sqrt(num_channel))
+            self.num_grid = (n, n)
+        grid_shape = (
+            int((self.full_grid_shape[1]) / self.num_grid[1]) - self.pad // 2,
+            int((self.full_grid_shape[0]) / self.num_grid[0]) - self.pad // 2,
+        )
+        return grid_shape
 
 
 class ImageHandler:

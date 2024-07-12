@@ -1,40 +1,70 @@
 app_config:
-  - application:
+  - task:
       - object_detection
-    model_config:
+    model_cfg:
       - ./cfg/object_detection_model.yaml
     model_path:
-      - []
-    num_worker: 8
-    device:
-      - warboy(1)*1
-    videos_info:
-      - input_path: /home/ubuntu/video_files_0523/detection_videos/elephant_1.mp4
+      - /home/furiosa/work_space/models/yolov8s_od.enf
+    num_worker: 32
+    npu_device:
+      - npu0pe0
+    video_params:
+      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/car_1.mp4
         type: file
-        recursive: False
-      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_1.mp4
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/cow_1.mp4
         type: file
-        recursive: False
-      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_2.mp4
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/cow_2.mp4
         type: file
-        recursive: False
-  - application:
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/elephant_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/dog_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/walking_2.mp4
+        type: file
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/surfing_2.mp4
+        type: file
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/surfing_1.mp4
+        type: file
+        recursive: True
+  - task:
       - pose_estimation
-    model_config:
+    model_cfg:
       - ./cfg/pose_estimation_model.yaml
     model_path:
-      - []
-    num_worker: 8
-    device:
-      - warboy(1)*1
-    videos_info:
-      - input_path: /home/ubuntu/video_files_0523/detection_videos/elephant_1.mp4
+      - /home/furiosa/work_space/models/yolov8n-pose.enf
+    num_worker: 32
+    npu_device:
+      - npu0pe1
+    video_params:
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/bmx_1.mp4
         type: file
-        recursive: False
-      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_1.mp4
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/dance_1.mp4
         type: file
-        recursive: False
-      - input_path: /home/ubuntu/video_files_0523/detection_videos/surfing_2.mp4
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/dance_2.mp4
         type: file
-        recursive: False
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/shoot_2.mp4
+        type: file
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/surfing_4.mp4
+        type: file
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/volleyball_1.mp4
+        type: file
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/Taekwondo_2.mp4
+        type: file
+        recursive: True
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/walking_1.mp4
+        type: file
+        recursive: True
 port: 20001

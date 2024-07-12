@@ -17,5 +17,6 @@ if __name__ == "__main__":
     run_warboy_app(warboy_app)
     result_queues = warboy_app.get_result_queues()
     proc = spawn_web_viewer("20001", result_queues)
+
     while True:
         continue
