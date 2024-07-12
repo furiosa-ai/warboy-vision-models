@@ -6,7 +6,7 @@ from warboy.runtime.mp_queue import MpQueue, QueueClosedError, QueueStopEle
 from warboy.runtime.warboy_runtime import WarboyRuntimeQueue, WarboyRuntimeRunner
 from warboy.utils.handler import Handler
 
-QUEUE_SIZE = -1
+QUEUE_SIZE = 100
 
 
 class AppRunner:

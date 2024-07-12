@@ -48,11 +48,14 @@ class Handler:
         self.full_grid_shape = (720, 1280)
         self.num_grid = None
         self.pad = 10
-        self.grid_shape = self._get_grid_info(len(result_queues))
+        self.grid_shape = self._get_grid_info(25)
 
     def start(self):
         for proc in self.video_processors:
-            proc.start()
+            try:
+                proc.start()
+            except Exception as e:
+                print(e, flush=True)
 
     def join(self):
         for proc in self.video_processors:
@@ -74,40 +77,36 @@ class Handler:
         num_completed = 0
         FPS = 0.0
         start_time = time.time()
-        while running:
-            cap = self._get_cv_widget(video_path, video_type)
-
-            while True:
-                try:
-                    hasFrame, frame = cap.read()
-                    if not hasFrame:
-                        break
-                    contexts = self._put_input_to_queue(frame, input_queue)
-                    out_img = self._get_output_from_queue(frame, output_queue, contexts)
-                    if out_img is None:
-                        break
-
-                    if time.time() - start_time > 1.0:
-                        FPS = (img_idx - num_completed) / (time.time() - start_time)
-                        start_time = time.time()
-                        num_completed = img_idx
-
-                    out_img = self._put_fps_to_img(out_img, f"FPS: {FPS:.1f}")
-
-                    out_img = cv2.resize(
-                        out_img, self.grid_shape, interpolation=cv2.INTER_LINEAR
-                    )
-                    _, grid_img = cv2.imencode(".jpg", out_img)
-                    out_img = grid_img.tobytes()
-                    result_queue.put((out_img, FPS))
-                    img_idx += 1
-                except Exception as e:
-                    result_queue.put(QueueStopEle)
+        cap = self._get_cv_widget(video_path, video_type)
+        while True:
+            try:
+                hasFrame, frame = cap.read()
+                if not hasFrame:
+                    if recursive:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        continue
+                    break
+                contexts = self._put_input_to_queue(frame, input_queue)
+                out_img = self._get_output_from_queue(frame, output_queue, contexts)
+                if out_img is None:
                     break
 
-            running = recursive
-            if cap.isOpened():
-                cap.release()
+                if time.time() - start_time > 1.0:
+                    FPS = (img_idx - num_completed) / (time.time() - start_time)
+                    start_time = time.time()
+                    num_completed = img_idx
+
+                out_img = self._put_fps_to_img(out_img, f"FPS: {FPS:.1f}")
+                out_img = cv2.resize(
+                    out_img, self.grid_shape, interpolation=cv2.INTER_LINEAR
+                )
+                result_queue.put((out_img, FPS))
+                img_idx += 1
+            except Exception as e:
+                result_queue.put(QueueStopEle)
+                break
+        if cap.isOpened():
+            cap.release()
 
     def _put_input_to_queue(self, frame: np.ndarray, input_queue: List[MpQueue]):
         contexts = []
@@ -125,6 +124,7 @@ class Handler:
     ):
         out_img = frame
         for postprocess, oq, context in zip(self.postprocessor, output_queue, contexts):
+            t0 = time.time()
             while True:
                 try:
                     outputs = oq.get(False)
@@ -214,10 +214,6 @@ class ImageHandler:
                         num_end_channel += 1 if states[idx] else 0
                         states[idx] = False
                         break
-                if not out_img is None:
-                    out_img = cv2.resize(
-                        out_img, grid_shape, interpolation=cv2.INTER_LINEAR
-                    )
                 grid_imgs.append(out_img)
                 total_fps += FPS
                 idx += 1
@@ -256,19 +252,4 @@ class ImageHandler:
             y1 = (r + 1) * grid_shape[0] + (r + 1) * (self.pad // 2)
 
             full_grid_img[x0:x1, y0:y1] = grid_img
-        """
-        h, w, _ = full_grid_img.shape
-        org = (5, int(0.05 * h) - 5)
-        scale = min(int((int(0.05 * w) - 5) * 0.04), 3)
-        full_grid_img = cv2.putText(
-            full_grid_img,
-            f"TOTAL FPS: {total_fps:.2f}",
-            org,
-            cv2.FONT_HERSHEY_PLAIN,
-            scale,
-            (255, 255, 255),
-            scale,
-            cv2.LINE_AA,
-        )
-        """
         return full_grid_img

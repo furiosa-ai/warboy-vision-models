@@ -44,31 +44,41 @@
                 width: 12%;
             }
 
+            .viewer_container {
+                width: 95%;
+                height: 100%;
+            }
+
             .demo_image {
                 width: 72.5vw;
             }
 
             .container {
                 display: grid;
-                max-width: 90%;
-                width: 90%;
-                row-gap: -100px;
+                max-width: 100%;
             }
 
             .device {
                 max-width: 100%;
-                width: 90%;
+                width: 100%;
+                margin: -14% 0% 0% 0%;
+                overflow: hidden;
             }
 
-            .graph_container {
+            .device img {
+                transform: scale(1.7);
+                margin: 0% 0% 0% -1%;
+            }
 
-                max-height: 33%;
+
+            .graph_container {
+                max-height: 65%;
             }
 
             .graph {
                 max-height: 90%;
                 width: 100%;
-                height: 50%;
+                height: 90%;
             }
 
             @media (min-width: 768px) {
@@ -99,61 +109,22 @@
             1st NPU CARD - WARBOY VISION DEMO
         </span>
     </header>
-    <div style="display: flex; justify-content: left; background-color: black; margin-top: 1%;">
+    <div style="display: flex; justify-content: left; background-color: black; margin-top: 1%;"
+        class="viewer_container">
         <div style="margin-left: 2%;">
             <div>
                 <span id="fps" style="color:white; text-align: left; font-family: IBMPlexSans Light; font-size: 2vw;">
                     TOTAL FPS: 0
                 </span>
-                <div id="channels"></div> <!--<img src=" /video_feed" alt="Inference Image" class="demo_image">-->
-                <script>
-                    async function fetchChannels() {
-                        const response = await fetch('/channels');
-                        const data = await response.json();
-                        return data.channels;
-                    }
-                    function startWebSocket() {
-                        let ws = new WebSocket(`ws://172.200.0.75:20001/ws`);
-                        ws.onopen = function (event) {
-                            console.log(`WebSocket openned`);
-                        }
-                        ws.onmessage = function (event) {
-                            let datas = JSON.parse(event.data);
-                            Object.keys(datas).forEach(camera => {
-                                let img = document.getElementById(camera);
-                                const imgElement = document.getElementById(camera);
-                                let url = URL.createObjectURL(new Blob([new Uint8Array(datas[camera])], { type: "image/jpeg" }));
-                                imgElement.src = url;
-                            });
-                        };
-                        ws.onclose = function (event) {
-                            console.log(`WebSocket closed for channel`);
-                        };
-                    }
-                    async function initialize() {
-                        const channels = await fetchChannels();
-                        const channelsDiv = document.getElementById('channels');
-                        channels.forEach(channel => {
-                            const channelDiv = document.createElement('div');
-                            channelDiv.className = 'channel';
-                            channelDiv.id = `channel-${channel}`;
-                            channelDiv.innerHTML = `
-                            <h2>Channel ${channel}</h2>
-                            <img id="camera_${channel}" alt="Channel ${channel}">
-                        `;
-                            channelsDiv.appendChild(channelDiv);
-                        });
-                        startWebSocket();
-                    }
-                    initialize();
-                </script>
+                <img src=" /video_feed" alt="Inference Image" class="demo_image">
             </div>
         </div>
         <div style="display: grid; justify-content: right; background-color: black; margin-left: 2.0vw;">
             <div class="container">
-                <div>
-                    <video fetchpriority="high" aria-label="Black anim" class="device" src="/static/img/warboy2.mp4"
-                        autoplay="" muted="" loop="" playsinline=""></video>
+                <div class="device">
+                    <!--<video fetchpriority="high" aria-label="Black anim" class="device" src="/static/img/warboy2.mp4"
+                        autoplay="" muted="" loop="" playsinline=""></video>-->
+                    <img src="/static/img/warboy.gif" alt="Inference Image" class="device">
                 </div>
                 <div class="graph_container">
                     <p id="DecPower" style="color:white; text-align: left; font-family: IBMPlexSans Light;">NPU
