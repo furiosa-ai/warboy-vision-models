@@ -323,7 +323,8 @@ class PoseDecoderYOLOv5(CDecoderBase):
 
 
 def check_model(model_name: str) -> bool:
-    if "yolov8" in model_name or "yolov9" in model_name:
+    import re
+    if "yolov8" in model_name or "yolov9" in model_name or re.search(r"yolov5.*u", model_name):
         return True
     return False
 

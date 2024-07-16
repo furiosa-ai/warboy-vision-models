@@ -17,13 +17,13 @@ class Handler:
     """
 
     """
-
     def __init__(
         self,
         input_queues: List[List[MpQueue]],
         output_queues: List[List[MpQueue]],
         result_queues: List[MpQueue],
         param: Dict[str, Any],
+        num_channels: int,
     ) -> None:
         self.video_processors = [
             mp.Process(
@@ -48,7 +48,7 @@ class Handler:
         self.full_grid_shape = (720, 1280)
         self.num_grid = None
         self.pad = 10
-        self.grid_shape = self._get_grid_info(25)
+        self.grid_shape = self._get_grid_info(num_channels)
 
     def start(self):
         for proc in self.video_processors:
@@ -131,7 +131,7 @@ class Handler:
                     out_img = postprocess(outputs, context, out_img)
                     break
                 except queue.Empty:
-                    time.sleep(0)
+                    time.sleep(1e-6)
                 except QueueClosedError:
                     return None
         return out_img
@@ -209,7 +209,7 @@ class ImageHandler:
                         out_img, FPS = result_queues[idx].get(False)
                         break
                     except queue.Empty:
-                        time.sleep(0)
+                        time.sleep(1e-6)
                     except QueueClosedError:
                         num_end_channel += 1 if states[idx] else 0
                         states[idx] = False

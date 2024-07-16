@@ -1,7 +1,24 @@
 TASKS = {"object_detection", "pose_estimation", "instance_segmentation"}
 
 MODEL_LIST = {
-    "object_detection": ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolov8x"],
+    "object_detection": [
+        "yolov8n",
+        "yolov8s",
+        "yolov8m",
+        "yolov8l",
+        "yolov8x",
+        "yolov5n",
+        "yolov5s",
+        "yolov5m",
+        "yolov5l",
+        "yolov5x",
+        "yolov5nu",
+        "yolov5su",
+        "yolov5mu",
+        "yolov5lu",
+        "yolov5xu",
+        "yolov5n6u",
+    ],
     "pose_estimation": [
         "yolov8n-pose",
         "yolov8s-pose",
