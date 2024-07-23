@@ -58,8 +58,13 @@ def _get_output_to_shape_det(model_name, input_shape, output_tensor):
     num_anchors = 3
 
     if "yolov8" in model_name or "yolov9" in model_name:
-        box_tensor = "/model.22/cv2.%d/cv2.%d.2/Conv_output_0"
-        cls_tensor = "/model.22/cv3.%d/cv3.%d.2/Conv_output_0"
+        model_layer = {"yolov9e": "/model.42"}
+        if model_name in model_layer:
+            box_tensor = model_layer[model_name] + "/cv2.%d/cv2.%d.2/Conv_output_0"
+            cls_tensor = model_layer[model_name] + "/cv3.%d/cv3.%d.2/Conv_output_0"
+        else:
+            box_tensor = "/model.22/cv2.%d/cv2.%d.2/Conv_output_0"
+            cls_tensor = "/model.22/cv3.%d/cv3.%d.2/Conv_output_0"
         num_anchors = len(output_tensor) - 1
         nc = output_tensor[0].shape[1] - 4
 
@@ -70,9 +75,13 @@ def _get_output_to_shape_det(model_name, input_shape, output_tensor):
             cls_layer = (cls_tensor % (idx, idx), (bs, nc, h_tensor, w_tensor))
             output_to_shape.append(box_layer)
             output_to_shape.append(cls_layer)
-    elif re.search(r'yolov5.*u', model_name):
-        box_tensor = "/model.24/cv2.%d/cv2.%d.2/Conv_output_0"
-        cls_tensor = "/model.24/cv3.%d/cv3.%d.2/Conv_output_0"
+    elif re.search(r"yolov5.*u", model_name):
+        if "6u" in model_name:
+            box_tensor = "/model.33/cv2.%d/cv2.%d.2/Conv_output_0"
+            cls_tensor = "/model.33/cv3.%d/cv3.%d.2/Conv_output_0"
+        else:
+            box_tensor = "/model.24/cv2.%d/cv2.%d.2/Conv_output_0"
+            cls_tensor = "/model.24/cv3.%d/cv3.%d.2/Conv_output_0"
         num_anchors = len(output_tensor) - 1
         nc = output_tensor[0].shape[1] - 4
 
@@ -87,7 +96,7 @@ def _get_output_to_shape_det(model_name, input_shape, output_tensor):
         nc = output_tensor[0].shape[-1] - 5
         num_anchors = (
             3
-            if output_tensor[0].shape[0]
+            if (output_tensor[0].shape[1] // 3)
             == sum(
                 [
                     int(h / (8 * (1 << idx))) * int(w / (8 * (1 << idx)))
@@ -106,6 +115,7 @@ def _get_output_to_shape_det(model_name, input_shape, output_tensor):
             "yolov5s6": "/model/model/model.33",
             "yolov5m6": "/model/model/model.33",
             "yolov5l6": "/model/model/model.33",
+            "yolov5x6": "/model/model/model.33",
             "yolov7": "/model/model.105",
             "yolov7x": "/model/model.121",
             "yolov7-w6": "/model/model.118",
@@ -131,7 +141,7 @@ def _get_output_to_shape_pose(model_name, input_shape, output_tensor):
     nc = 0
     num_anchors = 3
     if "yolov8" in model_name:
-        nc = output_tensor[0].shape[1] - 17*3 - 4
+        nc = output_tensor[0].shape[1] - 17 * 3 - 4
         box_tensor = "/model.22/cv2.%d/cv2.%d.2/Conv_output_0"
         cls_tensor = "/model.22/cv3.%d/cv3.%d.2/Conv_output_0"
         skeleton_tensor = "/model.22/cv4.%d/cv4.%d.2/Conv_output_0"
@@ -176,20 +186,20 @@ def _get_output_to_shape_pose(model_name, input_shape, output_tensor):
 def _get_output_to_shape_seg(model_name, input_shape, output_tensor):
     output_to_shape = []
     bs, c, h, w = input_shape
-    nc = output_tensor[0].shape[1] - 4
+    nc = output_tensor[0].shape[1] - 36
     num_anchors = 3
 
     if "yolov8" in model_name or "yolov9" in model_name:
-        proto_layer_names = {
-            "yolov8n-seg": "755",
-            "yolov8m-seg": "961",
-            "yolov8x-seg": "1167",
-            "yolov9c-seg": "1850",
-        }
-
-        box_tensor = "/model.22/cv2.%d/cv2.%d.2/Conv_output_0"
-        cls_tensor = "/model.22/cv3.%d/cv3.%d.2/Conv_output_0"
-        instance_tensor = "/model.22/cv4.%d/cv4.%d.2/Conv_output_0"
+        proto_layer_names = output_tensor[-1].name
+        model_layer = {"yolov9e-seg": "/model.42"}
+        if model_name in model_layer:
+            box_tensor = model_layer[model_name] + "/cv2.%d/cv2.%d.2/Conv_output_0"
+            cls_tensor = model_layer[model_name] + "/cv3.%d/cv3.%d.2/Conv_output_0"
+            instance_tensor = model_layer[model_name] + "/cv4.%d/cv4.%d.2/Conv_output_0"
+        else:
+            box_tensor = "/model.22/cv2.%d/cv2.%d.2/Conv_output_0"
+            cls_tensor = "/model.22/cv3.%d/cv3.%d.2/Conv_output_0"
+            instance_tensor = "/model.22/cv4.%d/cv4.%d.2/Conv_output_0"
 
         for idx in range(num_anchors):
             h_tensor = int(h / (8 * (1 << idx)))
@@ -206,10 +216,7 @@ def _get_output_to_shape_seg(model_name, input_shape, output_tensor):
             output_to_shape.append(cls_layer)
             output_to_shape.append(instance_layer)
 
-        proto_layer = (
-            proto_layer_names[model_name],
-            (bs, 32, int(h / 8) * 2, int(w / 8) * 2),
-        )
+        proto_layer = (proto_layer_names, (bs, 32, int(h / 8) * 2, int(w / 8) * 2))
         output_to_shape.append(proto_layer)
     else:
         raise "Unsupported Segmentation Model!!"

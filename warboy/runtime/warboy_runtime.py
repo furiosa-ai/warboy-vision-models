@@ -39,7 +39,10 @@ class WarboyRuntimeQueue:
         self, input_queues: List[List[MpQueue]], output_queues: List[List[MpQueue]]
     ) -> None:
         async with create_queue(
-            model=self.model_path, worker_num=self.worker_num, device=self.device, compiler_config={"lower_tabulated_dequantize": True}
+            model=self.model_path,
+            worker_num=self.worker_num,
+            device=self.device,
+            compiler_config={"lower_tabulated_dequantize": True},
         ) as (submitter, receiver):
             submit_task = asyncio.create_task(self.submit_with(submitter, input_queues))
             recv_task = asyncio.create_task(self.recv_with(receiver, output_queues))
@@ -106,7 +109,10 @@ class WarboyRuntimeRunner:
         num_task = len(input_queues)
         self.num_task = len(input_queues)
         async with create_runner(
-            self.model_path, worker_num=self.worker_num, device=self.device, compiler_config={"lower_tabulated_dequantize": True}
+            self.model_path,
+            worker_num=self.worker_num,
+            device=self.device,
+            compiler_config={"lower_tabulated_dequantize": True},
         ) as runner:
             await asyncio.gather(
                 *(

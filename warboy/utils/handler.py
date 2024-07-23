@@ -17,6 +17,7 @@ class Handler:
     """
 
     """
+
     def __init__(
         self,
         input_queues: List[List[MpQueue]],

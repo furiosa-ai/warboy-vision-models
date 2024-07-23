@@ -208,15 +208,6 @@ class InsSegDecoder(YOLO_Decoder):
         proto = proto[..., top:bottom, left:right]
 
         for _, prediction in enumerate(outputs):
-            tmp_prediction = []
-            for p in prediction:
-                if int(p[5]) == 0:
-                    tmp_prediction.append(p)
-            if len(tmp_prediction) == 0:
-                return [(np.array([]), np.array([]))]
-
-            prediction = np.array(tmp_prediction)
-
             prediction[:, :4] = scale_coords(
                 prediction[:, :4], ratio, dwdh, org_input_shape
             )  # Box Result
@@ -324,7 +315,12 @@ class PoseDecoderYOLOv5(CDecoderBase):
 
 def check_model(model_name: str) -> bool:
     import re
-    if "yolov8" in model_name or "yolov9" in model_name or re.search(r"yolov5.*u", model_name):
+
+    if (
+        "yolov8" in model_name
+        or "yolov9" in model_name
+        or re.search(r"yolov5.*u", model_name)
+    ):
         return True
     return False
 
@@ -350,7 +346,7 @@ def scale_coords(
 def process_mask(proto, mask_in, bbox, shape):
     c, mh, mw = proto.shape
     # masks = yolov8_segmentation_decode(mask_in, proto)
-    masks = (mask_in @ proto.view(c, -1)).sigmoid().view(-1, mh, mw)
+    masks = (mask_in @ proto.contiguous().view(c, -1)).sigmoid().view(-1, mh, mw)
     if len(masks) != 0:
         masks = F.interpolate(masks[None], shape, mode="bilinear", align_corners=False)[
             0

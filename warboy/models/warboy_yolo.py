@@ -47,10 +47,12 @@ class WARBOY_YOLO:
 
     def export_onnx(self, need_edit: bool = True, edit_info=None):
         print(f"Load PyTorch Model from {self.weight}...")
+        if not os.path.exists(os.path.dirname(self.onnx_path)):
+            os.makedirs(os.path.dirname(self.onnx_path))
         torch_model = self._load_torch_model().eval()
 
         print(f"Export ONNX {self.onnx_path}...")
-        dummy_input = torch.zeros(*self.input_shape).to(torch.device("cpu"))
+        dummy_input = torch.randn(*self.input_shape).to(torch.device("cpu"))
 
         torch.onnx.export(
             torch_model,
@@ -66,7 +68,7 @@ class WARBOY_YOLO:
             onnx.save(onnx.shape_inference.infer_shapes(edited_model), self.onnx_path)
 
         print(f"Export ONNX for {self.model_name} >> {self.onnx_path}")
-        return
+        return True
 
     def _edit_onnx(self, edit_info: Dict[str, List] = None):
         from onnx.utils import Extractor
@@ -106,17 +108,15 @@ class WARBOY_YOLO:
         if yolo_version >= 8 and yolo_version < 10:
             torch_model = YOLO(self.weight).model
         elif yolo_version == 7:
-            torch_model = torch.hub.load("WongKinYiu/yolov7", "custom", self.weight)
+            torch_model = torch.hub.load("WongKinYiu/yolov7", "custom", self.weight).to(
+                torch.device("cpu")
+            )
+        elif yolo_version == 5 and "u" in self.model_name:
+            torch_model = YOLO(self.weight).model
         elif yolo_version == 5:
-            try:
-                torch_model = YOLO(self.weight).model
-            except Exception as e:
-                torch_model = torch.hub.load(
-                    "ultralytics/yolov5",
-                    "custom",
-                    self.weight,
-                    device=torch.device("cpu"),
-                )
+            torch_model = torch.hub.load(
+                "ultralytics/yolov5", "custom", self.weight
+            ).to(torch.device("cpu"))
         else:
             raise ValueError(f"Supported Version 5,7,8,9")
 
@@ -139,6 +139,9 @@ class WARBOY_YOLO:
         """
         Qauntize the model using FuriosaAI SDK.
         """
+        if not os.path.exists(os.path.dirname(self.onnx_i8_path)):
+            os.makedirs(os.path.dirname(self.onnx_i8_path))
+
         if not os.path.exists(self.onnx_path):
             raise FileNotFoundError(f"{self.onnx_path} is not found!")
 
@@ -166,7 +169,9 @@ class WARBOY_YOLO:
         )
         preprocessor = YOLOPreProcessor()
 
-        for calibration_data in tqdm(self._get_calibration_dataset(), desc="calibration..."):
+        for calibration_data in tqdm(
+            self._get_calibration_dataset(), desc="calibration..."
+        ):
             input_img = cv2.imread(calibration_data)
             input_, _ = preprocessor(
                 input_img, new_shape=new_shape, tensor_type="float32"
@@ -187,7 +192,7 @@ class WARBOY_YOLO:
             f.write(bytes(quantized_model))
 
         print(f"Quantization completd >> {self.onnx_i8_path}")
-        return
+        return True
 
     def _get_calibration_dataset(self):
         import imghdr
@@ -200,7 +205,7 @@ class WARBOY_YOLO:
         datas = random.choices(datas, k=min(self.num_calibration_data, len(datas)))
         for data in datas:
             data_path = os.path.join(self.calibration_data, data)
-            if imghdr.what(data_path) is None:
+            if os.path.isdir(data_path) or imghdr.what(data_path) is None:
                 continue
             calibration_data.append(data_path)
         return calibration_data

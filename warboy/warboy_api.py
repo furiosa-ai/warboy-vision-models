@@ -13,6 +13,7 @@ class AppRunner:
     """
     
     """
+
     def __init__(self, param, result_queues: List[MpQueue], num_channels: int) -> None:
         num_task = len(param["task"])
         num_videos = len(param["videos_info"])
@@ -27,7 +28,7 @@ class AppRunner:
 
         # Warboy Runtime
         self.job_handler = Handler(
-            self.input_queues, self.output_queues, result_queues, param, num_channels,
+            self.input_queues, self.output_queues, result_queues, param, num_channels
         )
         warboy_runtimes = self._get_warboy_runtime(param, num_task, "queue")
 
@@ -94,7 +95,9 @@ class WARBOY_APP:
             self.result_queues += result_queues
 
         for param, result_queues in zip(self.params, total_result_queues):
-            self.app_runners.append(AppRunner(param, result_queues, len(self.result_queues)))
+            self.app_runners.append(
+                AppRunner(param, result_queues, len(self.result_queues))
+            )
 
         self.app_runner_threads = [
             threading.Thread(target=app_runner, args=())

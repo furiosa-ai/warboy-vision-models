@@ -1,6 +1,6 @@
 import threading
 
-from warboy import WARBOY_APP, get_demo_params_from_cfg, spawn_web_viewer, MODEL_LIST
+from warboy import WARBOY_APP, MODEL_LIST, get_demo_params_from_cfg, spawn_web_viewer
 
 
 def run_warboy_app(warboy_app):

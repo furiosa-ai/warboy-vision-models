@@ -14,7 +14,7 @@ class QueueClosedError(Exception):
 class MpQueue:
     def __init__(self, max_size: int = 0) -> None:
         self.qu = _MPQueue(maxsize=max_size)
-        #self.put_lk, self.get_lk = _MPLock(), _MPLock()
+        # self.put_lk, self.get_lk = _MPLock(), _MPLock()
 
     def put(self, item, block=True, timeout=None) -> None:
         # assert item is not QueueStopEle
@@ -24,7 +24,7 @@ class MpQueue:
         return self.qu.put(item, block, timeout)
 
     def get(self, block=True, timeout=None):
-        #with self.get_lk:
+        # with self.get_lk:
         if self.qu is not None:
             item = self.qu.get(block, timeout)
         else:
