@@ -24,6 +24,7 @@ Object detection is a computer vision technique used to identify the presence of
 - [YOLOv5](https://github.com/ultralytics/yolov5) Object Detection (COCO)
 
 <div align="center">
+  
 | Model     | Input Size<br><sup>(pixels) |  mAP<sup>val<br>50-95 (FP32) | mAP<sup>val<br>50-95 (INT8) | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
 | --------- | --------------------------- | ---------------------------- |---------------------------- | ----------------------------------- | -------------------------------------- |
 | YOLOv9t   | 640x640                     | 38.3                         | 35.4                        | 2.13  (4.60)                        | 2.60  (4.94)                           |
@@ -58,9 +59,11 @@ Object detection is a computer vision technique used to identify the presence of
 | YOLOv5m6  | 1280x1280                   | 51.3                         | 48.7                        | 12.73 (39.07)                       |                                        |
 | YOLOv5l6  | 1280x1280                   | 53.7                         | 50.9                        | 39.17 (63.08)                       |                                        |
 | YOLOv5x6  | 1280x1280                   | 55.0                         | 52.3                        |                                     |                                        |
+
 </div>
 
 <div align="center">
+  
 | Model       | Input Size<br><sup>(pixels) |  mAP<sup>box<br>50-95 (FP32) | mAP<sup>box<br>50-95 (INT8) |  mAP<sup>mask<br>50-95 (FP32) | mAP<sup>mask<br>50-95 (INT8) | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
 | ----------- | --------------------------- | ---------------------------- |---------------------------- | ----------------------------- |----------------------------- | ----------------------------------- | -------------------------------------- |
 | YOLOv9c-seg | 640x640                     | 52.4                         | 49.5                        | 42.2                          | 39.3                         | 2.13  (4.60)                        | 2.60  (4.94)                           |
@@ -73,6 +76,7 @@ Object detection is a computer vision technique used to identify the presence of
 </div>
 
 <div align="center">
+  
 | Model       | Input Size<br><sup>(pixels) |  mAP<sup>pose<br>50-95 (FP32) | mAP<sup>pose<br>50-95 (INT8) | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
 | ----------- | --------------------------- | ----------------------------- |----------------------------- | ----------------------------------- | -------------------------------------- |
 | YOLOv8n-pose | 640x640                    | 50.4                          | 47.6                         | 1.54  (3.59)                        | 1.90  (4.06)                           |
