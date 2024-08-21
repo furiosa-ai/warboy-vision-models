@@ -14,7 +14,6 @@ from tests.utils import (
     MSCOCODataLoader,
     CONF_THRES,
     IOU_THRES,
-    ANCHORS,
     YOLO_CATEGORY_TO_COCO_CATEGORY,
     xyxy2xywh,
 )
@@ -51,7 +50,7 @@ TARGET_ACCURACY = {
 
 async def warboy_inference(model, data_loader, preprocessor, postprocessor):
     async def task(
-        pbar, runner, data_loader, preprocessor, postprocessor, worker_id, worker_num
+        runner, data_loader, preprocessor, postprocessor, worker_id, worker_num
     ):
         results = []
         for idx, (img_path, annotation) in enumerate(data_loader):
@@ -75,28 +74,25 @@ async def warboy_inference(model, data_loader, preprocessor, postprocessor):
                         "score": round(output[4], 5),
                     }
                 )
-            pbar.update(1)
         return results
 
     from furiosa.runtime import create_runner
 
     worker_num = 16
-    with tqdm(total=5000) as pbar:
-        async with create_runner(model, worker_num=32) as runner:
-            results = await asyncio.gather(
-                *(
-                    task(
-                        pbar,
-                        runner,
-                        data_loader,
-                        preprocessor,
-                        postprocessor,
-                        idx,
-                        worker_num,
-                    )
-                    for idx in range(worker_num)
+    async with create_runner(model, worker_num=32, compiler_config={"use_program_loading": True}) as runner:
+        results = await asyncio.gather(
+            *(
+                task(
+                    runner,
+                    data_loader,
+                    preprocessor,
+                    postprocessor,
+                    idx,
+                    worker_num,
                 )
+                for idx in range(worker_num)
             )
+        )
     return sum(results, [])
 
 
@@ -129,5 +125,5 @@ def test_warboy_yolo_accuracy_pose(
     coco_eval.summarize()
 
     assert (
-        coco_eval.stats[0] >= TARGET_ACCURACY[warboy_yolo.model_name]
+        coco_eval.stats[0] >= TARGET_ACCURACY[model_name]
     ), f"{model_name} Accuracy check failed! -> mAP: {coco_eval.stats[0]}"

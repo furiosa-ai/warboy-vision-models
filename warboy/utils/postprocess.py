@@ -95,7 +95,7 @@ class PoseEstPostprocess:
 # Postprocess for Instance Segmentation
 class InsSegPostProcess:
     def __init__(
-        self, model_name: str, model_cfg, class_names, use_traking: bool = True
+        self, model_name: str, model_cfg, class_names, use_traking: bool = False
     ):
         model_cfg.update({"use_tracker": use_traking})
         self.postprocess_func = InsSegDecoder(model_name, **model_cfg)
@@ -115,8 +115,8 @@ class InsSegPostProcess:
 
         if num_prediction == 0 or ins_mask is None:
             return img
-
-        # ins_mask_img = draw_instance_mask(img, ins_mask, bbox, self.class_names)
+        h,w,c = img.shape
+        #ins_mask_img = draw_instance_mask(img, ins_mask, bbox, self.class_names)
         ins_mask_img = draw_contours(img, ins_mask, bbox, self.class_names)
         ins_mask_img = draw_bbox(ins_mask_img, bbox, self.class_names)
         return ins_mask_img

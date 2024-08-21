@@ -47,7 +47,7 @@ class WARBOY_YOLO:
 
     def export_onnx(self, need_edit: bool = True, edit_info=None):
         print(f"Load PyTorch Model from {self.weight}...")
-        if not os.path.exists(os.path.dirname(self.onnx_path)):
+        if os.path.dirname(self.onnx_path)!= "" and not os.path.exists(os.path.dirname(self.onnx_path)):
             os.makedirs(os.path.dirname(self.onnx_path))
         torch_model = self._load_torch_model().eval()
 
@@ -77,6 +77,7 @@ class WARBOY_YOLO:
         input_to_shape, output_to_shape = get_onnx_graph_info(
             self.task, self.model_name, self.onnx_path, edit_info
         )
+        
         edited_graph = Extractor(onnx_graph).extract_model(
             input_names=list(input_to_shape), output_names=list(output_to_shape)
         )
@@ -106,7 +107,12 @@ class WARBOY_YOLO:
         yolo_version = self._check_yolo_version
 
         if yolo_version >= 8 and yolo_version < 10:
-            torch_model = YOLO(self.weight).model
+            if self.task == "instance_segmentation" and yolo_version == 9:
+                torch_model = torch.hub.load("WongKinYiu/yolov9", "custom", self.weight).to(
+                    torch.device("cpu")
+                )
+            else:
+                torch_model = YOLO(self.weight).model
         elif yolo_version == 7:
             torch_model = torch.hub.load("WongKinYiu/yolov7", "custom", self.weight).to(
                 torch.device("cpu")
@@ -139,8 +145,8 @@ class WARBOY_YOLO:
         """
         Qauntize the model using FuriosaAI SDK.
         """
-        if not os.path.exists(os.path.dirname(self.onnx_i8_path)):
-            os.makedirs(os.path.dirname(self.onnx_i8_path))
+        #if not os.path.exists(os.path.dirname(self.onnx_i8_path)):
+        #    os.makedirs(os.path.dirname(self.onnx_i8_path))
 
         if not os.path.exists(self.onnx_path):
             raise FileNotFoundError(f"{self.onnx_path} is not found!")
@@ -203,9 +209,10 @@ class WARBOY_YOLO:
 
         datas = glob.glob(self.calibration_data + "/**", recursive=True)
         datas = random.choices(datas, k=min(self.num_calibration_data, len(datas)))
+        print(datas)
         for data in datas:
-            data_path = os.path.join(self.calibration_data, data)
-            if os.path.isdir(data_path) or imghdr.what(data_path) is None:
+            if os.path.isdir(data) or imghdr.what(data) is None:
                 continue
-            calibration_data.append(data_path)
+            calibration_data.append(data)
+        print(calibration_data)
         return calibration_data

@@ -1,0 +1,18 @@
+task: pose_estimation   #
+model_name: yolov8l
+weight: yolov8n.pt                       # weight file path
+onnx_path: yolov8n.onnx                  # onnx model path
+onnx_i8_path: yolov8l_i8.onnx # quantized onnx model path
+
+calibration_params:
+  calibration_method: SQNR_ASYM # calibration method
+  calibration_data: val2017          # calibration data path
+  num_calibration_data: 200     # number of calibration data
+
+conf_thres: 0.25
+iou_thres: 0.7
+input_shape: [1, 3, 640, 640]         # model input shape (batch, channel, Height, Width)
+anchors:                        # anchor information
+  -
+class_names:
+  - person

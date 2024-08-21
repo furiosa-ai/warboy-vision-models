@@ -22,6 +22,12 @@ PARAMETERS = [WARBOY_YOLO(yaml) for yaml in YAML_PATH]
 
 @pytest.mark.parametrize("warboy_yolo", PARAMETERS)
 def test_export_onnx(warboy_yolo):
+    target_modules = ["models", "utils"]
+    conflict_modules = [ key for module in target_modules for key in sys.modules.keys() if key.startswith(module) ]
+
+    for key in conflict_modules:
+        del sys.modules[key]
+        
     task = warboy_yolo.task
     warboy_yolo.weight = os.path.join(WEIGHT_DIR, task, warboy_yolo.weight)
     warboy_yolo.onnx_path = os.path.join(ONNX_DIR, task, warboy_yolo.onnx_path)
@@ -31,13 +37,6 @@ def test_export_onnx(warboy_yolo):
         warboy_yolo.export_onnx()
     ), f"{warboy_yolo.model_name} -> ONNX Export Failed!!"
 
-
-@pytest.mark.parametrize("warboy_yolo", PARAMETERS)
-def test_furiosa_quantizer(warboy_yolo):
-    task = warboy_yolo.task
-    warboy_yolo.onnx_path = os.path.join(ONNX_DIR, task, warboy_yolo.onnx_path)
-    if os.path.exists(warboy_yolo.onnx_i8_path):
-        return
     warboy_yolo.onnx_i8_path = os.path.join(
         QUANTIZED_ONNX_DIR, task, warboy_yolo.onnx_i8_path
     )

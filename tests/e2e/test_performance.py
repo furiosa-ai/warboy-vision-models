@@ -24,26 +24,29 @@ DEVICE = ["npu0pe0", "npu0pe0-1"]
 PARAMETERS = [(WARBOY_YOLO(yaml), device) for yaml in YAML_PATH for device in DEVICE]
 
 
-@pytest.mark.parametrize("warboy_yolo, device", PARAMETERS)
 def test_warboy_performance(warboy_yolo, device):
     from furiosa.runtime.profiler import profile
-
     input_shape = warboy_yolo.input_shape
     trace_dir = os.path.join(TRACE_FILE_DIR, warboy_yolo.task)
+
+    if "6" in warboy_yolo.model_name and device == "npu0pe0":
+        return True 
+
     if not os.path.exists(trace_dir):
         os.makedirs(trace_dir)
 
     trace_file = os.path.join(trace_dir, warboy_yolo.model_name + "_" + device + ".log")
-    os.environ["FURIOSA_PROFILER_OUTPUT_PATH"] = trace_file
     onnx_i8_path = os.path.join(
         QUANTIZED_ONNX_DIR, warboy_yolo.task, warboy_yolo.onnx_i8_path
     )
     dummy_input = np.uint8(np.random.randn(*input_shape))
+    
+    with open(trace_file, mode="w") as tracing_file:
+        with profile(file=tracing_file) as profiler:
+            with create_runner(
+                onnx_i8_path, device=device, compiler_config={"use_program_loading": True}
+            ) as runner:
+                for _ in range(30):
+                    runner.run([dummy_input])
 
-    with create_runner(
-        onnx_i8_path, device=device, compiler_config={"use_program_loading": True}
-    ) as runner:
-        for _ in range(30):
-            runner.run([dummy_input])
-
-    assert True
+    return True

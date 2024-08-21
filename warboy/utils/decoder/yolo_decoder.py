@@ -1,6 +1,7 @@
 from typing import List, Sequence, Tuple, Union
 
 import cv2
+import re
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -75,6 +76,8 @@ class ObjDetDecoder(YOLO_Decoder):
             if check_model(model_name)
             else BoxDecoderYOLOv5(self.stride, self.conf_thres, self.anchors)
         )
+        if re.search(r"yolov5.*6u", model_name):
+            self.box_decoder.stride = np.array([(2 ** (i + 3)) for i in range(4)], dtype=np.float32)
 
     def __call__(
         self,
@@ -222,8 +225,8 @@ class InsSegDecoder(YOLO_Decoder):
             # )
 
             bbox = prediction[:, :6]
-            if self.tracker is not None:
-                bbox = self.tracker(bbox)
+            #if self.tracker is not None:
+            #    bbox = self.tracker(bbox)
             predictions.append((bbox, ins_masks))
 
         return predictions

@@ -2,7 +2,9 @@
 The `warboy-vision-models` project is designed to assist users in running various deep learning vision models on [FuriosaAI](https://furiosa.ai/)’s first generation NPU (Neural Processing Unit), Warboy. 
 Users can follow the outlined steps in the project to execute various vision applications, such as Object Detection, Pose Estimation, Instance Segmentation, etc., alongside Warboy.
 
-We hope that the resources here will help you utilize the FuriosaAI Warboy in your applications.
+The `warboy-vision-models` project is designed to assist users in running various deep learning vision models with [FuriosaAI](https://furiosa.ai/)'s 1st NPU (Neural Processing Unit) Warboy and [Furiosa SDK](https://github.com/furiosa-ai/furiosa-sdk/tree/main). 
+
+We hope that the resources of project will help you to use the Warboy in your application.
 
 # <div align="center">Model List</div>
 
@@ -15,46 +17,71 @@ Object detection is a computer vision technique used to identify the presence of
 
 <details><summary>Performance on Warboy</summary>
 
+- [YOLOv9](https://github.com/WongKinYiu/yolov9) Object Detection (COCO)
 - [YOLOv8](https://github.com/ultralytics/ultralytics) Object Detection (COCO)
-
-<div align="center">
-
-| Model     | Input Size<br><sup>(pixels) | mAP<sup>val<br>50-95 | Accuracy Drop<br>(%)    | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
-| --------- | --------------------------- | -------------------- |------------------------ | ----------------------------------- | -------------------------------------- |
-| YOLOv8n   | 640x640                     | 34.9                 |                         |                                     |                                        |
-| YOLOv8s   | 640x640                     | 42.9                 |                         |                                     |                                        |
-| YOLOv8m   | 640x640                     | 47.8                 |                         |                                     |                                        |
-| YOLOv8l   | 640x640                     | 50.4                 |                         |                                     |                                        |
-| YOLOv8x   | 640x640                     | 51.4                 |                         |                                     |                                        |
-</div>
-
 - [YOLOv7](https://github.com/WongKinYiu/yolov7) Object Detection (COCO)
-<div align="center">
-
-| Model     | Input Size<br><sup>(pixels) | mAP<sup>val<br>50-95 | Accuracy Drop<br>(%)    | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
-| --------- | --------------------------- | -------------------- |------------------------ | ----------------------------------- | -------------------------------------- |
-| YOLOv7    | 640x640                     |                      |                         |                                     |                                        |
-| YOLOv7x   | 640x640                     |                      |                         |                                     |                                        |
-| YOLOv7-w6 | 1280x1280                   |                      |                         |                                     |                                        |
-| YOLOv7-e6 | 1280x1280                   |                      |                         |                                     |                                        |
-| YOLOv7-d6 | 1280x1280                   |                      |                         |                                     |                                        |
-</div>
-
+- [YOLOv5u](https://docs.ultralytics.com/models/yolov5/#usage-examples) Object Detection (COCO)
 - [YOLOv5](https://github.com/ultralytics/yolov5) Object Detection (COCO)
-<div align="center">
 
-| Model     | Input Size<br><sup>(pixels) | mAP<sup>val<br>50-95 | Accuracy Drop<br>(%)    | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
-| --------- | --------------------------- | -------------------- |------------------------ | ----------------------------------- | -------------------------------------- |
-| YOLOv5n   | 640x640                     |                      |                         |                                     |                                        |
-| YOLOv5s   | 640x640                     |                      |                         |                                     |                                        |
-| YOLOv5m   | 640x640                     |                      |                         |                                     |                                        |
-| YOLOv5l   | 640x640                     |                      |                         |                                     |                                        |
-| YOLOv5x   | 640x640                     |                      |                         |                                     |                                        |
-| YOLOv5n6  | 1280x1280                   |                      |                         |                                     |                                        |
-| YOLOv5s6  | 1280x1280                   |                      |                         |                                     |                                        |
-| YOLOv5m6  | 1280x1280                   |                      |                         |                                     |                                        |
-| YOLOv5l6  | 1280x1280                   |                      |                         |                                     |                                        |
+<div align="center">
+| Model     | Input Size<br><sup>(pixels) |  mAP<sup>val<br>50-95 (FP32) | mAP<sup>val<br>50-95 (INT8) | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
+| --------- | --------------------------- | ---------------------------- |---------------------------- | ----------------------------------- | -------------------------------------- |
+| YOLOv9t   | 640x640                     | 38.3                         | 35.4                        | 2.13  (4.60)                        | 2.60  (4.94)                           |
+| YOLOv9s   | 640x640                     | 46.8                         | 43.4                        | 3.78  (6.40)                        | 5.36  (8.01)                           |
+| YOLOv9m   | 640x640                     | 51.4                         | 48.6                        | 9.21  (10.61)                       | 12.59 (14.28)                          |
+| YOLOv9c   | 640x640                     | 53.0                         | 49.5                        | 9.75  (11.12)                       | 14.86 (17.38)                          |
+| YOLOv9e   | 640x640                     | 55.6                         |                             |                                     |                                        |
+| YOLOv8n   | 640x640                     | 37.3                         | 34.7                        | 1.51  (4.10)                        | 1.89  (4.86)                           |
+| YOLOv8s   | 640x640                     | 44.9                         | 42.4                        | 2.97  (5.26)                        | 4.17  (10.67)                          |
+| YOLOv8m   | 640x640                     | 50.2                         | 47.6                        | 8.22  (10.03)                       | 11.67 (13.23)                          |
+| YOLOv8l   | 640x640                     | 52.9                         | 50.4                        | 15.22 (16.83)                       | 24.69 (26.41)                          |
+| YOLOv8x   | 640x640                     | 53.9                         | 51.4                        | 26.81 (28.41)                       |                                        |
+| YOLOv7    | 640x640                     | 51.4                         | 47.9                        | 8.76  (14.22)                       |                                        |
+| YOLOv7x   | 640x640                     | 53.1                         | 49.7                        | 15.61 (17.79)                       |                                        |
+| YOLOv5nu  | 640x640                     | 34.3                         | 31.8                        | 1.15  (3.83)                        | 1.34  (4.44)                           |
+| YOLOv5su  | 640x640                     | 43.0                         | 40.4                        | 2.14  (4.90)                        | 2.95  (9.59)                           |
+| YOLOv5mu  | 640x640                     | 49.0                         | 46.3                        | 4.77  (6.42)                        | 6.49  (8.08)                           |
+| YOLOv5lu  | 640x640                     | 52.2                         | 49.2                        | 8.89  (11.14)                       | 11.75 (14.35)                          |
+| YOLOv5xu  | 640x640                     | 53.2                         | 50.4                        | 16.51 (17.88)                       | 22.98 (24.39)                          |
+| YOLOv5n6u | 1280x1280                   | 42.1                         | 39.1                        | 2.67  (13.93)                       |                                        |
+| YOLOv5s6u | 1280x1280                   | 48.6                         | 45.5                        | 5.86  (15.55)                       |                                        |
+| YOLOv5m6u | 1280x1280                   | 53.6                         | 50.0                        | 13.76 (20.96)                       |                                        |
+| YOLOv5l6u | 1280x1280                   | 55.7                         | 51.8                        | 41.85 (47.08)                       |                                        |
+| YOLOv5x6u | 1280x1280                   | 56.8                         | 53.1                        |                                     |                                        |
+| YOLOv5n   | 640x640                     | 28.0                         | 26.0                        | 1.09  (8.00)                        | 1.26  (8.83)                           |
+| YOLOv5s   | 640x640                     | 37.4                         | 35.5                        | 1.93  (8.56)                        | 2.45  (8.92)                           |
+| YOLOv5m   | 640x640                     | 45.4                         | 43.0                        | 4.44  (12.39)                       | 5.88  (12.25)                          |
+| YOLOv5l   | 640x640                     | 49.0                         | 46.7                        | 7.70  (14.44)                       | 10.33 (16.15)                          |
+| YOLOv5x   | 640x640                     | 50.7                         | 48.7                        | 14.39 (19.66)                       | 20.49 (23.77)                          |
+| YOLOv5n6  | 1280x1280                   | 36.0                         | 33.3                        | 2.64  (28.29)                       | 3.51  (29.14)                          |
+| YOLOv5s6  | 1280x1280                   | 44.8                         | 41.9                        | 5.43  (33.10)                       |                                        |
+| YOLOv5m6  | 1280x1280                   | 51.3                         | 48.7                        | 12.73 (39.07)                       |                                        |
+| YOLOv5l6  | 1280x1280                   | 53.7                         | 50.9                        | 39.17 (63.08)                       |                                        |
+| YOLOv5x6  | 1280x1280                   | 55.0                         | 52.3                        |                                     |                                        |
 </div>
+
+<div align="center">
+| Model       | Input Size<br><sup>(pixels) |  mAP<sup>box<br>50-95 (FP32) | mAP<sup>box<br>50-95 (INT8) |  mAP<sup>mask<br>50-95 (FP32) | mAP<sup>mask<br>50-95 (INT8) | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
+| ----------- | --------------------------- | ---------------------------- |---------------------------- | ----------------------------- |----------------------------- | ----------------------------------- | -------------------------------------- |
+| YOLOv9c-seg | 640x640                     | 52.4                         | 49.5                        | 42.2                          | 39.3                         | 2.13  (4.60)                        | 2.60  (4.94)                           |
+| YOLOv9e-seg | 640x640                     | 55.1                         |                             | 44.3                          |                              | 3.78  (6.40)                        | 5.36  (8.01)                           |
+| YOLOv8n-seg | 640x640                     | 36.7                         | 33.9                        | 30.5                          | 27.8                         | 9.21  (10.61)                       | 12.59 (14.28)                          |
+| YOLOv8s-seg | 640x640                     | 44.6                         | 42.2                        | 36.8                          | 34.2                         | 9.75  (11.12)                       | 14.86 (17.38)                          |
+| YOLOv8m-seg | 640x640                     | 49.9                         | 47.3                        | 40.8                          | 38.2                         |                                     |                                        |
+| YOLOv8l-seg | 640x640                     | 52.3                         | 49.1                        | 42.6                          | 39.3                         | 1.51  (4.10)                        | 1.89  (4.86)                           |
+| YOLOv8x-seg | 640x640                     | 53.4                         | 50.4                        | 43.4                          | 40.1                         | 2.97  (5.26)                        | 4.17  (10.67)                          |
+</div>
+
+<div align="center">
+| Model       | Input Size<br><sup>(pixels) |  mAP<sup>pose<br>50-95 (FP32) | mAP<sup>pose<br>50-95 (INT8) | Warboy Speed<sup>Fusion<br>(ms)     | Warboy Speed<sup>Single PE<br>(ms)     |
+| ----------- | --------------------------- | ----------------------------- |----------------------------- | ----------------------------------- | -------------------------------------- |
+| YOLOv8n-pose | 640x640                    | 50.4                          | 47.6                         | 1.54  (3.59)                        | 1.90  (4.06)                           |
+| YOLOv8s-pose | 640x640                    | 60.0                          | 56.7                         | 3.06  (4.76)                        | 4.14  (5.37)                           |
+| YOLOv8m-pose | 640x640                    | 65.0                          | 62.2                         | 8.36  (9.45)                        | 11.9  (13.05)                          |
+| YOLOv8l-pose | 640x640                    | 67.6                          | 65.0                         | 15.31 (16.43)                       | 24.89 (26.10)                          |
+| YOLOv8x-pose | 640x640                    | 69.2                          | 66.6                         | 27.55 (28.85)                       |                                        |
+</div>
+
 
 
 </details>

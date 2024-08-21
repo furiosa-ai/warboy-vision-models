@@ -14,7 +14,6 @@ from tests.utils import (
     MSCOCODataLoader,
     CONF_THRES,
     IOU_THRES,
-    ANCHORS,
     YOLO_CATEGORY_TO_COCO_CATEGORY,
     xyxy2xywh,
 )
@@ -52,6 +51,10 @@ TARGET_ACCURACY = {
     "yolov5x": 0.507,
     "yolov7": 0.514,
     "yolov7x": 0.531,
+    "yolov7-w6": 0.549,
+    "yolov7-e6": 0.560,
+    "yolov7-d6": 0.566,
+    "yolov7-e6e": 0.568,
     "yolov8n": 0.373,
     "yolov8s": 0.449,
     "yolov8m": 0.502,
@@ -62,12 +65,22 @@ TARGET_ACCURACY = {
     "yolov9m": 0.514,
     "yolov9c": 0.530,
     "yolov9e": 0.556,
+    "yolov5n6": 0.360,
+    "yolov5n6u": 0.421,
+    "yolov5s6": 0.448,
+    "yolov5s6u": 0.486,
+    "yolov5m6": 0.513,
+    "yolov5m6u": 0.536,
+    "yolov5l6": 0.537,
+    "yolov5l6u": 0.557,
+    "yolov5x6": 0.550,
+    "yolov5x6u": 0.568,
 }
 
 
 async def warboy_inference(model, data_loader, preprocessor, postprocessor):
     async def task(
-        pbar, runner, data_loader, preprocessor, postprocessor, worker_id, worker_num
+        runner, data_loader, preprocessor, postprocessor, worker_id, worker_num
     ):
         results = []
         for idx, (img_path, annotation) in enumerate(data_loader):
@@ -93,28 +106,25 @@ async def warboy_inference(model, data_loader, preprocessor, postprocessor):
                         "score": round(output[4], 5),
                     }
                 )
-            pbar.update(1)
         return results
 
     from furiosa.runtime import create_runner
 
     worker_num = 16
-    with tqdm(total=5000) as pbar:
-        async with create_runner(model, worker_num=32) as runner:
-            results = await asyncio.gather(
-                *(
-                    task(
-                        pbar,
-                        runner,
-                        data_loader,
-                        preprocessor,
-                        postprocessor,
-                        idx,
-                        worker_num,
-                    )
-                    for idx in range(worker_num)
+    async with create_runner(model, worker_num=32, compiler_config={"use_program_loading": True}) as runner:
+        results = await asyncio.gather(
+            *(
+                task(
+                    runner,
+                    data_loader,
+                    preprocessor,
+                    postprocessor,
+                    idx,
+                    worker_num,
                 )
+                for idx in range(worker_num)
             )
+        )
     return sum(results, [])
 
 

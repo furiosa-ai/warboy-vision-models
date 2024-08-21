@@ -220,5 +220,4 @@ def _get_output_to_shape_seg(model_name, input_shape, output_tensor):
         output_to_shape.append(proto_layer)
     else:
         raise "Unsupported Segmentation Model!!"
-
     return output_to_shape

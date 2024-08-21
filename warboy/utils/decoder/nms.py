@@ -53,3 +53,4 @@ def _box_iou(boxes1: np.ndarray, boxes2: np.ndarray, eps: float = 1e-5) -> np.nd
     area1 = _box_area(boxes1[..., :2], boxes1[..., 2:])
     area2 = _box_area(boxes2[..., :2], boxes2[..., 2:])
     return overlap_area / (area1 + area2 - overlap_area + eps)
+

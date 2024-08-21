@@ -5,9 +5,9 @@ onnx_path: yolov9e-seg.onnx                  # onnx model path
 onnx_i8_path: yolov9e-seg_i8.onnx # quantized onnx model path
 
 calibration_params:
-  calibration_method: PERCENTILE_ASYM # calibration method
+  calibration_method: MSE_ASYM # calibration method
   calibration_data: ../val2017          # calibration data path
-  num_calibration_data: 200     # number of calibration data
+  num_calibration_data: 500     # number of calibration data
 
 conf_thres: 0.35
 iou_thres: 0.7

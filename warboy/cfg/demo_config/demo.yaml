@@ -1,21 +1,18 @@
 app_config:
   - task:
-      - instance_segmentation
+      - object_detection
     model_cfg:
-      - ./warboy/cfg/model_config/instance_segmentation_model.yaml
+      - instance_segmentation.yaml
     model_path:
-      - /home/furiosa/work_space/quantized_onnx/instance_segmentation/yolov8n-seg_i8.onnx
+      - yolov8n.enf
     num_worker: 64
     npu_device:
-      - warboy(2)*1
+      - npu0pe0
     video_params:
       - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/bmx_1.mp4
         type: file
         recursive: True
-      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/car_1.mp4
-        type: file
-        recursive: True
-      - input_path: /home/furiosa/work_space/video_files_0523/detection_videos/car_2.mp4
+      - input_path: /home/furiosa/work_space/video_files_0523/pose_videos/dance_1.mp4
         type: file
         recursive: True
 port: 20001
