@@ -135,13 +135,13 @@ def _get_output_to_shape_det(model_name, input_shape, output_tensor):
     return output_to_shape
 
 
-def _get_output_to_shape_pose(model_name, input_shape, output_tensor):
+def _get_output_to_shape_pose(model_name, input_shape, output_tensor, num_keypoints=15):
     output_to_shape = []
     bs, c, h, w = input_shape
     nc = 0
     num_anchors = 3
     if "yolov8" in model_name:
-        nc = output_tensor[0].shape[1] - 17 * 3 - 4
+        nc = output_tensor[0].shape[1] - num_keypoints * 3 - 4
         box_tensor = "/model.22/cv2.%d/cv2.%d.2/Conv_output_0"
         cls_tensor = "/model.22/cv3.%d/cv3.%d.2/Conv_output_0"
         skeleton_tensor = "/model.22/cv4.%d/cv4.%d.2/Conv_output_0"
@@ -153,7 +153,7 @@ def _get_output_to_shape_pose(model_name, input_shape, output_tensor):
             cls_layer = (cls_tensor % (idx, idx), (bs, nc, h_tensor, w_tensor))
             skeleton_layer = (
                 skeleton_tensor % (idx, idx),
-                (bs, 17 * 3, h_tensor, w_tensor),
+                (bs, num_keypoints * 3, h_tensor, w_tensor),
             )
             output_to_shape.append(box_layer)
             output_to_shape.append(cls_layer)
@@ -174,7 +174,7 @@ def _get_output_to_shape_pose(model_name, input_shape, output_tensor):
 
             box_layer = (box_layer_name, (bs, 6 * 3, h_tensor, w_tensor))
 
-            pose_layer = (pose_layer_name, (bs, 17 * 3 * 3, h_tensor, w_tensor))
+            pose_layer = (pose_layer_name, (bs, num_keypoints * 3 * 3, h_tensor, w_tensor))
             output_to_shape.append(box_layer)
             output_to_shape.append(pose_layer)
     else:
