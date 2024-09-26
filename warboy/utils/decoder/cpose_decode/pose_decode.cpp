@@ -90,7 +90,7 @@ void yolov8_pose_decode_feat(
 
                     const uint32_t pos = x + y * nx + b * (nx * ny);
                     const uint32_t pos_box = pos * 4 * reg_max;
-                    const uint32_t pos_pose = pos * 17 * 3;
+                    const uint32_t pos_pose = pos * npos * 3;
 
                     const float left = dfl(&feat_box_cur[pos_box + 0 * reg_max], reg_max);
                     const float top = dfl(&feat_box_cur[pos_box + 1 * reg_max], reg_max);
