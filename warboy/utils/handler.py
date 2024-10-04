@@ -12,12 +12,10 @@ from warboy.runtime.mp_queue import MpQueue, QueueClosedError, QueueStopEle
 from warboy.utils.postprocess import getPostProcesser
 from warboy.utils.preprocess import YOLOPreProcessor
 
-
 class Handler:
     """
 
     """
-
     def __init__(
         self,
         input_queues: List[List[MpQueue]],
@@ -26,15 +24,33 @@ class Handler:
         param: Dict[str, Any],
         num_channels: int,
     ) -> None:
+        self.frame_queues = [
+            MpQueue(100) for _ in range(len(input_queues))
+        ]
+        self.start_times = [
+            time.time() for _ in range(len(input_queues))
+        ]
+        self.num_comp_imgs = [0 for _ in range(len(input_queues))]
+
         self.video_processors = [
             mp.Process(
                 target=self.video_task,
-                args=(video_info, input_queue, output_queue, result_queue),
+                args=(video_info, input_queue, frame_queue, ),
             )
-            for (video_info, input_queue, output_queue, result_queue) in zip(
-                param["videos_info"], input_queues, output_queues, result_queues
+            for (video_info, input_queue, frame_queue) in zip(
+                param["videos_info"], input_queues, self.frame_queues
             )
         ]
+        self.img_processors = [
+            mp.Process(
+                target=self.out_img_task,
+                args=(output_queue, result_queue, frame_queue, ),
+            )
+            for (output_queue, result_queue, frame_queue) in zip(
+                output_queues, result_queues, self.frame_queues
+            )
+        ]
+
         self.input_shapes = param["input_shapes"]
         self.preprocessor = YOLOPreProcessor()
         self.postprocessor = [
@@ -52,32 +68,31 @@ class Handler:
         self.grid_shape = self._get_grid_info(num_channels)
 
     def start(self):
-        for proc in self.video_processors:
+        for proc1, proc2 in zip(self.video_processors, self.img_processors):
             try:
-                proc.start()
+                proc1.start()
+                proc2.start()
             except Exception as e:
                 print(e, flush=True)
 
     def join(self):
-        for proc in self.video_processors:
-            proc.join()
+        for proc1 in self.video_processors:
+            proc1.join()
+        
+        for proc2 in self.img_processors:
+            proc2.join()
+
 
     def video_task(
-        self,
+        self, 
         video_info: Dict[str, Any],
         input_queue: List[MpQueue],
-        output_queue: List[MpQueue],
-        result_queue: MpQueue,
+        frame_queue: MpQueue,
     ) -> None:
         """
-
+        Video Preprocess Task
         """
         video_path, video_type, recursive = video_info.values()
-        running = True
-        img_idx = 0
-        num_completed = 0
-        FPS = 0.0
-        start_time = time.time()
         cap = self._get_cv_widget(video_path, video_type)
         while True:
             try:
@@ -87,27 +102,49 @@ class Handler:
                         cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                         continue
                     break
+                
                 contexts = self._put_input_to_queue(frame, input_queue)
-                out_img = self._get_output_from_queue(frame, output_queue, contexts)
-                if out_img is None:
-                    break
-
-                if time.time() - start_time > 1.0:
-                    FPS = (img_idx - num_completed) / (time.time() - start_time)
-                    start_time = time.time()
-                    num_completed = img_idx
-
-                out_img = self._put_fps_to_img(out_img, f"FPS: {FPS:.1f}")
-                out_img = cv2.resize(
-                    out_img, self.grid_shape, interpolation=cv2.INTER_LINEAR
-                )
-                result_queue.put((out_img, FPS))
-                img_idx += 1
+                frame_queue.put((frame, contexts))
             except Exception as e:
-                result_queue.put(QueueStopEle)
+                print("Error ->",e)
                 break
+
+        
         if cap.isOpened():
             cap.release()
+
+    def out_img_task(
+        self,
+        output_queue: List[MpQueue],
+        result_queue: MpQueue,
+        frame_queue: MpQueue,
+    ) -> None:
+        img_idx = 0
+        num_comp = 0
+        start_time = time.time()
+        while True:
+            try:
+                frame, contexts = frame_queue.get()
+            except QueueClosedError:
+                result_queue.put(QueueStopEle)
+                break
+
+            out_img = self._get_output_from_queue(frame, output_queue, contexts)
+            if out_img is None:
+                break
+            
+            elapsed_time = time.time() - start_time
+            if elapsed_time > 1.0:
+                FPS = (img_idx - num_comp) / elapsed_time
+                start_time = time.time()
+                num_comp = img_idx
+
+            out_img = self._put_fps_to_img(out_img, f"FPS: {FPS:.1f}")
+            out_img = cv2.resize(
+                out_img, self.grid_shape, interpolation=cv2.INTER_NEAREST
+            )
+            result_queue.put((out_img, FPS))
+            img_idx += 1
 
     def _put_input_to_queue(self, frame: np.ndarray, input_queue: List[MpQueue]):
         contexts = []
@@ -179,7 +216,6 @@ class Handler:
         )
         return grid_shape
 
-
 class ImageHandler:
     """
 
@@ -197,7 +233,7 @@ class ImageHandler:
     def __call__(self, result_queues: List[MpQueue]):
         num_channel = len(result_queues)
         num_end_channel = 0
-
+        states = [True for _ in range(num_channel)]
         grid_shape = self._get_grid_info(num_channel)
         while num_end_channel < num_channel:
             idx = 0
@@ -207,7 +243,12 @@ class ImageHandler:
                 out_img = None
                 while True:
                     try:
-                        out_img, FPS = result_queues[idx].get(False)
+                        res= result_queues[idx].get(False)
+                        if res == QueueStopEle:
+                            num_end_channel += 1 if states[idx] else 0
+                            states[idx] = False
+                            break
+                        out_img, FPS = res
                         break
                     except queue.Empty:
                         time.sleep(1e-6)
