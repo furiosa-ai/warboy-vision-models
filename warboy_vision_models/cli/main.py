@@ -6,7 +6,7 @@ import typer
 _ = np.finfo(np.float64)
 _ = np.finfo(np.float32)
 
-from warboy_vision_models.demo.web_demo import run_web_demo
+from warboy_vision_models.demo.demo import run_make_file, run_web_demo
 from warboy_vision_models.tests.e2e import (
     test_face_recognition,
     test_instance_seg,
@@ -113,6 +113,11 @@ def web_demo(
 ):
     run_web_demo(cfg_path)
 
+@app.command("make-file", help="Run file demo.")
+def make_file_demo(
+    cfg_path,
+):
+    run_make_file(cfg_path)
 
 @app.command("make-model", help="Export model to ONNX format and quantize it.")
 def make_model(
