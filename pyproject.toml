@@ -1,0 +1,22 @@
+[project]
+name = "warboy_vision_models"
+version = "0.1.0"
+description = "CLI for running model project tasks"
+authors = [{name = "Jisoo Lee", email = "jisoo.lee@furiosa.ai"}, {name = "Hayeong Lee", email = "hayeong.lee@furiosa.ai"}]
+dependencies = [
+    "typer[all]"
+]
+
+[project.scripts]
+warboy-vision = "warboy_vision_models.cli.main:app"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+include = ["warboy_vision_models*"]
+
+[tool.setuptools.package-data]
+"warboy_vision_models.warboy.yolo.cbox_decode" = ["*.so"]
+"warboy_vision_models.warboy.yolo.cpose_decode" = ["*.so"]
+"warboy_vision_models.warboy.yolo.tracking.cbytetrack.build" = ["*.so"]

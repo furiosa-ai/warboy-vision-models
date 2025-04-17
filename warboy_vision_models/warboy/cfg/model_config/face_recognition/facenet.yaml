@@ -1,0 +1,18 @@
+task: face_recognition   #
+model_name: facenet
+weight: ./models/weight/face_recognition/facenet.pt                       # weight file path
+onnx_path: ./models/onnx/face_recognition/facenet.onnx                  # onnx model path
+onnx_i8_path: ./models/quantized_onnx/face_recognition/facenet_i8.onnx # quantized onnx model path
+
+calibration_params:
+  calibration_method: SQNR_ASYM # calibration method
+  calibration_data: ./datasets/face_recognition/lfw-align-128          # calibration data path
+  num_calibration_data: 200     # number of calibration data
+
+conf_thres: 0.25
+iou_thres: 0.7
+input_shape: [1, 3, 160, 160]         # model input shape (batch, channel, Height, Width)
+anchors:                        # anchor information
+  -
+class_names:
+  -
