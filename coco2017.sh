@@ -1,6 +1,8 @@
 # https://github.com/linzhenyuyuchen/Dataset-Download/blob/master/coco/coco2017.sh
 #!/bin/bash
 
+sudo apt install unzip
+
 start=`date +%s`
 
 DIR=datasets/coco

@@ -131,6 +131,16 @@ If needed, download the coco2017 dataset. You can skip this step if you have you
 </details>
 
 <details open>
+<summary> Download the demo videos </summary>
+  
+If needed, you can download object detection, pose estimation demo videos from warboy_tutorials. You can skip this step if you have your own videos.
+  
+```sh
+./demo_videos.sh
+```    
+</details>
+
+<details open>
 <summary> Set config files for project </summary>
 
 Before running the project, you need to set up configuration files for model and demo. 
