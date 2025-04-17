@@ -15,31 +15,12 @@ app_config:
       - input_path: ./datasets/demo_videos/detection_videos/cow_1.mp4
         type: file
         recursive: True
-      - input_path: ./datasets/demo_videos/detection_videos/dog_1.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/detection_videos/elephant_1.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/detection_videos/horse_1.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/detection_videos/street_1.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/detection_videos/surfing_1.mp4
+      - input_path: ./datasets/demo_videos/detection_videos/surfing_2.mp4
         type: file
         recursive: True
       - input_path: ./datasets/demo_videos/detection_videos/walking_2.mp4
         type: file
         recursive: True
-      - input_path: ./datasets/demo_videos/detection_videos/car_2.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/detection_videos/cow_2.mp4
-        type: file
-        recursive: True
-      
   - task:
       - pose_estimation
     model_cfg:
@@ -50,34 +31,16 @@ app_config:
     npu_device:
       - warboy(1)*1
     video_params:
-      - input_path: ./datasets/demo_videos/pose_videos/1.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/pose_videos/2.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/pose_videos/3.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/pose_videos/4.mp4
-        type: file
-        recursive: True
       - input_path: ./datasets/demo_videos/pose_videos/bmx_1.mp4
         type: file
         recursive: True
       - input_path: ./datasets/demo_videos/pose_videos/dance_1.mp4
         type: file
         recursive: True
-      - input_path: ./datasets/demo_videos/pose_videos/shoot_2.mp4
-        type: file
-        recursive: True
       - input_path: ./datasets/demo_videos/pose_videos/surfing_4.mp4
         type: file
         recursive: True
       - input_path: ./datasets/demo_videos/pose_videos/Taekwondo_2.mp4
-        type: file
-        recursive: True
-      - input_path: ./datasets/demo_videos/pose_videos/volleyball_1.mp4
         type: file
         recursive: True
 
