@@ -25,11 +25,14 @@ def set_engin_config(param, idx):
 class AppRunner:
     """ """
 
-    def __init__(self, params) -> None:
+    def __init__(self, params, demo_type) -> None:
         num_videos = sum(len(param["videos_info"]) for param in params)
 
         # Warboy Runtime
-        self.job_handler = PipeLine(num_channels=num_videos)
+        if demo_type == "web":
+            self.job_handler = PipeLine(num_channels=num_videos)
+        elif demo_type == "file":
+            self.job_handler = PipeLine(num_channels=num_videos, run_fast_api=False, make_image_output=True)
 
         engin_configs_dict = {}
         videos = {}
@@ -66,12 +69,13 @@ class AppRunner:
 class WARBOY_APP:
     """ """
 
-    def __init__(self, params):
+    def __init__(self, params, demo_type):
         self.params = params
+        self.demo_type = demo_type
 
         self.result_queue = []
 
-        self.app_runner = AppRunner(self.params)
+        self.app_runner = AppRunner(self.params, self.demo_type)
 
     def get_result_queues(self):
         return self.app_runner.job_handler.result_mux_list

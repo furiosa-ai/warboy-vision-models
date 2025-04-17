@@ -67,10 +67,11 @@ class ImageList:
 
 class PipeLine:
     def __init__(
-        self, num_channels: int, run_fast_api: bool = True, run_e2e_test: bool = False
+        self, num_channels: int, run_fast_api: bool = True, run_e2e_test: bool = False, make_image_output: bool = False
     ):
         self.run_fast_api = run_fast_api
         self.run_e2e_test = run_e2e_test
+        self.make_image_output = make_image_output
         self.runtime_info = {}
         self.preprocess_functions = {}
         self.postprocess_functions = {}
@@ -140,7 +141,11 @@ class PipeLine:
             new_stream_mux = PipeLineQueue(maxsize=500)
             new_frame_mux = PipeLineQueue(maxsize=500)
             new_output_mux = PipeLineQueue(maxsize=500)
-            new_result_mux = PipeLineQueue(maxsize=500) if self.run_fast_api else None
+            new_result_mux = (
+                PipeLineQueue(maxsize=500)
+                if (self.run_fast_api or self.run_e2e_test or self.make_image_output)
+                else None
+            )
             self.stream_mux_list[name].append(new_stream_mux)
             self.frame_mux_list[name].append(new_frame_mux)
             self.output_mux_list[name].append(new_output_mux)
@@ -172,7 +177,7 @@ class PipeLine:
             new_output_mux = PipeLineQueue(maxsize=500)
             new_result_mux = (
                 PipeLineQueue(maxsize=500)
-                if (self.run_fast_api or self.run_e2e_test)
+                if (self.run_fast_api or self.run_e2e_test or self.make_image_output)
                 else None
             )
             self.stream_mux_list[name].append(new_stream_mux)
@@ -280,6 +285,17 @@ class PipeLine:
                     self.image_paths_dict,
                     self.image_paths,
                 )
+            elif self.make_image_output:
+                total_result_mux_list = [
+                    self.result_mux_list[name] for name, _ in self.runtime_info.items()
+                ]
+                self.image_handler.output_image_handler(
+                    [
+                        result_mux
+                        for result_mux_list in total_result_mux_list
+                        for result_mux in result_mux_list
+                    ]
+                )
 
             for pipeline_proc in pipeline_procs:
                 pipeline_proc.join()
@@ -354,8 +370,6 @@ class ImageHandler:
             grid_imgs = []
             total_fps = 0
             for idx, result_mux in enumerate(result_mux_list):
-                # if not os.path.exists(f"./img{idx}"):
-                #     os.makedirs(f"./img{idx}")
                 if end_mux_flag[idx]:
                     continue
                 try:
@@ -367,7 +381,6 @@ class ImageHandler:
                     )
                     total_fps += fps
                     grid_imgs.append(output_img)
-                    # cv2.imwrite(f"./img{idx}/{id_}.jpg", output)
                 except QueueClosedError:
                     end_channels += 1
                     end_mux_flag[idx] = True
@@ -376,10 +389,43 @@ class ImageHandler:
                     continue
 
             full_grid_img = self._get_full_grid_img(grid_imgs, self.grid_shape)
-            # cv2.imwrite(f"./test/{id_}.jpg", full_grid_img)
-            # self.results.append((full_grid_img, 0.0))
             yield full_grid_img, total_fps
 
+            id_ += 1
+
+            if end_channels == len(result_mux_list):
+                break
+
+    def output_image_handler(self, result_mux_list: List[PipeLineQueue]):
+        end_channels = 0
+        id_ = 0
+
+        end_mux_flag = [False] * len(result_mux_list)
+
+        if not os.path.exists("./outputs"):
+            os.makedirs("./outputs")
+
+        while True:
+            for idx, result_mux in enumerate(result_mux_list):
+                if not os.path.exists(f"./outputs/img{idx}"):
+                    os.makedirs(f"./outputs/img{idx}")
+                if end_mux_flag[idx]:
+                    continue
+                try:
+                    # obj detection, output = bboxed image
+                    output, fps, _ = result_mux.get()
+                    # output_img = self._put_fps_to_img(output, f"FPS: {fps:.1f}")
+                    output_img = cv2.resize(
+                        output, self.grid_shape, interpolation=cv2.INTER_NEAREST
+                    )
+                    cv2.imwrite(f"./outputs/img{idx}/{id_}.jpg", output_img)
+                except QueueClosedError:
+                    end_channels += 1
+                    end_mux_flag[idx] = True
+                    if end_channels == len(result_mux_list):
+                        break
+                    continue
+            
             id_ += 1
 
             if end_channels == len(result_mux_list):
@@ -401,7 +447,6 @@ class ImageHandler:
                     continue
                 try:
                     output, _, img_idx = result_mux.get()
-                    # print("output_e2e", img_idx)
                     if not len(output) == 1:
                         print(len(output))
                     image_path = image_paths_dict[name][img_idx]

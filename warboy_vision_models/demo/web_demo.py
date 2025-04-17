@@ -1,3 +1,4 @@
+import argparse
 import threading
 
 from warboy_vision_models.warboy import (
@@ -16,7 +17,7 @@ def run_warboy_app(warboy_app):
 
 def run_web_demo(cfg_path="./warboy_vision_models/warboy/cfg/demo_config/demo.yaml"):
     demo_params = get_demo_params_from_cfg(cfg_path)
-    warboy_app = WARBOY_APP(demo_params)
+    warboy_app = WARBOY_APP(demo_params, "web")
     run_warboy_app(warboy_app)
     result_queues = warboy_app.get_result_queues()
     spawn_web_viewer("20001", result_queues)
@@ -24,6 +25,29 @@ def run_web_demo(cfg_path="./warboy_vision_models/warboy/cfg/demo_config/demo.ya
     while True:
         continue
 
+def run_make_file(cfg_path="./warboy_vision_models/warboy/cfg/demo_config/demo.yaml"):
+    demo_params = get_demo_params_from_cfg(cfg_path)
+    warboy_app = WARBOY_APP(demo_params, "file")
+    
+    warboy_app()
 
 if __name__ == "__main__":
-    run_web_demo()
+    parser = argparse.ArgumentParser(description="Demo script")
+    parser.add_argument("mode", choices=["web", "file"], help="Choose the mode to run")
+
+    parser.add_argument(
+        "--cfg-path",
+        type=str,
+        default="./warboy_vision_models/warboy/cfg/demo_config/demo.yaml",
+        help="Path to the configuration file",
+    )
+
+    args = parser.parse_args()
+
+    if args.mode == "web":
+        run_web_demo(args.cfg_path)
+    elif args.mode == "file":
+        run_make_file(args.cfg_path)
+    else:
+        print("Invalid mode. Choose 'web' or 'file'.")
+        exit(1)
