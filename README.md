@@ -216,12 +216,16 @@ In the project, vision applications are executed for videos from multiple channe
 - **command with cli**
   
   ```sh
-  warboy-vision web-demo "/path/to/your/demo/cfg.yaml"      # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+  warboy-vision web-demo "/path/to/your/demo/cfg.yaml"    # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+
+  warboy-vision make-file "/path/to/your/demo/cfg.yaml"   # outputs will be saved in outputs folder
   ```
 - **command with python**
   
   ```sh
-  python warboy_vision_models/demo/web_demo.py      # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+  python warboy_vision_models/demo/demo.py web      # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+
+  python warboy_vision_models/demo/demo.py file     # outputs will be saved in outputs folder
   ```
 </details>
 
