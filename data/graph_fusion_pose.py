@@ -31,7 +31,7 @@ plt.ylabel("COCO mAP$_{50-95}$ val (INT8)")
 plt.title("Pose Estimation Performance on Warboy Fusion")
 
 plt.grid(True)
-plt.legend()
+plt.legend(loc="lower right")
 plt.tight_layout()
 plt.savefig("data/images/graph_fusion_pose.png", dpi=300)
 plt.show()
