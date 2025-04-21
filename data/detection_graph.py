@@ -135,10 +135,10 @@ for i, label in enumerate(yolov5_6):
 # 축 및 제목 설정
 plt.xlabel("Latency on Warboy Fusion (ms/img)")
 plt.ylabel("COCO mAP$_{50-95}$ val (INT8)")
-plt.title("Object Detection Performance")
+plt.title("Object Detection Models' Performance on Warboy Fusion")
 
 plt.grid(True)
 plt.legend()
 plt.tight_layout()
-plt.savefig("object_detection_performance.png", dpi=300)
+plt.savefig("data/images/performance_detection.png", dpi=300)
 plt.show()
