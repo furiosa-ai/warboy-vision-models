@@ -13,11 +13,11 @@ Object detection is a computer vision technique used to identify the presence of
 
 <div align="center"><img width="1024" height="360" src="./data/images/object_detection.png"></div>
 
+![YOLO Performance](object_detection_performance.png)
+
 <details><summary>Performance on Warboy</summary>
 
 <div align="center">
-
-![YOLO Performance](object_detection_performance.png)
 
 | Model     | Input Size<br><sup>(pixels) | mAP<sup>val<br>50-95 (FP32) | mAP<sup>val<br>50-95 (INT8) | Warboy Speed<sup>Fusion<br>(ms) | Warboy Speed<sup>Single PE<br>(ms) |
 | --------- | --------------------------- | --------------------------- | --------------------------- | ------------------------------- | ---------------------------------- |
