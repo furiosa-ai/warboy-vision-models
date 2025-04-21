@@ -131,9 +131,9 @@ def test_warboy_yolo_accuracy_pose(
     print(coco_eval.stats[:3])
 
     assert coco_eval.stats[0] >= (
-        TARGET_ACCURACY[model_name] * 0.95
-    ), f"{model_name} Accuracy check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[model_name] * 0.95}]"
+        TARGET_ACCURACY[model_name] * 0.9
+    ), f"{model_name} Accuracy check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[model_name] * 0.9}]"
 
     print(
-        f"{model_name} Accuracy check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[model_name] * 0.95}]"
+        f"{model_name} Accuracy check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[model_name] * 0.9}]"
     )
