@@ -16,7 +16,7 @@ Object detection is a computer vision technique used to identify the presence of
 <details><summary>Performance on Warboy</summary>
 
 <div align="center">
-  
+
 | Model     | Input Size<br><sup>(pixels) | mAP<sup>val<br>50-95 (FP32) | mAP<sup>val<br>50-95 (INT8) | Warboy Speed<sup>Fusion<br>(ms) | Warboy Speed<sup>Single PE<br>(ms) |
 | --------- | --------------------------- | --------------------------- | --------------------------- | ------------------------------- | ---------------------------------- |
 | YOLOv9t   | 640x640                     | 38.3                        | 35.4                        | 2.13  (4.60)                    | 2.60  (4.94)                       |
@@ -53,8 +53,9 @@ Object detection is a computer vision technique used to identify the presence of
 | YOLOv5x6  | 1280x1280                   | 55.0                        | 52.3                        |                                 |                                    |
 
 </div>
-
 </details>
+
+![YOLO Performance](./data/images/performance_detection.png)
 
 ### Pose Estimation
 Pose estimation is a technology that identifies and estimates the posture of a person or object by detecting body parts (typically joints) and using them to estimate the pose of the respective object.
@@ -73,8 +74,9 @@ Pose estimation is a technology that identifies and estimates the posture of a p
 | YOLOv8l-pose | 640x640                     | 67.6                         | 65.0                         | 15.31 (16.43)                   | 24.89 (26.10)                      |
 | YOLOv8x-pose | 640x640                     | 69.2                         | 66.6                         | 27.55 (28.85)                   |                                    |
 </div>
-
 </details>
+
+![YOLO Performance](./data/images/performance_pose.png)
 
 ### Instance Segmentation 
 Instance segmentation is a technology that identifies multiple objects in an image or video and delineates the boundaries of each object. In essence, it combines Object Detection and Semantic Segmentation techniques to individually identify multiple objects belonging to the same class and estimate their boundaries.
@@ -95,8 +97,9 @@ Instance segmentation is a technology that identifies multiple objects in an ima
 | YOLOv8l-seg | 640x640                     | 52.3                        | 49.1                        | 42.6                         | 39.3                         | 1.51  (4.10)                    | 1.89  (4.86)                       |
 | YOLOv8x-seg | 640x640                     | 53.4                        | 50.4                        | 43.4                         | 40.1                         | 2.97  (5.26)                    | 4.17  (10.67)                      |
 </div>
-
 </details>
+
+![YOLO Performance](./data/images/performance_segmentation.png)
 
 # <div align="center">Documentation</div>
 Please refer below for a installation and usage example. 
