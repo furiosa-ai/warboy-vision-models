@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # yolo 모델 버전별 데이터
-yolov9_seg = ["9c-seg", "9e-seg"]
-yolov9_seg_mAP = [49.5, np.nan]
-yolov9_seg_latency = [2.13, 3.78]
+yolov9_seg = ["9c-seg"]
+yolov9_seg_mAP = [49.5]
+yolov9_seg_latency = [2.13]
 
-yolov8_seg = ["8n-seg", "8s-seg", "8m-seg", "8l-seg", "8x-seg"]
-yolov8_seg_mAP = [33.9, 42.2, 47.3, 49.1, 50.4]
-yolov8_seg_latency = [9.21, 9.75, np.nan, 1.51, 2.97]
+yolov8_seg = ["8n-seg", "8s-seg", "8l-seg", "8x-seg"]
+yolov8_seg_mAP = [33.9, 42.2, 49.1, 50.4]
+yolov8_seg_latency = [9.21, 9.75, 1.51, 2.97]
 
 # 그래프 스타일
 plt.figure(figsize=(10, 6))
@@ -55,5 +55,5 @@ plt.title("Instance Segmentation Models' Performance on Warboy Fusion")
 plt.grid(True)
 plt.legend()
 plt.tight_layout()
-plt.savefig("data/images/performance_segmentation.png", dpi=300)
+plt.savefig("data/images/graph_fusion_seg.png", dpi=300)
 plt.show()
