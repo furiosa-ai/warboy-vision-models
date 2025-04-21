@@ -13,8 +13,6 @@ Object detection is a computer vision technique used to identify the presence of
 
 <div align="center"><img width="1024" height="360" src="./data/images/object_detection.png"></div>
 
-![YOLO Performance](object_detection_performance.png)
-
 <details><summary>Performance on Warboy</summary>
 
 <div align="center">
@@ -55,8 +53,9 @@ Object detection is a computer vision technique used to identify the presence of
 | YOLOv5x6  | 1280x1280                   | 55.0                        | 52.3                        |                                 |                                    |
 
 </div>
-
 </details>
+
+![YOLO Performance](object_detection_performance.png)
 
 ### Pose Estimation
 Pose estimation is a technology that identifies and estimates the posture of a person or object by detecting body parts (typically joints) and using them to estimate the pose of the respective object.
@@ -75,7 +74,6 @@ Pose estimation is a technology that identifies and estimates the posture of a p
 | YOLOv8l-pose | 640x640                     | 67.6                         | 65.0                         | 15.31 (16.43)                   | 24.89 (26.10)                      |
 | YOLOv8x-pose | 640x640                     | 69.2                         | 66.6                         | 27.55 (28.85)                   |                                    |
 </div>
-
 </details>
 
 ### Instance Segmentation 
@@ -97,7 +95,6 @@ Instance segmentation is a technology that identifies multiple objects in an ima
 | YOLOv8l-seg | 640x640                     | 52.3                        | 49.1                        | 42.6                         | 39.3                         | 1.51  (4.10)                    | 1.89  (4.86)                       |
 | YOLOv8x-seg | 640x640                     | 53.4                        | 50.4                        | 43.4                         | 40.1                         | 2.97  (5.26)                    | 4.17  (10.67)                      |
 </div>
-
 </details>
 
 # <div align="center">Documentation</div>
