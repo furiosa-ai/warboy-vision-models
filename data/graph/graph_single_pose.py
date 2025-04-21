@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 # yolo 모델 버전별 데이터
-yolov8_pose = ["8n-pose", "8s-pose", "8m-pose", "8l-pose", "8x-pose"]
-yolov8_pose_mAP = [47.6, 56.7, 62.2, 65.0, 66.6]
-yolov8_pose_latency = [1.54, 3.06, 8.36, 15.31, 27.55]
+yolov8_pose = ["8n-pose", "8s-pose", "8m-pose", "8l-pose"]
+yolov8_pose_mAP = [47.6, 56.7, 62.2, 65.0]
+yolov8_pose_latency = [1.90, 4.14, 11.9, 24.89]
 
 # 그래프 스타일
 plt.figure(figsize=(10, 6))
@@ -26,12 +27,15 @@ for i, label in enumerate(yolov8_pose):
     )
 
 # 축 및 제목 설정
-plt.xlabel("Latency on Warboy Fusion (ms/img)")
+plt.xlabel("Latency on Warboy Single PE (ms/img)")
 plt.ylabel("COCO mAP$_{50-95}$ val (INT8)")
-plt.title("Pose Estimation Performance on Warboy Fusion")
+plt.title("Pose Estimation Performance on Warboy Single PE")
+
+plt.xticks(np.arange(0, 31, 5))
+plt.yticks(np.arange(45, 68, 2.5))
 
 plt.grid(True)
-plt.legend()
+plt.legend(loc="lower right")
 plt.tight_layout()
-plt.savefig("data/images/performance_pose.png", dpi=300)
+plt.savefig("data/images/graph_single_pose.png", dpi=300)
 plt.show()

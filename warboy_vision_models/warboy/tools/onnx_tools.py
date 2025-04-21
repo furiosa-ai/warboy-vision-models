@@ -36,7 +36,9 @@ class OnnxTools:
         if "yolo" in self.model_name:
             torch_model = self._load_yolo_torch_model().eval()
         elif "facenet" == self.model_name:
-            torch_model = self._load_facenet_torch_model().eval()
+            from facenet_pytorch import InceptionResnetV1
+
+            torch_model = InceptionResnetV1(pretrained="vggface2").eval()
         else:
             raise NotImplementedError(
                 f"Export ONNX for {self.task} >> {self.model_name} is not implemented yet!"
@@ -86,7 +88,6 @@ class OnnxTools:
         return edited_graph
 
     def _load_yolo_torch_model(self):
-        """ """
         from ultralytics import YOLO
 
         if not self.model_name in MODEL_LIST[self.task]:
@@ -96,7 +97,7 @@ class OnnxTools:
 
         yolo_version = self._check_yolo_version
 
-        if yolo_version >= 8 and yolo_version < 10:
+        if 8 <= yolo_version < 10:
             if self.task == "instance_segmentation" and yolo_version == 9:
                 torch_model = torch.hub.load(
                     "WongKinYiu/yolov9", "custom", self.weight
@@ -114,17 +115,7 @@ class OnnxTools:
                 "ultralytics/yolov5", "custom", self.weight
             ).to(torch.device("cpu"))
         else:
-            raise ValueError(f"Supported Version 5,7,8,9")
-
-        return torch_model
-
-    def _load_facenet_torch_model(self):
-        """
-        Load Facenet Torch Model
-        """
-        from facenet_pytorch import InceptionResnetV1
-
-        torch_model = InceptionResnetV1(pretrained="vggface2")
+            raise ValueError(f"Supported YOLO Versions are 5,7,8,9")
 
         return torch_model
 
