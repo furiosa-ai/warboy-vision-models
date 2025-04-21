@@ -11,7 +11,7 @@ Currently, the project supports all vision applications provided by YOLO series 
 ### Object Detection
 Object detection is a computer vision technique used to identify the presence of specific objects in images or videos and determines their locations. It entails classifying objects in videos or photos (classification) and precisely locating them using bounding boxes, thereby detecting objects through this process.
 
-<div align="center"><img width="960" height="360" src="./data/images/object_detection.png"></div>
+<div align="center"><img width="1024" height="360" src="./data/images/object_detection.png"></div>
 
 <details><summary>Performance on Warboy</summary>
 
@@ -56,14 +56,14 @@ Object detection is a computer vision technique used to identify the presence of
 </details>
 
 <p align="center">
-  <img src="./data/images/graph_fusion_det.png" width="50%"/>
-  <img src="./data/images/graph_single_det.png" width="50%"/>
+  <img src="./data/images/graph_fusion_det.png" width="48%"/>
+  <img src="./data/images/graph_single_det.png" width="48%"/>
 </p>
 
 ### Pose Estimation
 Pose estimation is a technology that identifies and estimates the posture of a person or object by detecting body parts (typically joints) and using them to estimate the pose of the respective object.
 
-<div align="center"><img width="960" src="./data/images/pose_estimation.png"></div>
+<div align="center"><img width="720" src="./data/images/pose_estimation.png"></div>
 
 <details><summary>Performance on Warboy</summary>
 
@@ -80,14 +80,14 @@ Pose estimation is a technology that identifies and estimates the posture of a p
 </details>
 
 <p align="center">
-  <img src="./data/images/graph_fusion_pose.png" width="50%"/>
-  <img src="./data/images/graph_single_pose.png" width="50%"/>
+  <img src="./data/images/graph_fusion_pose.png" width="48%"/>
+  <img src="./data/images/graph_single_pose.png" width="48%"/>
 </p>
 
 ### Instance Segmentation 
 Instance segmentation is a technology that identifies multiple objects in an image or video and delineates the boundaries of each object. In essence, it combines Object Detection and Semantic Segmentation techniques to individually identify multiple objects belonging to the same class and estimate their boundaries.
 
-<div align="center"><img width="960" src="./data/images/instance_segmentation.png"></div>
+<div align="center"><img width="720" src="./data/images/instance_segmentation.png"></div>
 
 <details><summary>Performance on Warboy</summary>
 
@@ -106,8 +106,8 @@ Instance segmentation is a technology that identifies multiple objects in an ima
 </details>
 
 <p align="center">
-  <img src="./data/images/graph_fusion_seg.png" width="50%"/>
-  <img src="./data/images/graph_single_seg.png" width="50%"/>
+  <img src="./data/images/graph_fusion_seg.png" width="48%"/>
+  <img src="./data/images/graph_single_seg.png" width="48%"/>
 </p>
 
 # <div align="center">Documentation</div>
