@@ -55,7 +55,7 @@ Object detection is a computer vision technique used to identify the presence of
 </div>
 </details>
 
-![YOLO Performance](performance_detection.png)
+![YOLO Performance](./data/images/performance_detection.png)
 
 ### Pose Estimation
 Pose estimation is a technology that identifies and estimates the posture of a person or object by detecting body parts (typically joints) and using them to estimate the pose of the respective object.
@@ -76,7 +76,7 @@ Pose estimation is a technology that identifies and estimates the posture of a p
 </div>
 </details>
 
-![YOLO Performance](performance_pose.png)
+![YOLO Performance](./data/images/performance_pose.png)
 
 ### Instance Segmentation 
 Instance segmentation is a technology that identifies multiple objects in an image or video and delineates the boundaries of each object. In essence, it combines Object Detection and Semantic Segmentation techniques to individually identify multiple objects belonging to the same class and estimate their boundaries.
@@ -99,7 +99,7 @@ Instance segmentation is a technology that identifies multiple objects in an ima
 </div>
 </details>
 
-![YOLO Performance](performance_segmentation.png)
+![YOLO Performance](./data/images/performance_segmentation.png)
 
 # <div align="center">Documentation</div>
 Please refer below for a installation and usage example. 
