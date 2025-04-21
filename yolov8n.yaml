@@ -7,7 +7,7 @@ onnx_i8_path: ./models/quantized_onnx/object_detection/yolov8n_i8.onnx # quantiz
 calibration_params:
   calibration_method: SQNR_ASYM # calibration method
   calibration_data: ./datasets/coco/val2017          # calibration data path
-  num_calibration_data: 1     # number of calibration data
+  num_calibration_data: 100     # number of calibration data
 
 conf_thres: 0.25
 iou_thres: 0.7
