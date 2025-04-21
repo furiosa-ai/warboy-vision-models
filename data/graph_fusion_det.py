@@ -137,6 +137,9 @@ plt.xlabel("Latency on Warboy Fusion (ms/img)")
 plt.ylabel("COCO mAP$_{50-95}$ val (INT8)")
 plt.title("Object Detection Models' Performance on Warboy Fusion")
 
+plt.xticks(np.arange(0, 46, 5))
+plt.yticks(np.arange(25, 55, 5))
+
 plt.grid(True)
 plt.legend(loc="lower right")
 plt.tight_layout()

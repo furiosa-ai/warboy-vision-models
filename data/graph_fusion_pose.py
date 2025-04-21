@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 # yolo 모델 버전별 데이터
 yolov8_pose = ["8n-pose", "8s-pose", "8m-pose", "8l-pose", "8x-pose"]
@@ -29,6 +30,9 @@ for i, label in enumerate(yolov8_pose):
 plt.xlabel("Latency on Warboy Fusion (ms/img)")
 plt.ylabel("COCO mAP$_{50-95}$ val (INT8)")
 plt.title("Pose Estimation Performance on Warboy Fusion")
+
+plt.xticks(np.arange(0, 31, 5))
+plt.yticks(np.arange(45, 68, 2.5))
 
 plt.grid(True)
 plt.legend(loc="lower right")

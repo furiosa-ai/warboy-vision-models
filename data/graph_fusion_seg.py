@@ -52,6 +52,9 @@ plt.xlabel("Latency on Warboy Fusion (ms/img)")
 plt.ylabel("COCO mAP$_{50-95}$ val (INT8)")
 plt.title("Instance Segmentation Models' Performance on Warboy Fusion")
 
+plt.xticks(np.arange(0, 17, 2))
+plt.yticks(np.arange(30, 51, 2))
+
 plt.grid(True)
 plt.legend(loc="lower right")
 plt.tight_layout()
