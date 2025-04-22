@@ -7,7 +7,7 @@ import pycocotools.mask as mask_util
 import pytest
 from pycocotools.cocoeval import COCOeval
 
-from evals.utils import (
+from tests.utils import (
     CONF_THRES,
     IOU_THRES,
     YOLO_CATEGORY_TO_COCO_CATEGORY,

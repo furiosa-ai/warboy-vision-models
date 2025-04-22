@@ -5,7 +5,7 @@ from typing import List
 import pytest
 from pycocotools.cocoeval import COCOeval
 
-from evals.utils import CONF_THRES, IOU_THRES, MSCOCODataLoader
+from tests.utils import CONF_THRES, IOU_THRES, MSCOCODataLoader
 from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
 from warboy.yolo.preprocess import YoloPreProcessor
 

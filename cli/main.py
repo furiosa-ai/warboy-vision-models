@@ -7,7 +7,7 @@ _ = np.finfo(np.float64)
 _ = np.finfo(np.float32)
 
 from demo.demo import run_make_file, run_web_demo
-from evals.e2e import (
+from tests.e2e import (
     test_face_recognition,
     test_instance_seg,
     test_npu_performance,

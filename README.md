@@ -224,7 +224,7 @@ If you have the model in an ONNX model, the next step is the model quantization 
 - **command with python**
   
   ```sh
-  python tests/test_make_model.py      # please check test_make_model.py file
+  python test_codes/test_make_model.py      # please check test_make_model.py file
   ```
 </details>
 
@@ -266,9 +266,9 @@ In the project, there are end-to-end performance tests for various vision applic
 - **command with python**
   
   ```sh
-  python tests/test_acc.py     # for model performance test, please check test_acc.py file
+  python test_codes/test_acc.py     # for model performance test, please check test_acc.py file
 
-  python tests/test_npu.py     # for NPU performance test, please check test_npu_performance.py file
+  python test_codes/test_npu.py     # for NPU performance test, please check test_npu_performance.py file
   ```
 
 - **command with cli without config file**

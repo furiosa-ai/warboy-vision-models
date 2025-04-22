@@ -1,4 +1,4 @@
-from evals.e2e import (
+from tests.e2e import (
     test_face_recognition,
     test_instance_seg,
     test_object_det,

@@ -9,7 +9,7 @@ import typer
 from pycocotools.cocoeval import COCOeval
 from sklearn.metrics.pairwise import cosine_similarity
 
-from evals.utils import CONF_THRES, IOU_THRES
+from tests.utils import CONF_THRES, IOU_THRES
 from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
 
 
