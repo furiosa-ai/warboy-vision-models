@@ -6,9 +6,9 @@ yolov9_seg = ["9c-seg"]
 yolov9_seg_mAP = [49.5]
 yolov9_seg_latency = [2.60]
 
-yolov8_seg = ["8n-seg", "8s-seg", "8l-seg", "8x-seg"]
-yolov8_seg_mAP = [33.9, 42.2, 49.1, 50.4]
-yolov8_seg_latency = [12.59, 14.86, 1.89, 4.17]
+yolov8_seg = ["8n-seg", "8s-seg"]
+yolov8_seg_mAP = [33.9, 42.2]
+yolov8_seg_latency = [12.59, 14.86]
 
 # 그래프 스타일
 plt.figure(figsize=(10, 6))
