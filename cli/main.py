@@ -25,7 +25,7 @@ def face_recognition_e2e_tests(
     model_name: str,
     onnx_i8: str,
 ):
-    cfg = f"evals/test_config/face_recognition/{model_name}.yaml"
+    cfg = f"tests/test_config/face_recognition/{model_name}.yaml"
     param = get_model_params_from_cfg(cfg)
 
     test_face_recognition.test_warboy_facenet_accuracy_recog(
@@ -40,7 +40,7 @@ def instance_segmentation_e2e_tests(
     model_name: str,
     onnx_i8: str,
 ):
-    cfg = f"evals/test_config/instance_segmentation/{model_name}.yaml"
+    cfg = f"tests/test_config/instance_segmentation/{model_name}.yaml"
     param = get_model_params_from_cfg(cfg)
 
     test_instance_seg.test_warboy_yolo_accuracy_seg(
@@ -53,7 +53,7 @@ def object_detection_e2e_test(
     model_name: str,
     onnx_i8: str,
 ):
-    cfg = f"evals/test_config/object_detection/{model_name}.yaml"
+    cfg = f"tests/test_config/object_detection/{model_name}.yaml"
     param = get_model_params_from_cfg(cfg)
 
     test_object_det.test_warboy_yolo_accuracy_det(
@@ -66,7 +66,7 @@ def pose_estimation_e2e_test(
     model_name: str,
     onnx_i8: str,
 ):
-    cfg = f"evals/test_config/pose_estimation/{model_name}.yaml"
+    cfg = f"tests/test_config/pose_estimation/{model_name}.yaml"
     param = get_model_params_from_cfg(cfg)
 
     test_pose_est.test_warboy_yolo_accuracy_pose(
