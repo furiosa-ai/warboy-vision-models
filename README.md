@@ -183,7 +183,7 @@ class_names:                    # class names
 
 ```yaml
 application: object_detection
-model_config: ./warboy_vision_models/warboy/cfg/model_config/object_detection/yolov8n.yaml          # model config file path
+model_config: ./warboy/cfg/model_config/object_detection/yolov8n.yaml          # model config file path
 model_path: ./models/quantized_onnx/object_detection/yolov8n_i8.onnx                                # quantized onnx model path
 num_workers: 8                                                                                      
 device: warboy(2)*1                                                                                 # device name (warboy(2)*1 | warboy(1)*1 | npu0pe0 | etc.)
@@ -224,7 +224,7 @@ If you have the model in an ONNX model, the next step is the model quantization 
 - **command with python**
   
   ```sh
-  python warboy_vision_models/test_make_model.py      # please check test_make_model.py file
+  python tests/test_make_model.py      # please check test_make_model.py file
   ```
 </details>
 
@@ -245,9 +245,9 @@ In the project, vision applications are executed for videos from multiple channe
 - **command with python**
   
   ```sh
-  python warboy_vision_models/demo/demo.py web      # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+  python demo/demo.py web      # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
 
-  python warboy_vision_models/demo/demo.py file     # outputs will be saved in outputs folder
+  python demo/demo.py file     # outputs will be saved in outputs folder
   ```
 </details>
 
@@ -266,9 +266,9 @@ In the project, there are end-to-end performance tests for various vision applic
 - **command with python**
   
   ```sh
-  python warboy_vision_models/test_acc.py     # for model performance test, please check test_acc.py file
+  python tests/test_acc.py     # for model performance test, please check test_acc.py file
 
-  python warboy_vision_models/test_npu.py     # for NPU performance test, please check test_npu_performance.py file
+  python tests/test_npu.py     # for NPU performance test, please check test_npu_performance.py file
   ```
 
 - **command with cli without config file**
@@ -279,6 +279,6 @@ In the project, there are end-to-end performance tests for various vision applic
     warboy-vision pose-estimation "model_name" "/path/to/your/quantized/model.onnx"           # pose estimation performance test
     warboy-vision instance-segmentation "model_name" "/path/to/your/quantized/model.onnx"     # instance segmentation performance test
 
-    # can check supported models in warboy_vision_models/tests/test_config
+    # can check supported models in evals/test_config
     ```
 </details>

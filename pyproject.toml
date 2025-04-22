@@ -8,15 +8,15 @@ dependencies = [
 ]
 
 [project.scripts]
-warboy-vision = "warboy_vision_models.cli.main:app"
+warboy-vision = "cli.main:app"
 
 [tool.setuptools]
 package-dir = {"" = "."}
 
 [tool.setuptools.packages.find]
-include = ["warboy_vision_models*"]
+include = ["*"]
 
 [tool.setuptools.package-data]
-"warboy_vision_models.warboy.yolo.cbox_decode" = ["*.so"]
-"warboy_vision_models.warboy.yolo.cpose_decode" = ["*.so"]
-"warboy_vision_models.warboy.yolo.tracking.cbytetrack.build" = ["*.so"]
+"warboy.yolo.cbox_decode" = ["*.so"]
+"warboy.yolo.cpose_decode" = ["*.so"]
+"warboy.yolo.tracking.cbytetrack.build" = ["*.so"]
