@@ -2,7 +2,7 @@ app_config:
   - task:
       - object_detection
     model_cfg:
-      - notebooks/yolov8n.yaml
+      - tutorials/cfg/yolov8n.yaml
     model_path:
       - models/quantized_onnx/object_detection/yolov8n_i8.onnx
     num_worker: 32
