@@ -11,7 +11,7 @@ def run_warboy_app(warboy_app):
     return t.native_id
 
 
-def run_web_demo(cfg_path="evals/warboy/cfg/demo_config/demo.yaml"):
+def run_web_demo(cfg_path="tests/warboy/cfg/demo_config/demo.yaml"):
     demo_params = get_demo_params_from_cfg(cfg_path)
     warboy_app = WARBOY_APP(demo_params, "web")
     run_warboy_app(warboy_app)
@@ -21,7 +21,7 @@ def run_web_demo(cfg_path="evals/warboy/cfg/demo_config/demo.yaml"):
     while True:
         continue
 
-def run_make_file(cfg_path="evals/warboy/cfg/demo_config/demo.yaml"):
+def run_make_file(cfg_path="tests/warboy/cfg/demo_config/demo.yaml"):
     demo_params = get_demo_params_from_cfg(cfg_path)
     warboy_app = WARBOY_APP(demo_params, "file")
     
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--cfg-path",
         type=str,
-        default="evals/warboy/cfg/demo_config/demo.yaml",
+        default="tests/warboy/cfg/demo_config/demo.yaml",
         help="Path to the configuration file",
     )
 

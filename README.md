@@ -279,6 +279,6 @@ In the project, there are end-to-end performance tests for various vision applic
     warboy-vision pose-estimation "model_name" "/path/to/your/quantized/model.onnx"           # pose estimation performance test
     warboy-vision instance-segmentation "model_name" "/path/to/your/quantized/model.onnx"     # instance segmentation performance test
 
-    # can check supported models in evals/test_config
+    # can check supported models in tests/test_config
     ```
 </details>
