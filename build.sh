@@ -1,3 +1,5 @@
+cd src
+
 cd warboy/yolo/cbox_decode
 rm -rf build cbox_decode.so
 python build.py build_ext --inplace
@@ -16,3 +18,5 @@ cd warboy/yolo/tracking/cbytetrack/build
 cmake ..
 make
 cd -
+
+cd ../

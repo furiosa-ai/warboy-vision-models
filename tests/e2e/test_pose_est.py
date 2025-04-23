@@ -5,9 +5,9 @@ from typing import List
 import pytest
 from pycocotools.cocoeval import COCOeval
 
+from src.warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
+from src.warboy.yolo.preprocess import YoloPreProcessor
 from tests.utils import CONF_THRES, IOU_THRES, MSCOCODataLoader
-from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-from warboy.yolo.preprocess import YoloPreProcessor
 
 TARGET_ACCURACY = {
     "yolov8n-pose": 0.504,
