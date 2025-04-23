@@ -4,21 +4,12 @@ app_config:
     model_cfg:
       - ../cfg/yolov8n.yaml
     model_path:
-      - ../../models/quantized_onnx/object_detection/yolov8n_i8.onnx
+      - ../models/quantized_onnx/object_detection/yolov8n_i8.onnx
     num_worker: 32
     npu_device:
       - warboy(1)*1
     video_params:
-      - input_path: ../../datasets/demo_videos/detection_videos/car_1.mp4
-        type: file
-        recursive: True
-      - input_path: ../../datasets/demo_videos/detection_videos/cow_1.mp4
-        type: file
-        recursive: True
-      - input_path: ../../datasets/demo_videos/detection_videos/surfing_2.mp4
-        type: file
-        recursive: True
-      - input_path: ../../datasets/demo_videos/detection_videos/walking_2.mp4
+      - input_path: /your/path/to/your/video.mp4
         type: file
         recursive: True
 
