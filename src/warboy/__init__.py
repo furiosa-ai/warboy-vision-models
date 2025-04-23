@@ -1,6 +1,6 @@
 """Furiosa Warboy Vision Models"""
 
-from src.warboy.cfg import (
+from warboy.cfg import (
     MODEL_LIST,
     TASKS,
     get_demo_params_from_cfg,

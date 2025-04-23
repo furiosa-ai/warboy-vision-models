@@ -9,14 +9,14 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 
-from src.warboy.face_recognition.preprocess import FaceRecogPreProcessor
-from src.warboy.runtime.warboy_runtime import WarboyApplication, WarboyQueueRuntime
-from src.warboy.utils.image_decoder import ImageListDecoder
-from src.warboy.utils.image_encoder import ImageEncoder, PredictionEncoder
-from src.warboy.utils.queue import PipeLineQueue, QueueClosedError
-from src.warboy.utils.video_decoder import VideoDecoder
-from src.warboy.yolo.postprocess import get_post_processor
-from src.warboy.yolo.preprocess import YoloPreProcessor
+from warboy.face_recognition.preprocess import FaceRecogPreProcessor
+from warboy.runtime.warboy_runtime import WarboyApplication, WarboyQueueRuntime
+from warboy.utils.image_decoder import ImageListDecoder
+from warboy.utils.image_encoder import ImageEncoder, PredictionEncoder
+from warboy.utils.queue import PipeLineQueue, QueueClosedError
+from warboy.utils.video_decoder import VideoDecoder
+from warboy.yolo.postprocess import get_post_processor
+from warboy.yolo.preprocess import YoloPreProcessor
 
 
 @dataclass

@@ -10,8 +10,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from src.warboy.utils.monitor_npu import WARBOYDevice
-from src.warboy.utils.process_pipeline import ImageHandler
+from warboy.utils.monitor_npu import WARBOYDevice
+from warboy.utils.process_pipeline import ImageHandler
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")

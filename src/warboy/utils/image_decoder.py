@@ -2,8 +2,8 @@ from typing import Callable, List
 
 import cv2
 
-from src.warboy.utils.queue import PipeLineQueue, QueueClosedError, StopSig
-from src.warboy.yolo.preprocess import YoloPreProcessor
+from warboy.utils.queue import PipeLineQueue, QueueClosedError, StopSig
+from warboy.yolo.preprocess import YoloPreProcessor
 
 
 class ImageListDecoder:

@@ -1,4 +1,4 @@
-from src.warboy.utils.process_pipeline import Engine, PipeLine, Video
+from warboy.utils.process_pipeline import Engine, PipeLine, Video
 
 QUEUE_SIZE = 500
 

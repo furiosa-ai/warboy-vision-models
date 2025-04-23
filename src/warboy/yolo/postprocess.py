@@ -3,11 +3,9 @@ from typing import Any, Dict, List, Tuple
 import cv2
 import numpy as np
 
-from src.warboy.cfg import COLORS, POSE_LIMB_COLOR, SKELETONS, TASKS
-from src.warboy.face_recognition.embedding_process import (
-    face_recognition_embedding_decoder,
-)
-from src.warboy.yolo.anchor_process import (
+from warboy.cfg import COLORS, POSE_LIMB_COLOR, SKELETONS, TASKS
+from warboy.face_recognition.embedding_process import face_recognition_embedding_decoder
+from warboy.yolo.anchor_process import (
     instance_segment_anchor_decoder,
     object_detection_anchor_decoder,
     pose_estimation_anchor_decoder,

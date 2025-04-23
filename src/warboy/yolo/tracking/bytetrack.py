@@ -2,7 +2,7 @@ import sys
 
 import numpy as np
 
-from src.warboy.yolo.tracking.cbytetrack import CByteTrack
+from warboy.yolo.tracking.cbytetrack import CByteTrack
 
 
 class ByteTrack:

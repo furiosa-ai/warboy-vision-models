@@ -1,7 +1,7 @@
 import argparse
 import threading
 
-from src.warboy import WARBOY_APP, get_demo_params_from_cfg, spawn_web_viewer
+from warboy import WARBOY_APP, get_demo_params_from_cfg, spawn_web_viewer
 
 
 def run_warboy_app(warboy_app):

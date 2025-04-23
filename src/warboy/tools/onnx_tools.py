@@ -6,8 +6,8 @@ import onnx
 import torch
 from tqdm import tqdm
 
-from src.warboy.cfg import MODEL_LIST, get_model_params_from_cfg
-from src.warboy.tools.utils import get_onnx_graph_info
+from warboy.cfg import MODEL_LIST, get_model_params_from_cfg
+from warboy.tools.utils import get_onnx_graph_info
 
 
 class OnnxTools:
@@ -164,12 +164,12 @@ class OnnxTools:
             onnx_model, CalibrationMethod._member_map_[self.calibration_method]
         )
         if "yolo" in self.model_name:
-            from src.warboy.yolo.preprocess import YoloPreProcessor
+            from warboy.yolo.preprocess import YoloPreProcessor
 
             preprocessor = YoloPreProcessor(new_shape=new_shape, tensor_type="float32")
 
         elif "face_recognition" == self.task:
-            from src.warboy.face_recognition.preprocess import FaceRecogPreProcessor
+            from warboy.face_recognition.preprocess import FaceRecogPreProcessor
 
             preprocessor = FaceRecogPreProcessor(
                 new_shape=new_shape, tensor_type="float32"

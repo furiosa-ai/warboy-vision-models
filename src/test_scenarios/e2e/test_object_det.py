@@ -4,15 +4,15 @@ from typing import List
 
 from pycocotools.cocoeval import COCOeval
 
-from src.test_scenarios.utils import (
+from test_scenarios.utils import (
     CONF_THRES,
     IOU_THRES,
     YOLO_CATEGORY_TO_COCO_CATEGORY,
     MSCOCODataLoader,
     xyxy2xywh,
 )
-from src.warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-from src.warboy.yolo.preprocess import YoloPreProcessor
+from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
+from warboy.yolo.preprocess import YoloPreProcessor
 
 TARGET_ACCURACY = {
     "yolov5nu": 0.343,

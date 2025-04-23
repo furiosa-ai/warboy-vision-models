@@ -6,16 +6,16 @@ import typer
 _ = np.finfo(np.float64)
 _ = np.finfo(np.float32)
 
-from src.demo.demo import run_make_file, run_web_demo
-from src.test_scenarios.e2e import (
+from demo.demo import run_make_file, run_web_demo
+from test_scenarios.e2e import (
     test_face_recognition,
     test_instance_seg,
     test_npu_performance,
     test_object_det,
     test_pose_est,
 )
-from src.warboy import get_model_params_from_cfg
-from src.warboy.tools.onnx_tools import OnnxTools
+from warboy import get_model_params_from_cfg
+from warboy.tools.onnx_tools import OnnxTools
 
 app = typer.Typer()
 
