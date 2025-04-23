@@ -23,13 +23,11 @@ app = typer.Typer()
 @app.command("face-recognition", help="Run end-to-end test for face recognition.")
 def face_recognition_e2e_tests(
     model_name: str,
-    onnx_i8: str,
 ):
     cfg = f"tests/test_config/face_recognition/{model_name}.yaml"
-    param = get_model_params_from_cfg(cfg)
 
     test_face_recognition.test_warboy_facenet_accuracy_recog(
-        model_name, onnx_i8, param["input_shape"], param["anchors"],
+        cfg,
         "datasets/face_recognition/lfw-align-128",
         "datasets/face_recognition/lfw_test_pair.txt",
     )
@@ -40,13 +38,11 @@ def face_recognition_e2e_tests(
 )
 def instance_segmentation_e2e_tests(
     model_name: str,
-    onnx_i8: str,
 ):
     cfg = f"tests/test_config/instance_segmentation/{model_name}.yaml"
-    param = get_model_params_from_cfg(cfg)
 
     test_instance_seg.test_warboy_yolo_accuracy_seg(
-        model_name, onnx_i8, param["input_shape"], param["anchors"],
+        cfg,
         "datasets/coco/val2017",
         "datasets/coco/annotations/instances_val2017.json",
     )
@@ -55,13 +51,11 @@ def instance_segmentation_e2e_tests(
 @app.command("object-detection", help="Run end-to-end test for object detection.")
 def object_detection_e2e_test(
     model_name: str,
-    onnx_i8: str,
 ):
     cfg = f"tests/test_config/object_detection/{model_name}.yaml"
-    param = get_model_params_from_cfg(cfg)
 
     test_object_det.test_warboy_yolo_accuracy_det(
-        model_name, onnx_i8, param["input_shape"], param["anchors"],
+        cfg,
         "datasets/coco/val2017",
         "datasets/coco/annotations/instances_val2017.json",
     )
@@ -70,13 +64,11 @@ def object_detection_e2e_test(
 @app.command("pose-estimation", help="Run end-to-end test for pose estimation.")
 def pose_estimation_e2e_test(
     model_name: str,
-    onnx_i8: str,
 ):
     cfg = f"tests/test_config/pose_estimation/{model_name}.yaml"
-    param = get_model_params_from_cfg(cfg)
 
     test_pose_est.test_warboy_yolo_accuracy_pose(
-        model_name, onnx_i8, param["input_shape"], param["anchors"],
+        cfg,
         "datasets/coco/val2017",
         "datasets/coco/annotations/person_keypoints_val2017.json",
     )
@@ -108,10 +100,7 @@ def run_e2e_tests(
         typer.echo(f"Error: Unsupported task '{param['task']}' in the config file.")
 
     func(
-        param["model_name"],
-        param["onnx_i8_path"],
-        param["input_shape"],
-        param["anchors"],
+        cfg,
         dataset,
         annotation,
     )

@@ -8,33 +8,9 @@ import typer
 from pycocotools.cocoeval import COCOeval
 from sklearn.metrics.pairwise import cosine_similarity
 
-from test_scenarios.utils import CONF_THRES, IOU_THRES
+from test_scenarios.utils import set_engin_config
+from warboy import get_model_params_from_cfg
 from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-
-
-def set_engin_config(num_device, model, model_name, input_shape):
-    """
-    FIXME
-    get configs from config file
-    currently, for facenet face recognition model
-    """
-    engin_configs = []
-    for idx in range(num_device):
-        engin_config = {
-            "name": f"test{idx}",
-            "task": "face_recognition",
-            "model": model,
-            "worker_num": 16,
-            "device": "warboy(1)*1",
-            "model_type": model_name,
-            "input_shape": input_shape,
-            "class_names": [],
-            "conf_thres": CONF_THRES,
-            "iou_thres": IOU_THRES,
-            "use_tracking": False,
-        }
-        engin_configs.append(engin_config)
-    return engin_configs
 
 
 def _cal_accuracy(y_score, y_true):
@@ -97,26 +73,20 @@ def _resolve_input_paths(input_path: Path) -> List[str]:
 
 
 def test_warboy_facenet_accuracy_recog(
-    model_name: str, model: str, input_shape: List[int], anchors, image_dir: str, annotation_file: str
+    cfg: str, image_dir: str, annotation_file: str
 ):
     """
-    model_name(str):
-    model(str): a path to quantized onnx file
-    input_shape(List[int]): [N, C, H, W] => consider batch as 1
-    anchors(List): [None] for yolov8
+    cfg(str): a path to config file
     image_dir(str): a path to image directory
     annotation_file(str): a path to annotation file
     """
-
-    import time
-
-    t1 = time.time()
-
     image_paths = _resolve_input_paths(Path(image_dir))
 
     images = [Image(image_info=image_path) for image_path in image_paths]
-
-    engin_configs = set_engin_config(2, model, model_name, input_shape[2:])
+    
+    param = get_model_params_from_cfg(cfg)
+    
+    engin_configs = set_engin_config(param, 2)
 
     task = PipeLine(run_fast_api=False, run_e2e_test=True, num_channels=len(images))
 
@@ -137,10 +107,6 @@ def test_warboy_facenet_accuracy_recog(
     outputs = task.outputs
 
     acc, th = _test_performance(image_dir, annotation_file, outputs)
-
-    t2 = time.time()
-
-    print(t2 - t1)
 
     print("Accuracy: ", acc)
     print("Threshold: ", th)
