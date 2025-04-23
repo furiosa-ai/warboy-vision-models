@@ -252,7 +252,7 @@ def test_warboy_yolo_accuracy_seg(
 
 
     assert coco_eval.stats[0] >= (
-        TARGET_MASK_ACCURACY[model_name] * 0.9
+        TARGET_BBOX_ACCURACY[model_name] * 0.9
     ), f"{model_name} Accuracy (Bbox) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[model_name] * 0.9}]"
 
     print(
