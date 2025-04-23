@@ -1,4 +1,5 @@
 import asyncio
+import importlib.resources as resources
 import multiprocessing as mp
 import time
 
@@ -13,9 +14,12 @@ from fastapi.templating import Jinja2Templates
 from warboy.utils.monitor_npu import WARBOYDevice
 from warboy.utils.process_pipeline import ImageHandler
 
+TEMPLATES_DIR = resources.files("warboy").joinpath("templates")
+STATIC_DIR = TEMPLATES_DIR / "static"
+
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="templates/static"))
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+app.mount("/static", StaticFiles(directory=STATIC_DIR))
 
 app.state.result_queues = list()
 app.state.warboy_device = None
