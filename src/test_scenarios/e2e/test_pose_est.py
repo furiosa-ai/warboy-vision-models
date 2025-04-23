@@ -62,19 +62,20 @@ def _process_output(outputs_dict, data_loader):
 
 
 def test_warboy_yolo_accuracy_pose(
-    model_name: str, model: str, input_shape: List[int], anchors
+    model_name: str, model: str, input_shape: List[int], anchors, image_dir: str, annotation_file: str
 ):
     """
     model_name(str):
     model(str): a path to quantized onnx file
     input_shape(List[int]): [N, C, H, W] => consider batch as 1
     anchors(List): [None] for yolov8
+    image_dir(str): a path to image directory
+    annotation_file(str): a path to annotation file
     """
     import time
 
     t1 = time.time()
 
-    image_dir = "datasets/coco/val2017"
     image_names = os.listdir(image_dir)
 
     images = [
@@ -87,8 +88,8 @@ def test_warboy_yolo_accuracy_pose(
     preprocessor = YoloPreProcessor(new_shape=input_shape, tensor_type="uint8")
 
     data_loader = MSCOCODataLoader(
-        Path("datasets/coco/val2017"),
-        Path("datasets/coco/annotations/person_keypoints_val2017.json"),
+        Path(image_dir),
+        Path(annotation_file),
         preprocessor,
         input_shape,
     )

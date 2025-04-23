@@ -97,14 +97,21 @@ def _resolve_input_paths(input_path: Path) -> List[str]:
 
 
 def test_warboy_facenet_accuracy_recog(
-    model_name: str, model: str, input_shape: List[int], anchors
+    model_name: str, model: str, input_shape: List[int], anchors, image_dir: str, annotation_file: str
 ):
+    """
+    model_name(str):
+    model(str): a path to quantized onnx file
+    input_shape(List[int]): [N, C, H, W] => consider batch as 1
+    anchors(List): [None] for yolov8
+    image_dir(str): a path to image directory
+    annotation_file(str): a path to annotation file
+    """
+
     import time
 
     t1 = time.time()
 
-    image_dir = "datasets/face_recognition/lfw-align-128"
-    lfw_test_pair = "datasets/face_recognition/lfw_test_pair.txt"
     image_paths = _resolve_input_paths(Path(image_dir))
 
     images = [Image(image_info=image_path) for image_path in image_paths]
@@ -129,7 +136,7 @@ def test_warboy_facenet_accuracy_recog(
     print("Inference done!")
     outputs = task.outputs
 
-    acc, th = _test_performance(image_dir, lfw_test_pair, outputs)
+    acc, th = _test_performance(image_dir, annotation_file, outputs)
 
     t2 = time.time()
 

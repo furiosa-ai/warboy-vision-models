@@ -182,15 +182,15 @@ def _process_output(outputs_dict, data_loader):
 
 
 def test_warboy_yolo_accuracy_det(
-    model_name: str, model: str, input_shape: List[int], image_dir: str, annotation_file: str, anchors
+    model_name: str, model: str, input_shape: List[int], anchors, image_dir: str, annotation_file: str
 ):
     """
     model_name(str):
     model(str): a path to quantized onnx file
     input_shape(List[int]): [N, C, H, W] => consider batch as 1
+    anchors(List): [None] for yolov8
     image_dir(str): a path to image directory
     annotation_file(str): a path to annotation file
-    anchors(List): [None] for yolov8
     """
     import time
 
