@@ -4,7 +4,7 @@ from typing import List
 
 from pycocotools.cocoeval import COCOeval
 
-from test_scenarios.utils import MSCOCODataLoader, set_engin_config
+from test_scenarios.utils import MSCOCODataLoader, set_test_engin_configs
 from warboy import get_model_params_from_cfg
 from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
 from warboy.yolo.preprocess import YoloPreProcessor
@@ -53,7 +53,7 @@ def test_warboy_yolo_accuracy_pose(
 
     param = get_model_params_from_cfg(cfg)
 
-    engin_configs = set_engin_config(param, 2)
+    engin_configs = set_test_engin_configs(param, 2)
 
     preprocessor = YoloPreProcessor(new_shape=param["input_shape"], tensor_type="uint8")
 

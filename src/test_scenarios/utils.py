@@ -129,7 +129,7 @@ def xyxy2xywh(x: np.ndarray) -> np.ndarray:
     y[:, 3] = x[:, 3] - x[:, 1]
     return y
 
-def set_engin_config(param, num_device):
+def set_test_engin_configs(param, num_device):
     engin_configs = []
     for idx in range(num_device):
         engin_config = {

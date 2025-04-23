@@ -8,7 +8,7 @@ import typer
 from pycocotools.cocoeval import COCOeval
 from sklearn.metrics.pairwise import cosine_similarity
 
-from test_scenarios.utils import set_engin_config
+from test_scenarios.utils import set_test_engin_configs
 from warboy import get_model_params_from_cfg
 from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
 
@@ -86,7 +86,7 @@ def test_warboy_facenet_accuracy_recog(
     
     param = get_model_params_from_cfg(cfg)
     
-    engin_configs = set_engin_config(param, 2)
+    engin_configs = set_test_engin_configs(param, 2)
 
     task = PipeLine(run_fast_api=False, run_e2e_test=True, num_channels=len(images))
 

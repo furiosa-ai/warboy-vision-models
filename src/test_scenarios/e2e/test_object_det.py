@@ -7,7 +7,7 @@ from pycocotools.cocoeval import COCOeval
 from test_scenarios.utils import (
     YOLO_CATEGORY_TO_COCO_CATEGORY,
     MSCOCODataLoader,
-    set_engin_config,
+    set_test_engin_configs,
     xyxy2xywh,
 )
 from warboy import get_model_params_from_cfg
@@ -92,7 +92,7 @@ def test_warboy_yolo_accuracy_det(
 
     param = get_model_params_from_cfg(cfg)
 
-    engin_configs = set_engin_config(param, 2)
+    engin_configs = set_test_engin_configs(param, 2)
 
     preprocessor = YoloPreProcessor(new_shape=param["input_shape"], tensor_type="uint8")
 
