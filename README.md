@@ -99,9 +99,9 @@ Instance segmentation is a technology that identifies multiple objects in an ima
 | YOLOv9e-seg | 640x640                     | 55.1                        |                             | 44.3                         |                              | 3.78  (6.40)                    | 5.36  (8.01)                       |
 | YOLOv8n-seg | 640x640                     | 36.7                        | 33.9                        | 30.5                         | 27.8                         | 9.21  (10.61)                   | 12.59 (14.28)                      |
 | YOLOv8s-seg | 640x640                     | 44.6                        | 42.2                        | 36.8                         | 34.2                         | 9.75  (11.12)                   | 14.86 (17.38)                      |
-| YOLOv8m-seg | 640x640                     | 49.9                        | 47.3                        | 40.8                         | 38.2                         |                                    |
-| YOLOv8l-seg | 640x640                     | 52.3                        | 49.1                        | 42.6                         | 39.3                         |                                    |
-| YOLOv8x-seg | 640x640                     | 53.4                        | 50.4                        | 43.4                         | 40.1                         |                                    |
+| YOLOv8m-seg | 640x640                     | 49.9                        | 47.3                        | 40.8                         | 38.2                         |                                 |
+| YOLOv8l-seg | 640x640                     | 52.3                        | 49.1                        | 42.6                         | 39.3                         |                                 |
+| YOLOv8x-seg | 640x640                     | 53.4                        | 50.4                        | 43.4                         | 40.1                         |                                 |
 </div>
 </details>
 
@@ -211,7 +211,7 @@ Next, it is necessary to export the model to the ONNX format.
 
 If you have the model in an ONNX model, the next step is the model quantization process. Since FuriosaAI's Warboy only supports models in 8-bit integer format (int8), it is necessary to quantize the float32-based model into an int8 data type model. 
 
-- **command with cli**
+- **model making commands**
   ```sh
   warboy-vision make-model "/path/to/your/model/cfg.yaml"       # from onnx export to quantize
 
@@ -220,11 +220,6 @@ If you have the model in an ONNX model, the next step is the model quantization 
 
   # if you want to quantize onnx model
   warboy-vision quantize "/path/to/your/model/cfg.yaml"         # quantize
-  ```
-- **command with python**
-  
-  ```sh
-  python test_codes/test_make_model.py      # please check test_make_model.py file
   ```
 </details>
 
@@ -235,19 +230,12 @@ In the project, vision applications are executed for videos from multiple channe
 
 <div align="center"><img width="960" src="./data/images/structure.png"></div>
   
-- **command with cli**
+- **demo commands**
   
   ```sh
   warboy-vision web-demo "/path/to/your/demo/cfg.yaml"    # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
 
   warboy-vision make-file "/path/to/your/demo/cfg.yaml"   # outputs will be saved in outputs folder
-  ```
-- **command with python**
-  
-  ```sh
-  python demo/demo.py web      # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
-
-  python demo/demo.py file     # outputs will be saved in outputs folder
   ```
 </details>
 
@@ -256,22 +244,15 @@ In the project, vision applications are executed for videos from multiple channe
 <!-- e2e test 설명 -->
 In the project, there are end-to-end performance tests for various vision applications. We can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. Also, we can test NPU performance, too.
 
-- **command with cli**
+- **performance test commands**
   
   ```sh
   warboy-vision performance "/path/to/your/model/cfg.yaml"      # performance test for model with config file
 
   warboy-vision npu-profile "/path/to/your/model/cfg.yaml"      # NPU performance test for model with config file
   ```
-- **command with python**
-  
-  ```sh
-  python test_codes/test_acc.py     # for model performance test, please check test_acc.py file
 
-  python test_codes/test_npu.py     # for NPU performance test, please check test_npu_performance.py file
-  ```
-
-- **command with cli without config file**
+- **performance test commands without config files**
 
     ```sh
 

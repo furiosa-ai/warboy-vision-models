@@ -1,12 +1,12 @@
 task: object_detection   #
 model_name: yolov8n
-weight: ./models/weight/object_detection/yolov8n.pt                       # weight file path
-onnx_path: ./models/onnx/object_detection/yolov8n.onnx                  # onnx model path
-onnx_i8_path: ./models/quantized_onnx/object_detection/yolov8n_i8.onnx # quantized onnx model path
+weight: ../models/weight/object_detection/yolov8n.pt                       # weight file path
+onnx_path: ../models/onnx/object_detection/yolov8n.onnx                  # onnx model path
+onnx_i8_path: ../models/quantized_onnx/object_detection/yolov8n_i8.onnx # quantized onnx model path
 
 calibration_params:
   calibration_method: SQNR_ASYM # calibration method
-  calibration_data: ./datasets/coco/val2017          # calibration data path
+  calibration_data: ../../datasets/coco/val2017          # calibration data path, you may change this path to your own path
   num_calibration_data: 100     # number of calibration data
 
 conf_thres: 0.25

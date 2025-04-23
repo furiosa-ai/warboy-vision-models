@@ -2,56 +2,38 @@ import os
 from pathlib import Path
 from typing import List
 
-import pytest
+import numpy as np
+import pycocotools.mask as mask_util
 from pycocotools.cocoeval import COCOeval
 
-from src.warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-from src.warboy.yolo.preprocess import YoloPreProcessor
-from tests.utils import (
+from test_scenarios.utils import (
     CONF_THRES,
     IOU_THRES,
     YOLO_CATEGORY_TO_COCO_CATEGORY,
     MSCOCODataLoader,
     xyxy2xywh,
 )
+from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
+from warboy.yolo.preprocess import YoloPreProcessor
 
-TARGET_ACCURACY = {
-    "yolov5nu": 0.343,
-    "yolov5su": 0.430,
-    "yolov5mu": 0.490,
-    "yolov5lu": 0.522,
-    "yolov5xu": 0.532,
-    "yolov5n": 0.280,
-    "yolov5s": 0.374,
-    "yolov5m": 0.454,
-    "yolov5l": 0.490,
-    "yolov5x": 0.507,
-    "yolov7": 0.514,
-    "yolov7x": 0.531,
-    "yolov7-w6": 0.549,
-    "yolov7-e6": 0.560,
-    "yolov7-d6": 0.566,
-    "yolov7-e6e": 0.568,
-    "yolov8n": 0.373,
-    "yolov8s": 0.449,
-    "yolov8m": 0.502,
-    "yolov8l": 0.529,
-    "yolov8x": 0.539,
-    "yolov9t": 0.383,
-    "yolov9s": 0.468,
-    "yolov9m": 0.514,
-    "yolov9c": 0.530,
-    "yolov9e": 0.556,
-    "yolov5n6": 0.360,
-    "yolov5n6u": 0.421,
-    "yolov5s6": 0.448,
-    "yolov5s6u": 0.486,
-    "yolov5m6": 0.513,
-    "yolov5m6u": 0.536,
-    "yolov5l6": 0.537,
-    "yolov5l6u": 0.557,
-    "yolov5x6": 0.550,
-    "yolov5x6u": 0.568,
+TARGET_MASK_ACCURACY = {
+    "yolov8n-seg": 0.305,
+    "yolov8s-seg": 0.368,
+    "yolov8m-seg": 0.408,
+    "yolov8l-seg": 0.426,
+    "yolov8x-seg": 0.434,
+    "yolov9c-seg": 0.422,
+    "yolov9e-seg": 0.443,
+}
+
+TARGET_BBOX_ACCURACY = {
+    "yolov8n-seg": 0.367,
+    "yolov8s-seg": 0.446,
+    "yolov8m-seg": 0.499,
+    "yolov8l-seg": 0.523,
+    "yolov8x-seg": 0.534,
+    "yolov9c-seg": 0.524,
+    "yolov9e-seg": 0.551,
 }
 
 
@@ -59,13 +41,13 @@ def set_engin_config(num_device, model, model_name, input_shape):
     """
     FIXME
     get configs from config file
-    currently, for yolov8n object detection model
+    currently, for yolov8n instance segmentation model
     """
     engin_configs = []
     for idx in range(num_device):
         engin_config = {
             "name": f"test{idx}",
-            "task": "object_detection",
+            "task": "instance_segmentation",
             "model": model,
             "worker_num": 16,
             "device": "warboy(1)*1",
@@ -166,37 +148,45 @@ def _process_output(outputs_dict, data_loader):
     for img_path, annotation in data_loader:
         if not len(outputs_dict[str(img_path)]) == 1:
             print(len(outputs_dict[str(img_path)]))
-        for outputs in outputs_dict[str(img_path)]:
+        for outputs, pred_masks in outputs_dict[str(img_path)]:
             bboxes = xyxy2xywh(outputs[:, :4])
             bboxes[:, :2] -= bboxes[:, 2:] / 2
 
-            for output, bbox in zip(outputs, bboxes):
+            rles = [
+                mask_util.encode(
+                    np.array(mask[:, :, np.newaxis], dtype=np.uint8, order="F")
+                )[0]
+                for mask in pred_masks
+            ]
+
+            for output, bbox, rle in zip(outputs, bboxes, rles):
                 results.append(
                     {
                         "image_id": annotation["id"],
                         "category_id": YOLO_CATEGORY_TO_COCO_CATEGORY[int(output[5])],
                         "bbox": [round(x, 3) for x in bbox],
+                        "segmentation": rle,
                         "score": round(output[4], 5),
                     }
                 )
     return results
 
 
-@pytest.mark.parametrize("model_name, model, input_shape, anchors")
-def test_warboy_yolo_accuracy_det(
-    model_name: str, model: str, input_shape: List[int], anchors
+def test_warboy_yolo_accuracy_seg(
+    model_name: str, model: str, input_shape: List[int], anchors, image_dir: str, annotation_file: str
 ):
     """
     model_name(str):
     model(str): a path to quantized onnx file
     input_shape(List[int]): [N, C, H, W] => consider batch as 1
     anchors(List): [None] for yolov8
+    image_dir(str): a path to image directory
+    annotation_file(str): a path to annotation file
     """
     import time
 
     t1 = time.time()
 
-    image_dir = "datasets/coco/val2017"
     image_names = os.listdir(image_dir)
 
     images = [
@@ -209,8 +199,8 @@ def test_warboy_yolo_accuracy_det(
     preprocessor = YoloPreProcessor(new_shape=input_shape, tensor_type="uint8")
 
     data_loader = MSCOCODataLoader(
-        Path("datasets/coco/val2017"),
-        Path("datasets/coco/annotations/instances_val2017.json"),
+        Path(image_dir),
+        Path(annotation_file),
         preprocessor,
         input_shape,
     )
@@ -230,25 +220,41 @@ def test_warboy_yolo_accuracy_det(
     # task.run(runtime_type="application")
     task.run()
 
+    print("Inference done!")
     outputs = task.outputs
     results = _process_output(outputs, data_loader)
 
     coco_result = data_loader.coco.loadRes(results)
-    coco_eval = COCOeval(data_loader.coco, coco_result, "bbox")
+    coco_eval = COCOeval(data_loader.coco, coco_result, "segm")
+    coco_eval_box = COCOeval(data_loader.coco, coco_result, "bbox")
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
+
+    coco_eval_box.evaluate()
+    coco_eval_box.accumulate()
+    coco_eval_box.summarize()
 
     t2 = time.time()
 
     print(t2 - t1)
 
-    print(coco_eval.stats[:3])
+    print("MASK mAP: ", coco_eval.stats[0])
+    print("BBOX mAP: ", coco_eval_box.stats[0])
 
     assert coco_eval.stats[0] >= (
-        TARGET_ACCURACY[model_name] * 0.9
-    ), f"{model_name} Accuracy check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[model_name] * 0.9}]"
+        TARGET_MASK_ACCURACY[model_name] * 0.9
+    ), f"{model_name} Accuracy (Mask) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[model_name] * 0.9}]"
 
     print(
-        f"{model_name} Accuracy check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[model_name] * 0.9}]"
+        f"{model_name} Accuracy (Mask) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[model_name] * 0.9}]"
+    )
+
+
+    assert coco_eval.stats[0] >= (
+        TARGET_BBOX_ACCURACY[model_name] * 0.9
+    ), f"{model_name} Accuracy (Bbox) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[model_name] * 0.9}]"
+
+    print(
+        f"{model_name} Accuracy (Bbox) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[model_name] * 0.9}]"
     )

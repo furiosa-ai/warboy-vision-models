@@ -7,6 +7,8 @@ import pycocotools.mask as mask_util
 import pytest
 from pycocotools.cocoeval import COCOeval
 
+from src.warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
+from src.warboy.yolo.preprocess import YoloPreProcessor
 from tests.utils import (
     CONF_THRES,
     IOU_THRES,
@@ -14,8 +16,6 @@ from tests.utils import (
     MSCOCODataLoader,
     xyxy2xywh,
 )
-from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-from warboy.yolo.preprocess import YoloPreProcessor
 
 TARGET_MASK_ACCURACY = {
     "yolov8n-seg": 0.305,

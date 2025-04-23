@@ -7,7 +7,7 @@ _ = np.finfo(np.float64)
 _ = np.finfo(np.float32)
 
 from demo.demo import run_make_file, run_web_demo
-from tests.e2e import (
+from test_scenarios.e2e import (
     test_face_recognition,
     test_instance_seg,
     test_npu_performance,
@@ -29,7 +29,9 @@ def face_recognition_e2e_tests(
     param = get_model_params_from_cfg(cfg)
 
     test_face_recognition.test_warboy_facenet_accuracy_recog(
-        model_name, onnx_i8, param["input_shape"], param["anchors"]
+        model_name, onnx_i8, param["input_shape"], param["anchors"],
+        "datasets/face_recognition/lfw-align-128",
+        "datasets/face_recognition/lfw_test_pair.txt",
     )
 
 
@@ -44,7 +46,9 @@ def instance_segmentation_e2e_tests(
     param = get_model_params_from_cfg(cfg)
 
     test_instance_seg.test_warboy_yolo_accuracy_seg(
-        model_name, onnx_i8, param["input_shape"], param["anchors"]
+        model_name, onnx_i8, param["input_shape"], param["anchors"],
+        "datasets/coco/val2017",
+        "datasets/coco/annotations/instances_val2017.json",
     )
 
 
@@ -57,7 +61,9 @@ def object_detection_e2e_test(
     param = get_model_params_from_cfg(cfg)
 
     test_object_det.test_warboy_yolo_accuracy_det(
-        model_name, onnx_i8, param["input_shape"], param["anchors"]
+        model_name, onnx_i8, param["input_shape"], param["anchors"],
+        "datasets/coco/val2017",
+        "datasets/coco/annotations/instances_val2017.json",
     )
 
 
@@ -70,7 +76,9 @@ def pose_estimation_e2e_test(
     param = get_model_params_from_cfg(cfg)
 
     test_pose_est.test_warboy_yolo_accuracy_pose(
-        model_name, onnx_i8, param["input_shape"], param["anchors"]
+        model_name, onnx_i8, param["input_shape"], param["anchors"],
+        "datasets/coco/val2017",
+        "datasets/coco/annotations/person_keypoints_val2017.json",
     )
 
 
@@ -82,12 +90,20 @@ def run_e2e_tests(
     func = None
     if param["task"] == "face_recognition":
         func = test_face_recognition.test_warboy_facenet_accuracy_recog
+        dataset = "datasets/face_recognition/lfw-align-128"
+        annotation = "datasets/face_recognition/lfw_test_pair.txt"
     elif param["task"] == "instance_segmentation":
         func = test_instance_seg.test_warboy_yolo_accuracy_seg
+        dataset = "datasets/coco/val2017"
+        annotation = "datasets/coco/annotations/instances_val2017.json"
     elif param["task"] == "object_detection":
         func = test_object_det.test_warboy_yolo_accuracy_det
+        dataset = "datasets/coco/val2017"
+        annotation = "datasets/coco/annotations/instances_val2017.json"
     elif param["task"] == "pose_estimation":
         func = test_pose_est.test_warboy_yolo_accuracy_pose
+        dataset = "datasets/coco/val2017"
+        annotation = "datasets/coco/annotations/person_keypoints_val2017.json"
     else:
         typer.echo(f"Error: Unsupported task '{param['task']}' in the config file.")
 
@@ -96,6 +112,8 @@ def run_e2e_tests(
         param["onnx_i8_path"],
         param["input_shape"],
         param["anchors"],
+        dataset,
+        annotation,
     )
 
 
