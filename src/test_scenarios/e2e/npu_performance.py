@@ -23,9 +23,7 @@ def test_warboy_performance(cfg, num_device):
     if not os.path.exists(trace_dir):
         os.makedirs(trace_dir)
 
-    trace_file = os.path.join(
-        trace_dir, param["model_name"] + "_" + device + ".log"
-    )
+    trace_file = os.path.join(trace_dir, param["model_name"] + "_" + device + ".log")
 
     onnx_i8_path = param["onnx_i8_path"]
 

@@ -75,9 +75,7 @@ def _process_output(outputs_dict, data_loader):
     return results
 
 
-def test_warboy_yolo_accuracy_det(
-    cfg: str, image_dir: str, annotation_file: str
-):
+def test_warboy_yolo_accuracy_det(cfg: str, image_dir: str, annotation_file: str):
     """
     cfg(str): a path to config file
     image_dir(str): a path to image directory
@@ -130,7 +128,7 @@ def test_warboy_yolo_accuracy_det(
     print(coco_eval.stats[:3])
 
     assert coco_eval.stats[0] >= (
-        TARGET_ACCURACY[param['model_name']] * 0.9
+        TARGET_ACCURACY[param["model_name"]] * 0.9
     ), f"{param['model_name']} Accuracy check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[param['model_name']] * 0.9}]"
 
     print(

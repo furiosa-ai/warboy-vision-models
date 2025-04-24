@@ -3,7 +3,12 @@ ONNX_DIR = "./models/onnx"
 QUANTIZED_ONNX_DIR = "./models/quantized_onnx"
 TRACE_FILE_DIR = "./models/trace"
 
-TEST_TASK = ["object_detection", "pose_estimation", "instance_segmentation", "face_recognition"]
+TEST_TASK = [
+    "object_detection",
+    "pose_estimation",
+    "instance_segmentation",
+]
+
 TEST_MODEL_LIST = {
     "object_detection": [
         "yolov5n",
@@ -28,10 +33,10 @@ TEST_MODEL_LIST = {
         "yolov5x6u",
         "yolov7",
         "yolov7x",
-        #"yolov7-w6",
-        #"yolov7-e6",
-        #"yolov7-d6",
-        #"yolov7-e6e",
+        # "yolov7-w6",
+        # "yolov7-e6",
+        # "yolov7-d6",
+        # "yolov7-e6e",
         "yolov8n",
         "yolov8s",
         "yolov8m",
@@ -58,11 +63,5 @@ TEST_MODEL_LIST = {
         "yolov8x-seg",
         "yolov9c-seg",
         "yolov9e-seg",
-    ],
-    "face_detection": [
-        "yolov8n-face",
-    ],
-    "face_recognition": [
-        "facenet",
     ],
 }

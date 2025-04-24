@@ -1,14 +1,20 @@
+import asyncio
 import os
+import sys
 from pathlib import Path
-from typing import List
+from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Tuple
 
+import cv2
 import numpy as np
 import pycocotools.mask as mask_util
 import pytest
 from pycocotools.cocoeval import COCOeval
+from tqdm import tqdm
 
-from src.warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
+from src.warboy.cfg import get_model_params_from_cfg
+from src.warboy.yolo.postprocess import InsSegPostProcess
 from src.warboy.yolo.preprocess import YoloPreProcessor
+from tests.test_config import QUANTIZED_ONNX_DIR, TEST_MODEL_LIST
 from tests.utils import (
     CONF_THRES,
     IOU_THRES,
@@ -16,6 +22,25 @@ from tests.utils import (
     MSCOCODataLoader,
     xyxy2xywh,
 )
+
+CONFIG_PATH = "./tests/test_config/instance_segmentation"
+YAML_PATH = [
+    os.path.join(CONFIG_PATH, model_name + ".yaml")
+    for model_name in TEST_MODEL_LIST["instance_segmentation"]
+]
+
+PARAMS = [get_model_params_from_cfg(yaml) for yaml in YAML_PATH]
+
+PARAMETERS = [
+    (
+        param["model_name"],
+        os.path.join(QUANTIZED_ONNX_DIR, param["task"], param["onnx_i8_path"]),
+        param["input_shape"],
+        param["anchors"],
+    )
+    for param in PARAMS
+]
+
 
 TARGET_MASK_ACCURACY = {
     "yolov8n-seg": 0.305,
@@ -38,118 +63,21 @@ TARGET_BBOX_ACCURACY = {
 }
 
 
-def set_engin_config(num_device, model, model_name, input_shape):
-    """
-    FIXME
-    get configs from config file
-    currently, for yolov8n instance segmentation model
-    """
-    engin_configs = []
-    for idx in range(num_device):
-        engin_config = {
-            "name": f"test{idx}",
-            "task": "instance_segmentation",
-            "model": model,
-            "worker_num": 16,
-            "device": "warboy(1)*1",
-            "model_type": model_name,
-            "input_shape": input_shape,
-            "class_names": [
-                "person",
-                "bicycle",
-                "car",
-                "motorcycle",
-                "airplane",
-                "bus",
-                "train",
-                "truck",
-                "boat",
-                "traffic light",
-                "fire hydrant",
-                "stop sign",
-                "parking meter",
-                "bench",
-                "bird",
-                "cat",
-                "dog",
-                "horse",
-                "sheep",
-                "cow",
-                "elephant",
-                "bear",
-                "zebra",
-                "giraffe",
-                "backpack",
-                "umbrella",
-                "handbag",
-                "tie",
-                "suitcase",
-                "frisbee",
-                "skis",
-                "snowboard",
-                "sports ball",
-                "kite",
-                "baseball bat",
-                "baseball glove",
-                "skateboard",
-                "surfboard",
-                "tennis racket",
-                "bottle",
-                "wine glass",
-                "cup",
-                "fork",
-                "knife",
-                "spoon",
-                "bowl",
-                "banana",
-                "apple",
-                "sandwich",
-                "orange",
-                "broccoli",
-                "carrot",
-                "hot dog",
-                "pizza",
-                "donut",
-                "cake",
-                "chair",
-                "couch",
-                "potted plant",
-                "bed",
-                "dining table",
-                "toilet",
-                "tv",
-                "laptop",
-                "mouse",
-                "remote",
-                "keyboard",
-                "cell phone",
-                "microwave",
-                "oven",
-                "toaster",
-                "sink",
-                "refrigerator",
-                "book",
-                "clock",
-                "vase",
-                "scissors",
-                "teddy bear",
-                "hair drier",
-                "toothbrush",
-            ],
-            "conf_thres": CONF_THRES,
-            "iou_thres": IOU_THRES,
-            "use_tracking": False,
-        }
-        engin_configs.append(engin_config)
-    return engin_configs
+async def warboy_inference(model, data_loader, preprocessor, postprocessor):
+    async def task(
+        runner, data_loader, preprocessor, postprocessor, worker_id, worker_num
+    ):
+        results = []
+        for idx, (img_path, annotation) in enumerate(data_loader):
+            if idx % worker_num != worker_id:
+                continue
 
+            img = cv2.imread(str(img_path))
+            img0shape = img.shape[:2]
+            input_, contexts = preprocessor(img)
+            preds = await runner.run([input_])
 
-def _process_output(outputs_dict, data_loader):
-    results = []
-    for img_path, annotation in data_loader:
-        if not len(outputs_dict[str(img_path)]) == 1:
-            print(len(outputs_dict[str(img_path)]))
-        for outputs, pred_masks in outputs_dict[str(img_path)]:
+            outputs, pred_masks = postprocessor(preds, contexts, img0shape)[0]
             bboxes = xyxy2xywh(outputs[:, :4])
             bboxes[:, :2] -= bboxes[:, 2:] / 2
 
@@ -159,7 +87,6 @@ def _process_output(outputs_dict, data_loader):
                 )[0]
                 for mask in pred_masks
             ]
-
             for output, bbox, rle in zip(outputs, bboxes, rles):
                 results.append(
                     {
@@ -170,28 +97,39 @@ def _process_output(outputs_dict, data_loader):
                         "score": round(output[4], 5),
                     }
                 )
-    return results
+        return results
+
+    from furiosa.runtime import create_runner
+
+    worker_num = 16
+    async with create_runner(
+        model, worker_num=32, compiler_config={"use_program_loading": True}
+    ) as runner:
+        results = await asyncio.gather(
+            *(
+                task(
+                    runner,
+                    data_loader,
+                    preprocessor,
+                    postprocessor,
+                    idx,
+                    worker_num,
+                )
+                for idx in range(worker_num)
+            )
+        )
+    return sum(results, [])
 
 
-@pytest.mark.parametrize("model_name, model, input_shape, anchors")
+@pytest.mark.parametrize("model_name, model, input_shape, anchors", PARAMETERS)
 def test_warboy_yolo_accuracy_seg(
     model_name: str, model: str, input_shape: List[int], anchors
 ):
-    import time
-
-    t1 = time.time()
-
-    image_dir = "datasets/coco/val2017"
-    image_names = os.listdir(image_dir)
-
-    images = [
-        Image(image_info=os.path.join(image_dir, image_name))
-        for image_name in image_names
-    ]
-
-    engin_configs = set_engin_config(2, model, model_name, input_shape[2:])
-
-    preprocessor = YoloPreProcessor(new_shape=input_shape, tensor_type="uint8")
+    model_cfg = {"conf_thres": CONF_THRES, "iou_thres": IOU_THRES, "anchors": anchors}
+    preprocessor = YoloPreProcessor(new_shape=input_shape[2:])
+    postprocessor = InsSegPostProcess(
+        model_name, model_cfg, None, False
+    ).postprocess_func
 
     data_loader = MSCOCODataLoader(
         Path("datasets/coco/val2017"),
@@ -200,24 +138,9 @@ def test_warboy_yolo_accuracy_seg(
         input_shape,
     )
 
-    task = PipeLine(run_fast_api=False, run_e2e_test=True, num_channels=len(images))
-
-    for idx, engin in enumerate(engin_configs):
-        task.add(Engine(**engin), postprocess_as_img=False)
-        task.add(
-            ImageList(
-                image_list=[image for image in images[idx :: len(engin_configs)]]
-            ),
-            name=engin["name"],
-            postprocess_as_img=False,
-        )
-
-    # task.run(runtime_type="application")
-    task.run()
-
-    print("Inference done!")
-    outputs = task.outputs
-    results = _process_output(outputs, data_loader)
+    results = asyncio.run(
+        warboy_inference(model, data_loader, preprocessor, postprocessor)
+    )
 
     coco_result = data_loader.coco.loadRes(results)
     coco_eval = COCOeval(data_loader.coco, coco_result, "segm")
@@ -230,26 +153,9 @@ def test_warboy_yolo_accuracy_seg(
     coco_eval_box.accumulate()
     coco_eval_box.summarize()
 
-    t2 = time.time()
-
-    print(t2 - t1)
-
-    print("MASK mAP: ", coco_eval.stats[0])
-    print("BBOX mAP: ", coco_eval_box.stats[0])
-
-    assert coco_eval.stats[0] >= (
-        TARGET_MASK_ACCURACY[model_name] * 0.9
+    assert (
+        coco_eval.stats[0] >= TARGET_MASK_ACCURACY[model_name] * 0.9
     ), f"{model_name} Accuracy (Mask) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[model_name] * 0.9}]"
-
-    print(
-        f"{model_name} Accuracy (Mask) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[model_name] * 0.9}]"
-    )
-
-
-    assert coco_eval.stats[0] >= (
-        TARGET_MASK_ACCURACY[model_name] * 0.9
-    ), f"{model_name} Accuracy (Bbox) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[model_name] * 0.9}]"
-
-    print(
-        f"{model_name} Accuracy (Bbox) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[model_name] * 0.9}]"
-    )
+    assert (
+        coco_eval_box.stats[0] >= TARGET_BBOX_ACCURACY[model_name] * 0.9
+    ), f"{model_name} Accuracy (Bbox) check failed! -> mAP: {coco_eval_box.stats[0]} [Target: {TARGET_BBOX_ACCURACY[model_name] * 0.9}]"

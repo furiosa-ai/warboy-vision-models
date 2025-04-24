@@ -36,6 +36,7 @@ TARGET_BBOX_ACCURACY = {
     "yolov9e-seg": 0.551,
 }
 
+
 def _process_output(outputs_dict, data_loader):
     results = []
     for img_path, annotation in data_loader:
@@ -65,9 +66,7 @@ def _process_output(outputs_dict, data_loader):
     return results
 
 
-def test_warboy_yolo_accuracy_seg(
-    cfg: str, image_dir: str, annotation_file: str
-):
+def test_warboy_yolo_accuracy_seg(cfg: str, image_dir: str, annotation_file: str):
     """
     cfg(str): a path to config file
     image_dir(str): a path to image directory
@@ -127,16 +126,15 @@ def test_warboy_yolo_accuracy_seg(
     print("BBOX mAP: ", coco_eval_box.stats[0])
 
     assert coco_eval.stats[0] >= (
-        TARGET_MASK_ACCURACY[param['model_name']] * 0.9
+        TARGET_MASK_ACCURACY[param["model_name"]] * 0.9
     ), f"{param['model_name']} Accuracy (Mask) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[param['model_name']] * 0.9}]"
 
     print(
         f"{param['model_name']} Accuracy (Mask) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[param['model_name']] * 0.9}]"
     )
 
-
     assert coco_eval.stats[0] >= (
-        TARGET_BBOX_ACCURACY[param['model_name']] * 0.9
+        TARGET_BBOX_ACCURACY[param["model_name"]] * 0.9
     ), f"{param['model_name']} Accuracy (Bbox) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
 
     print(

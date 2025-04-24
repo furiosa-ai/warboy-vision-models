@@ -1,13 +1,37 @@
+import asyncio
 import os
+import sys
 from pathlib import Path
-from typing import List
+from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Tuple
 
+import cv2
+import numpy as np
 import pytest
 from pycocotools.cocoeval import COCOeval
+from tqdm import tqdm
 
-from src.warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
+from src.warboy.cfg import get_model_params_from_cfg
+from src.warboy.yolo.postprocess import PoseEstPostprocess
 from src.warboy.yolo.preprocess import YoloPreProcessor
+from tests.test_config import QUANTIZED_ONNX_DIR, TEST_MODEL_LIST
 from tests.utils import CONF_THRES, IOU_THRES, MSCOCODataLoader
+
+CONFIG_PATH = "./tests/test_config/pose_estimation"
+YAML_PATH = [
+    os.path.join(CONFIG_PATH, model_name + ".yaml")
+    for model_name in TEST_MODEL_LIST["pose_estimation"]
+]
+PARAMS = [get_model_params_from_cfg(yaml) for yaml in YAML_PATH]
+
+PARAMETERS = [
+    (
+        param["model_name"],
+        os.path.join(QUANTIZED_ONNX_DIR, param["task"], param["onnx_i8_path"]),
+        param["input_shape"],
+        param["anchors"],
+    )
+    for param in PARAMS
+]
 
 TARGET_ACCURACY = {
     "yolov8n-pose": 0.504,
@@ -18,37 +42,22 @@ TARGET_ACCURACY = {
 }
 
 
-def set_engin_config(num_device, model, model_name, input_shape):
-    """
-    FIXME
-    get configs from config file
-    currently, for yolov8n pose estimation model
-    """
-    engin_configs = []
-    for idx in range(num_device):
-        engin_config = {
-            "name": f"test{idx}",
-            "task": "pose_estimation",
-            "model": model,
-            "worker_num": 16,
-            "device": "warboy(1)*1",
-            "model_type": model_name,
-            "input_shape": input_shape,
-            "class_names": ["person"],
-            "conf_thres": CONF_THRES,
-            "iou_thres": IOU_THRES,
-            "use_tracking": False,
-        }
-        engin_configs.append(engin_config)
-    return engin_configs
+async def warboy_inference(model, data_loader, preprocessor, postprocessor):
+    async def task(
+        runner, data_loader, preprocessor, postprocessor, worker_id, worker_num
+    ):
+        results = []
+        for idx, (img_path, annotation) in enumerate(data_loader):
+            if idx % worker_num != worker_id:
+                continue
 
+            img = cv2.imread(str(img_path))
+            img0shape = img.shape[:2]
+            input_, contexts = preprocessor(img)
+            preds = await runner.run([input_])
 
-def _process_output(outputs_dict, data_loader):
-    results = []
-    for img_path, annotation in data_loader:
-        if not len(outputs_dict[str(img_path)]) == 1:
-            print(len(outputs_dict[str(img_path)]))
-        for outputs in outputs_dict[str(img_path)]:
+            outputs = postprocessor(preds, contexts, img0shape)[0]
+
             for output in outputs:
                 keypoint = output[5:]
                 results.append(
@@ -59,34 +68,40 @@ def _process_output(outputs_dict, data_loader):
                         "score": round(output[4], 5),
                     }
                 )
-    return results
+        return results
+
+    from furiosa.runtime import create_runner
+
+    worker_num = 16
+    async with create_runner(
+        model, worker_num=32, compiler_config={"use_program_loading": True}
+    ) as runner:
+        results = await asyncio.gather(
+            *(
+                task(
+                    runner,
+                    data_loader,
+                    preprocessor,
+                    postprocessor,
+                    idx,
+                    worker_num,
+                )
+                for idx in range(worker_num)
+            )
+        )
+    return sum(results, [])
 
 
-@pytest.mark.parametrize("model_name, model, input_shape, anchors")
+@pytest.mark.parametrize("model_name, model, input_shape, anchors", PARAMETERS)
 def test_warboy_yolo_accuracy_pose(
     model_name: str, model: str, input_shape: List[int], anchors
 ):
-    """
-    model_name(str):
-    model(str): a path to quantized onnx file
-    input_shape(List[int]): [N, C, H, W] => consider batch as 1
-    anchors(List): [None] for yolov8
-    """
-    import time
+    model_cfg = {"conf_thres": CONF_THRES, "iou_thres": IOU_THRES, "anchors": anchors}
 
-    t1 = time.time()
-
-    image_dir = "datasets/coco/val2017"
-    image_names = os.listdir(image_dir)
-
-    images = [
-        Image(image_info=os.path.join(image_dir, image_name))
-        for image_name in image_names
-    ]
-
-    engin_configs = set_engin_config(2, model, model_name, input_shape[2:])
-
-    preprocessor = YoloPreProcessor(new_shape=input_shape, tensor_type="uint8")
+    preprocessor = YoloPreProcessor(new_shape=input_shape[2:])
+    postprocessor = PoseEstPostprocess(
+        model_name, model_cfg, None, False
+    ).postprocess_func
 
     data_loader = MSCOCODataLoader(
         Path("datasets/coco/val2017"),
@@ -95,23 +110,9 @@ def test_warboy_yolo_accuracy_pose(
         input_shape,
     )
 
-    task = PipeLine(run_fast_api=False, run_e2e_test=True, num_channels=len(images))
-
-    for idx, engin in enumerate(engin_configs):
-        task.add(Engine(**engin), postprocess_as_img=False)
-        task.add(
-            ImageList(
-                image_list=[image for image in images[idx :: len(engin_configs)]]
-            ),
-            name=engin["name"],
-            postprocess_as_img=False,
-        )
-
-    # task.run(runtime_type="application")
-    task.run()
-
-    outputs = task.outputs
-    results = _process_output(outputs, data_loader)
+    results = asyncio.run(
+        warboy_inference(model, data_loader, preprocessor, postprocessor)
+    )
 
     coco_result = data_loader.coco.loadRes(results)
     coco_eval = COCOeval(data_loader.coco, coco_result, "keypoints")
@@ -119,16 +120,6 @@ def test_warboy_yolo_accuracy_pose(
     coco_eval.accumulate()
     coco_eval.summarize()
 
-    t2 = time.time()
-
-    print(t2 - t1)
-
-    print(coco_eval.stats[:3])
-
     assert coco_eval.stats[0] >= (
         TARGET_ACCURACY[model_name] * 0.9
     ), f"{model_name} Accuracy check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[model_name] * 0.9}]"
-
-    print(
-        f"{model_name} Accuracy check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_ACCURACY[model_name] * 0.9}]"
-    )

@@ -4,38 +4,13 @@ from typing import List
 
 import numpy as np
 import pycocotools.mask as mask_util
-import pytest
 import typer
 from pycocotools.cocoeval import COCOeval
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-from tests.utils import CONF_THRES, IOU_THRES
-
-
-def set_engin_config(num_device, model, model_name, input_shape):
-    """
-    FIXME
-    get configs from config file
-    currently, for facenet face recognition model
-    """
-    engin_configs = []
-    for idx in range(num_device):
-        engin_config = {
-            "name": f"test{idx}",
-            "task": "face_recognition",
-            "model": model,
-            "worker_num": 16,
-            "device": "warboy(1)*1",
-            "model_type": model_name,
-            "input_shape": input_shape,
-            "class_names": [],
-            "conf_thres": CONF_THRES,
-            "iou_thres": IOU_THRES,
-            "use_tracking": False,
-        }
-        engin_configs.append(engin_config)
-    return engin_configs
+from test_scenarios.utils import set_test_engin_configs
+from warboy import get_model_params_from_cfg
+from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
 
 
 def _cal_accuracy(y_score, y_true):
@@ -97,21 +72,19 @@ def _resolve_input_paths(input_path: Path) -> List[str]:
         raise typer.Exit(1)
 
 
-@pytest.mark.parametrize("model_name, model, input_shape, anchors")
-def test_warboy_facenet_accuracy_recog(
-    model_name: str, model: str, input_shape: List[int], anchors
-):
-    import time
-
-    t1 = time.time()
-
-    image_dir = "datasets/face_recognition/lfw-align-128"
-    lfw_test_pair = "datasets/face_recognition/lfw_test_pair.txt"
+def test_warboy_facenet_accuracy_recog(cfg: str, image_dir: str, annotation_file: str):
+    """
+    cfg(str): a path to config file
+    image_dir(str): a path to image directory
+    annotation_file(str): a path to annotation file
+    """
     image_paths = _resolve_input_paths(Path(image_dir))
 
     images = [Image(image_info=image_path) for image_path in image_paths]
 
-    engin_configs = set_engin_config(2, model, model_name, input_shape[2:])
+    param = get_model_params_from_cfg(cfg)
+
+    engin_configs = set_test_engin_configs(param, 2)
 
     task = PipeLine(run_fast_api=False, run_e2e_test=True, num_channels=len(images))
 
@@ -131,11 +104,7 @@ def test_warboy_facenet_accuracy_recog(
     print("Inference done!")
     outputs = task.outputs
 
-    acc, th = _test_performance(image_dir, lfw_test_pair, outputs)
-
-    t2 = time.time()
-
-    print(t2 - t1)
+    acc, th = _test_performance(image_dir, annotation_file, outputs)
 
     print("Accuracy: ", acc)
     print("Threshold: ", th)

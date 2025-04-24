@@ -130,6 +130,20 @@ sudo apt-get install cmake libeigen3-dev
 ./build.sh
 ```
 
+## Testing
+
+<details open>
+<summary> Performance test with pytest </summary>
+
+The project provides pytest for performance testing. You can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. Also, you can test NPU performance, too. You can check supported models in tests/test_config.
+
+- **pytest command**
+  ```sh
+  pytest
+  ```
+</details>
+
+
 ## Usage Example
 
 <details open>
