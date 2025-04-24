@@ -18,7 +18,7 @@ class PipeLineQueue:
         item = self.queue.get(block=block, timeout=timeout)
 
         if item is StopSig:
-            # self.put(StopSig)
+            self.close()
             raise QueueClosedError
 
         return item

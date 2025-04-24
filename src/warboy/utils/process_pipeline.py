@@ -356,13 +356,11 @@ class ImageHandler:
         id_ = 0
         t1 = time.time()
 
-        end_mux_flag = [False] * len(result_mux_list)
-
         while True:
             grid_imgs = []
             total_fps = 0
-            for idx, result_mux in enumerate(result_mux_list):
-                if end_mux_flag[idx]:
+            for result_mux in result_mux_list:
+                if result_mux == None:
                     continue
                 try:
                     # obj detection, output = bboxed image
@@ -375,7 +373,6 @@ class ImageHandler:
                     grid_imgs.append(output_img)
                 except QueueClosedError:
                     end_channels += 1
-                    end_mux_flag[idx] = True
                     if end_channels == len(result_mux_list):
                         break
                     continue
@@ -392,8 +389,6 @@ class ImageHandler:
         end_channels = 0
         id_ = 0
 
-        end_mux_flag = [False] * len(result_mux_list)
-
         if not os.path.exists("./outputs"):
             os.makedirs("./outputs")
 
@@ -401,19 +396,17 @@ class ImageHandler:
             for idx, result_mux in enumerate(result_mux_list):
                 if not os.path.exists(f"./outputs/img{idx}"):
                     os.makedirs(f"./outputs/img{idx}")
-                if end_mux_flag[idx]:
+                if result_mux == None:
                     continue
                 try:
                     # obj detection, output = bboxed image
                     output, fps, _ = result_mux.get()
-                    # output_img = self._put_fps_to_img(output, f"FPS: {fps:.1f}")
                     output_img = cv2.resize(
                         output, self.grid_shape, interpolation=cv2.INTER_NEAREST
                     )
                     cv2.imwrite(f"./outputs/img{idx}/{id_}.jpg", output_img)
                 except QueueClosedError:
                     end_channels += 1
-                    end_mux_flag[idx] = True
                     if end_channels == len(result_mux_list):
                         break
                     continue
@@ -431,11 +424,10 @@ class ImageHandler:
         image_paths,
     ):
         end_channels = 0
-        end_mux_flag = [False] * len(result_mux_list)
 
         while True:
-            for idx, (name, result_mux) in enumerate(result_mux_list):
-                if end_mux_flag[idx]:
+            for (name, result_mux) in result_mux_list:
+                if result_mux == None:
                     continue
                 try:
                     output, _, img_idx = result_mux.get()
@@ -449,7 +441,6 @@ class ImageHandler:
                     image_paths.append(image_paths_dict[name][img_idx])
                 except QueueClosedError:
                     end_channels += 1
-                    end_mux_flag[idx] = True
                     if end_channels == len(result_mux_list):
                         break
                     continue
