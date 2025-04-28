@@ -126,20 +126,20 @@ def test_warboy_yolo_accuracy_seg(cfg: str, image_dir: str, annotation_file: str
 
     if coco_eval.stats[0] >= (TARGET_MASK_ACCURACY[param["model_name"]] * 0.9):
         print(
-            f"{param['model_name']} Accuracy (Mask) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[param['model_name']] * 0.9}]"
+            f"{param['model_name']} Accuracy (Mask) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[param['model_name']] * 0.9}]"
         )
 
     else:
         print(
-            f"{param['model_name']} Accuracy (Mask) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[param['model_name']] * 0.9}]"
+            f"{param['model_name']} Accuracy (Mask) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[param['model_name']] * 0.9}]"
         )
 
     if coco_eval.stats[0] >= (TARGET_BBOX_ACCURACY[param["model_name"]] * 0.9):
         print(
-            f"{param['model_name']} Accuracy (Bbox) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
+            f"{param['model_name']} Accuracy (Bbox) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
         )
 
     else:
         print(
-            f"{param['model_name']} Accuracy (Bbox) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
+            f"{param['model_name']} Accuracy (Bbox) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
         )
