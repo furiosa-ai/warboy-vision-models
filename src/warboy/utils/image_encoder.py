@@ -1,7 +1,7 @@
 import time
 from typing import Callable
 
-from warboy.utils.queue import PipeLineQueue, QueueClosedError, StopSig
+from .queue import PipeLineQueue, QueueClosedError, StopSig
 
 
 class ImageEncoder:

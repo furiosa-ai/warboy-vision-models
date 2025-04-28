@@ -1,14 +1,10 @@
-from warboy.utils.process_pipeline import Engine, PipeLine, Video
+from .utils.process_pipeline import Engine, PipeLine, Video
 
 QUEUE_SIZE = 500
 
 
-def set_engin_config(param, idx):
-    # engin_configs = []
-
-    # FIXME pattern matching? not sure...
-    # num_device = 1
-
+def set_demo_engin_config(param, idx):
+    """Set engine config for each task"""
     engin_config = {
         "name": f"test_{param['task']}_{idx}",
         "task": param["task"],
@@ -32,7 +28,9 @@ class AppRunner:
         if demo_type == "web":
             self.job_handler = PipeLine(num_channels=num_videos)
         elif demo_type == "file":
-            self.job_handler = PipeLine(num_channels=num_videos, run_fast_api=False, make_image_output=True)
+            self.job_handler = PipeLine(
+                num_channels=num_videos, run_fast_api=False, make_image_output=True
+            )
 
         engin_configs_dict = {}
         videos = {}
@@ -43,7 +41,7 @@ class AppRunner:
                 videos[task] = []
 
             engin_configs_dict[task].append(
-                set_engin_config(param, len(engin_configs_dict[task]))
+                set_demo_engin_config(param, len(engin_configs_dict[task]))
             )
 
             videos[task] += [
