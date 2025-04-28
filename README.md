@@ -129,6 +129,10 @@ sudo apt-get update
 sudo apt-get install cmake libeigen3-dev
 ./build.sh
 ```
+Then, install the project using pip.
+```sh
+pip install .
+```
 
 ## Testing
 
@@ -153,16 +157,6 @@ If needed, download the coco2017 dataset. You can skip this step if you have you
   
 ```sh
 ./coco2017.sh
-```    
-</details>
-
-<details open>
-<summary> Download the demo videos </summary>
-  
-If needed, you can download object detection, pose estimation demo videos from warboy_tutorials. You can skip this step if you have your own videos.
-  
-```sh
-./demo_videos.sh
 ```    
 </details>
 
@@ -205,17 +199,6 @@ video_path:
   - [set your test video file path]
 ```
 </details>
-
-<details open>
-<summary> Make CLI tool </summary>
-
-- **command**
-  ```sh
-  pip install .
-  ```
-
-</details>
-
 
 </details>
 

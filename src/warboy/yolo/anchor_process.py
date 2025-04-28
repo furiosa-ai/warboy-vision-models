@@ -6,9 +6,9 @@ import torch
 import torch.nn.functional as F
 from torchvision.ops import nms
 
-from warboy.yolo.cbox_decode import yolov5_box_decode, yolov8_box_decode
-from warboy.yolo.cpose_decode import yolov5_pose_decode, yolov8_pose_decode
-from warboy.yolo.tracking.bytetrack import ByteTrack
+from .cbox_decode import yolov5_box_decode, yolov8_box_decode
+from .cpose_decode import yolov5_pose_decode, yolov8_pose_decode
+from .tracking.bytetrack import ByteTrack
 
 # from furiosa.yolo.tracking.bytetrack import ByteTrack
 

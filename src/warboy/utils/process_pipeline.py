@@ -9,14 +9,14 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 
-from warboy.face_recognition.preprocess import FaceRecogPreProcessor
-from warboy.runtime.warboy_runtime import WarboyApplication, WarboyQueueRuntime
-from warboy.utils.image_decoder import ImageListDecoder
-from warboy.utils.image_encoder import ImageEncoder, PredictionEncoder
-from warboy.utils.queue import PipeLineQueue, QueueClosedError
-from warboy.utils.video_decoder import VideoDecoder
-from warboy.yolo.postprocess import get_post_processor
-from warboy.yolo.preprocess import YoloPreProcessor
+from ..face_recognition.preprocess import FaceRecogPreProcessor
+from ..runtime.warboy_runtime import WarboyApplication, WarboyQueueRuntime
+from ..yolo.postprocess import get_post_processor
+from ..yolo.preprocess import YoloPreProcessor
+from .image_decoder import ImageListDecoder
+from .image_encoder import ImageEncoder, PredictionEncoder
+from .queue import PipeLineQueue, QueueClosedError
+from .video_decoder import VideoDecoder
 
 
 @dataclass
@@ -59,7 +59,11 @@ class ImageList:
 
 class PipeLine:
     def __init__(
-        self, num_channels: int, run_fast_api: bool = True, run_e2e_test: bool = False, make_image_output: bool = False
+        self,
+        num_channels: int,
+        run_fast_api: bool = True,
+        run_e2e_test: bool = False,
+        make_image_output: bool = False,
     ):
         self.run_fast_api = run_fast_api
         self.run_e2e_test = run_e2e_test
@@ -410,7 +414,7 @@ class ImageHandler:
                     if end_channels == len(result_mux_list):
                         break
                     continue
-            
+
             id_ += 1
 
             if end_channels == len(result_mux_list):
@@ -426,7 +430,7 @@ class ImageHandler:
         end_channels = 0
 
         while True:
-            for (name, result_mux) in result_mux_list:
+            for name, result_mux in result_mux_list:
                 if result_mux == None:
                     continue
                 try:

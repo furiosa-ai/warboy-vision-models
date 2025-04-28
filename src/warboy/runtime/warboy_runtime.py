@@ -6,7 +6,7 @@ from typing import List
 from furiosa.runtime import create_queue
 from furiosa.server.model import FuriosaRTModel, FuriosaRTModelConfig
 
-from warboy.utils.queue import PipeLineQueue, QueueClosedError, StopSig
+from ..utils.queue import PipeLineQueue, QueueClosedError, StopSig
 
 
 class WarboyApplication:

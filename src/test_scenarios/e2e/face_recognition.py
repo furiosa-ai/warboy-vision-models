@@ -8,9 +8,10 @@ import typer
 from pycocotools.cocoeval import COCOeval
 from sklearn.metrics.pairwise import cosine_similarity
 
-from test_scenarios.utils import set_test_engin_configs
 from warboy import get_model_params_from_cfg
 from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
+
+from ..utils import set_test_engin_configs
 
 
 def _cal_accuracy(y_score, y_true):

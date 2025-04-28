@@ -1,13 +1,6 @@
 """Furiosa Warboy Vision Models"""
 
-from warboy.cfg import (
-    MODEL_LIST,
-    TASKS,
-    get_demo_params_from_cfg,
-    get_model_params_from_cfg,
-)
-
-from .viewer import spawn_web_viewer
+from .cfg import MODEL_LIST, TASKS, get_demo_params_from_cfg, get_model_params_from_cfg
 from .warboy_api import WARBOY_APP
 
 __version__ = "0.10.2.dev0"

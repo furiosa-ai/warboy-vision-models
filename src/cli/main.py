@@ -8,11 +8,11 @@ _ = np.finfo(np.float32)
 
 from demo.demo import run_make_file, run_web_demo
 from test_scenarios.e2e import (
-    test_face_recognition,
-    test_instance_seg,
-    test_npu_performance,
-    test_object_det,
-    test_pose_est,
+    face_recognition,
+    instance_seg,
+    npu_performance,
+    object_det,
+    pose_est,
 )
 from warboy import get_model_params_from_cfg
 from warboy.tools.onnx_tools import OnnxTools
@@ -26,7 +26,7 @@ def face_recognition_e2e_tests(
 ):
     cfg = f"tests/test_config/face_recognition/{model_name}.yaml"
 
-    test_face_recognition.test_warboy_facenet_accuracy_recog(
+    face_recognition.test_warboy_facenet_accuracy_recog(
         cfg,
         "datasets/face_recognition/lfw-align-128",
         "datasets/face_recognition/lfw_test_pair.txt",
@@ -41,7 +41,7 @@ def instance_segmentation_e2e_tests(
 ):
     cfg = f"tests/test_config/instance_segmentation/{model_name}.yaml"
 
-    test_instance_seg.test_warboy_yolo_accuracy_seg(
+    instance_seg.test_warboy_yolo_accuracy_seg(
         cfg,
         "datasets/coco/val2017",
         "datasets/coco/annotations/instances_val2017.json",
@@ -67,7 +67,7 @@ def pose_estimation_e2e_test(
 ):
     cfg = f"tests/test_config/pose_estimation/{model_name}.yaml"
 
-    test_pose_est.test_warboy_yolo_accuracy_pose(
+    pose_est.test_warboy_yolo_accuracy_pose(
         cfg,
         "datasets/coco/val2017",
         "datasets/coco/annotations/person_keypoints_val2017.json",
@@ -81,19 +81,19 @@ def run_e2e_tests(
     param = get_model_params_from_cfg(cfg)
     func = None
     if param["task"] == "face_recognition":
-        func = test_face_recognition.test_warboy_facenet_accuracy_recog
+        func = face_recognition.test_warboy_facenet_accuracy_recog
         dataset = "datasets/face_recognition/lfw-align-128"
         annotation = "datasets/face_recognition/lfw_test_pair.txt"
     elif param["task"] == "instance_segmentation":
-        func = test_instance_seg.test_warboy_yolo_accuracy_seg
+        func = instance_seg.test_warboy_yolo_accuracy_seg
         dataset = "datasets/coco/val2017"
         annotation = "datasets/coco/annotations/instances_val2017.json"
     elif param["task"] == "object_detection":
-        func = test_object_det.test_warboy_yolo_accuracy_det
+        func = object_det.test_warboy_yolo_accuracy_det
         dataset = "datasets/coco/val2017"
         annotation = "datasets/coco/annotations/instances_val2017.json"
     elif param["task"] == "pose_estimation":
-        func = test_pose_est.test_warboy_yolo_accuracy_pose
+        func = pose_est.test_warboy_yolo_accuracy_pose
         dataset = "datasets/coco/val2017"
         annotation = "datasets/coco/annotations/person_keypoints_val2017.json"
     else:
@@ -111,7 +111,7 @@ def npu_performance_test(
     cfg_path: str,
     num_device: Optional[int] = 1,
 ):
-    test_npu_performance.test_warboy_performance(cfg_path, num_device)
+    npu_performance.test_warboy_performance(cfg_path, num_device)
 
 
 @app.command("web-demo", help="Run web demo.")
@@ -120,11 +120,13 @@ def web_demo(
 ):
     run_web_demo(cfg_path)
 
+
 @app.command("make-file", help="Run file demo.")
 def make_file_demo(
     cfg_path,
 ):
     run_make_file(cfg_path)
+
 
 @app.command("make-model", help="Export model to ONNX format and quantize it.")
 def make_model(

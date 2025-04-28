@@ -2,8 +2,8 @@ from typing import Callable
 
 import cv2
 
-from warboy.utils.queue import PipeLineQueue, StopSig
-from warboy.yolo.preprocess import YoloPreProcessor
+from ..yolo.preprocess import YoloPreProcessor
+from .queue import PipeLineQueue, StopSig
 
 
 class VideoDecoder:

@@ -4,10 +4,11 @@ from typing import List
 
 from pycocotools.cocoeval import COCOeval
 
-from test_scenarios.utils import MSCOCODataLoader, set_test_engin_configs
 from warboy import get_model_params_from_cfg
 from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
 from warboy.yolo.preprocess import YoloPreProcessor
+
+from ..utils import MSCOCODataLoader, set_test_engin_configs
 
 TARGET_ACCURACY = {
     "yolov8n-pose": 0.504,

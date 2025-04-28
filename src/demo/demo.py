@@ -1,7 +1,9 @@
 import argparse
 import threading
 
-from warboy import WARBOY_APP, get_demo_params_from_cfg, spawn_web_viewer
+from warboy import WARBOY_APP, get_demo_params_from_cfg
+
+from .viewer import spawn_web_viewer
 
 
 def run_warboy_app(warboy_app):
@@ -21,11 +23,13 @@ def run_web_demo(cfg_path="tests/warboy/cfg/demo_config/demo.yaml"):
     while True:
         continue
 
+
 def run_make_file(cfg_path="tests/warboy/cfg/demo_config/demo.yaml"):
     demo_params = get_demo_params_from_cfg(cfg_path)
     warboy_app = WARBOY_APP(demo_params, "file")
-    
+
     warboy_app()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demo script")

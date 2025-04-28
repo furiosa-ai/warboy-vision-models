@@ -1,4 +1,4 @@
-from warboy.utils.process_pipeline import Engine, PipeLine, Video
+from .utils.process_pipeline import Engine, PipeLine, Video
 
 QUEUE_SIZE = 500
 
@@ -28,7 +28,9 @@ class AppRunner:
         if demo_type == "web":
             self.job_handler = PipeLine(num_channels=num_videos)
         elif demo_type == "file":
-            self.job_handler = PipeLine(num_channels=num_videos, run_fast_api=False, make_image_output=True)
+            self.job_handler = PipeLine(
+                num_channels=num_videos, run_fast_api=False, make_image_output=True
+            )
 
         engin_configs_dict = {}
         videos = {}

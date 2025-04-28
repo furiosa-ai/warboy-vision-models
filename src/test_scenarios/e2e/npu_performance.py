@@ -3,8 +3,9 @@ import os
 import numpy as np
 from furiosa.runtime.sync import create_runner
 
-from test_scenarios.utils import TRACE_FILE_DIR
 from warboy import get_model_params_from_cfg
+
+from ..utils import TRACE_FILE_DIR
 
 
 def test_warboy_performance(cfg, num_device):
