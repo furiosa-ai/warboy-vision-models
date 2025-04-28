@@ -130,8 +130,10 @@ def test_warboy_yolo_accuracy_seg(
     ).postprocess_func
 
     data_loader = MSCOCODataLoader(
-        Path("datasets/coco/val2017"),
-        Path("datasets/coco/annotations/instances_val2017.json"),
+        Path("datasets/coco/val2017"),  # CHECK you may change this to your own path
+        Path(
+            "datasets/coco/annotations/instances_val2017.json"
+        ),  # CHECK you may change this to your own path
         preprocessor,
         input_shape,
     )

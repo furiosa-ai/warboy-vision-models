@@ -15,18 +15,24 @@ def run_e2e_test(config_file: str):
 
     if param["task"] == "object_detection":
         func = object_det.test_warboy_yolo_accuracy_det
-        annotation = "datasets/coco/annotations/instances_val2017.json"  # CHECK
-        image_dir = "datasets/coco/val2017"  # CHECK
+        annotation = "datasets/coco/annotations/instances_val2017.json"  # CHECK you may change this to your own path
+        image_dir = (
+            "datasets/coco/val2017"  # CHECK you may change this to your own path
+        )
 
     elif param["task"] == "pose_estimation":
         func = pose_est.test_warboy_yolo_accuracy_pose
-        annotation = "datasets/coco/annotations/person_keypoints_val2017.json"  # CHECK
-        image_dir = "datasets/coco/val2017"  # CHECK
+        annotation = "datasets/coco/annotations/person_keypoints_val2017.json"  # CHECK you may change this to your own path
+        image_dir = (
+            "datasets/coco/val2017"  # CHECK you may change this to your own path
+        )
 
     elif param["task"] == "instance_segmentation":
         func = instance_seg.test_warboy_yolo_accuracy_seg
-        annotation = "datasets/coco/annotations/instances_val2017.json"  # CHECK
-        image_dir = "datasets/coco/val2017"  # CHECK
+        annotation = "datasets/coco/annotations/instances_val2017.json"  # CHECK you may change this to your own path
+        image_dir = (
+            "datasets/coco/val2017"  # CHECK you may change this to your own path
+        )
 
     else:
         raise ValueError(
