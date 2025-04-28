@@ -364,7 +364,7 @@ class ImageHandler:
             grid_imgs = []
             total_fps = 0
             for result_mux in result_mux_list:
-                if result_mux == None:
+                if result_mux is None:
                     continue
                 try:
                     # obj detection, output = bboxed image
@@ -400,7 +400,7 @@ class ImageHandler:
             for idx, result_mux in enumerate(result_mux_list):
                 if not os.path.exists(f"./outputs/img{idx}"):
                     os.makedirs(f"./outputs/img{idx}")
-                if result_mux == None:
+                if result_mux is None:
                     continue
                 try:
                     # obj detection, output = bboxed image
@@ -431,7 +431,7 @@ class ImageHandler:
 
         while True:
             for name, result_mux in result_mux_list:
-                if result_mux == None:
+                if result_mux is None:
                     continue
                 try:
                     output, _, img_idx = result_mux.get()
