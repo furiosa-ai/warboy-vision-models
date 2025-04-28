@@ -11,7 +11,7 @@ from ..utils import TRACE_FILE_DIR
 def test_warboy_performance(cfg, num_device):
     """
     model(str): a path to quantized onnx file
-    num_device(int): a number of pe to use (1~2)    # CHECK
+    num_device(int): a number of pe to use (1~2)
     """
 
     param = get_model_params_from_cfg(cfg)
