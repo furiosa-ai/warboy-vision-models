@@ -4,7 +4,11 @@ from ...test_scenarios.e2e import instance_seg, npu_performance, object_det, pos
 from ...warboy import get_model_params_from_cfg
 
 
-@click.command("model-performance")
+@click.command(
+    "model-performance",
+    help="Run end-to-end performance test for object detection, pose estimation, or instance segmentation models.",
+    short_help="Run end-to-end performance test.",
+)
 @click.argument("config_file")
 def run_e2e_test(config_file: str):
     param = get_model_params_from_cfg(config_file)
@@ -32,7 +36,11 @@ def run_e2e_test(config_file: str):
     func(config_file, image_dir, annotation)
 
 
-@click.command("npu-performance")
+@click.command(
+    "npu-performance",
+    help="Run NPU performance test.",
+    short_help="Run NPU performance test.",
+)
 @click.argument("config_file")
 @click.option(
     "--num_device",

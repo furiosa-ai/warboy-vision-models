@@ -3,7 +3,11 @@ import click
 from ...demo import demo
 
 
-@click.command("run-demo")
+@click.command(
+    "run-demo",
+    help="Run the demo by web or making output files.",
+    short_help="Run demo, mode is web or file.",
+)
 @click.argument("demo_config_file")
 @click.option(
     "--mode",

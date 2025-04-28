@@ -3,7 +3,11 @@ import click
 from ...warboy.tools.onnx_tools import OnnxTools
 
 
-@click.command("make-model")
+@click.command(
+    "make-model",
+    help="Make quantized model from config file.",
+    short_help="Make quantized ONNX model",
+)
 @click.argument("config_file")
 @click.option(
     "--need_edit",
@@ -31,7 +35,9 @@ def run_make_model(config_file: str, need_edit: bool, need_quantize: bool):
         onnx_tools.quantize()
 
 
-@click.command("export-onnx")
+@click.command(
+    "export-onnx", help="Export ONNX model from config file.", short_help="Export ONNX"
+)
 @click.argument("config_file")
 @click.option(
     "--need_edit",
@@ -51,7 +57,11 @@ def run_export_onnx(config_file: str, need_edit: bool):
     onnx_tools.export_onnx(need_edit=need_edit)
 
 
-@click.command("quantize")
+@click.command(
+    "quantize",
+    help="Quantize ONNX model from config file. To run this command, you need to prepare the ONNX model first.",
+    short_help="Quantize ONNX, need ONNX model first",
+)
 @click.argument("config_file")
 def run_quantize(config_file: str):
     onnx_tools = OnnxTools(config_file)
