@@ -1,8 +1,7 @@
 import argparse
 import threading
 
-from warboy import WARBOY_APP, get_demo_params_from_cfg
-
+from ..warboy import WARBOY_APP, get_demo_params_from_cfg
 from .viewer import spawn_web_viewer
 
 

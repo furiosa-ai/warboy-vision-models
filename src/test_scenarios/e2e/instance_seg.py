@@ -1,15 +1,13 @@
 import os
 from pathlib import Path
-from typing import List
 
 import numpy as np
 import pycocotools.mask as mask_util
 from pycocotools.cocoeval import COCOeval
 
-from warboy import get_model_params_from_cfg
-from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-from warboy.yolo.preprocess import YoloPreProcessor
-
+from ...warboy import get_model_params_from_cfg
+from ...warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
+from ...warboy.yolo.preprocess import YoloPreProcessor
 from ..utils import (
     YOLO_CATEGORY_TO_COCO_CATEGORY,
     MSCOCODataLoader,

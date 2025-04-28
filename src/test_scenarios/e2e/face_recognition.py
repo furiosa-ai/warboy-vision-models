@@ -3,14 +3,11 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
-import pycocotools.mask as mask_util
 import typer
-from pycocotools.cocoeval import COCOeval
 from sklearn.metrics.pairwise import cosine_similarity
 
-from warboy import get_model_params_from_cfg
-from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-
+from ...warboy import get_model_params_from_cfg
+from ...warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
 from ..utils import set_test_engin_configs
 
 
