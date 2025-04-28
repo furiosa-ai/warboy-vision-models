@@ -1,173 +1,21 @@
-from typing import Optional
+import click
 
-import numpy as np
-import typer
-
-_ = np.finfo(np.float64)
-_ = np.finfo(np.float32)
-
-from demo.demo import run_make_file, run_web_demo
-from test_scenarios.e2e import (
-    face_recognition,
-    instance_seg,
-    npu_performance,
-    object_det,
-    pose_est,
-)
-from warboy import get_model_params_from_cfg
-from warboy.tools.onnx_tools import OnnxTools
-
-app = typer.Typer()
+from .demo import run_demo
+from .make_model import run_make_model
+from .performance_test import run_test_scenarios
 
 
-@app.command("face-recognition", help="Run end-to-end test for face recognition.")
-def face_recognition_e2e_tests(
-    model_name: str,
-):
-    cfg = f"tests/test_config/face_recognition/{model_name}.yaml"
-
-    face_recognition.test_warboy_facenet_accuracy_recog(
-        cfg,
-        "datasets/face_recognition/lfw-align-128",
-        "datasets/face_recognition/lfw_test_pair.txt",
-    )
+@click.group()
+def cli():
+    pass
 
 
-@app.command(
-    "instance-segmentation", help="Run end-to-end test for instance segmentation."
-)
-def instance_segmentation_e2e_tests(
-    model_name: str,
-):
-    cfg = f"tests/test_config/instance_segmentation/{model_name}.yaml"
-
-    instance_seg.test_warboy_yolo_accuracy_seg(
-        cfg,
-        "datasets/coco/val2017",
-        "datasets/coco/annotations/instances_val2017.json",
-    )
-
-
-@app.command("object-detection", help="Run end-to-end test for object detection.")
-def object_detection_e2e_test(
-    model_name: str,
-):
-    cfg = f"tests/test_config/object_detection/{model_name}.yaml"
-
-    test_object_det.test_warboy_yolo_accuracy_det(
-        cfg,
-        "datasets/coco/val2017",
-        "datasets/coco/annotations/instances_val2017.json",
-    )
-
-
-@app.command("pose-estimation", help="Run end-to-end test for pose estimation.")
-def pose_estimation_e2e_test(
-    model_name: str,
-):
-    cfg = f"tests/test_config/pose_estimation/{model_name}.yaml"
-
-    pose_est.test_warboy_yolo_accuracy_pose(
-        cfg,
-        "datasets/coco/val2017",
-        "datasets/coco/annotations/person_keypoints_val2017.json",
-    )
-
-
-@app.command("performance", help="Run end-to-end test with config file.")
-def run_e2e_tests(
-    cfg: str,
-):
-    param = get_model_params_from_cfg(cfg)
-    func = None
-    if param["task"] == "face_recognition":
-        func = face_recognition.test_warboy_facenet_accuracy_recog
-        dataset = "datasets/face_recognition/lfw-align-128"
-        annotation = "datasets/face_recognition/lfw_test_pair.txt"
-    elif param["task"] == "instance_segmentation":
-        func = instance_seg.test_warboy_yolo_accuracy_seg
-        dataset = "datasets/coco/val2017"
-        annotation = "datasets/coco/annotations/instances_val2017.json"
-    elif param["task"] == "object_detection":
-        func = object_det.test_warboy_yolo_accuracy_det
-        dataset = "datasets/coco/val2017"
-        annotation = "datasets/coco/annotations/instances_val2017.json"
-    elif param["task"] == "pose_estimation":
-        func = pose_est.test_warboy_yolo_accuracy_pose
-        dataset = "datasets/coco/val2017"
-        annotation = "datasets/coco/annotations/person_keypoints_val2017.json"
-    else:
-        typer.echo(f"Error: Unsupported task '{param['task']}' in the config file.")
-
-    func(
-        cfg,
-        dataset,
-        annotation,
-    )
-
-
-@app.command("npu-profile", help="Run NPU performance test.")
-def npu_performance_test(
-    cfg_path: str,
-    num_device: Optional[int] = 1,
-):
-    npu_performance.test_warboy_performance(cfg_path, num_device)
-
-
-@app.command("web-demo", help="Run web demo.")
-def web_demo(
-    cfg_path,
-):
-    run_web_demo(cfg_path)
-
-
-@app.command("make-file", help="Run file demo.")
-def make_file_demo(
-    cfg_path,
-):
-    run_make_file(cfg_path)
-
-
-@app.command("make-model", help="Export model to ONNX format and quantize it.")
-def make_model(
-    cfg: str,
-    need_edit: Optional[bool] = True,
-    quantize: Optional[bool] = True,
-):
-    onnx_tools = OnnxTools(cfg)
-
-    if need_edit and "yolo" not in onnx_tools.model_name:
-        typer.echo(
-            "Warning: The model is not a YOLO model. The need_edit option is ignored."
-        )
-        need_edit = False
-    onnx_tools.export_onnx(need_edit=need_edit)
-    if quantize:
-        onnx_tools.quantize()
-
-
-@app.command("export-onnx", help="Export model to ONNX format.")
-def export_onnx(
-    cfg: str,
-    need_edit: Optional[bool] = True,
-):
-    onnx_tools = OnnxTools(cfg)
-
-    if need_edit and "yolo" not in onnx_tools.model_name:
-        typer.echo(
-            "Warning: The model is not a YOLO model. The need_edit option is ignored."
-        )
-        need_edit = False
-    onnx_tools.export_onnx(need_edit=need_edit)
-
-
-@app.command("quantize", help="Quantize the ONNX model.")
-def quantize(
-    cfg: str,
-):
-    onnx_tools = OnnxTools(cfg)
-    onnx_tools.quantize()
-
+cli.add_command(run_test_scenarios.run_e2e_test)
+cli.add_command(run_test_scenarios.run_npu_performance_test)
+cli.add_command(run_demo.run_demo)
+cli.add_command(run_make_model.run_make_model)
+cli.add_command(run_make_model.run_export_onnx)
+cli.add_command(run_make_model.run_quantize)
 
 if __name__ == "__main__":
-    app()
+    cli()

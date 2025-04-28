@@ -2,15 +2,12 @@ import os
 from pathlib import Path
 from typing import List
 
+import click
 import numpy as np
-import pycocotools.mask as mask_util
-import typer
-from pycocotools.cocoeval import COCOeval
 from sklearn.metrics.pairwise import cosine_similarity
 
-from warboy import get_model_params_from_cfg
-from warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
-
+from ...warboy import get_model_params_from_cfg
+from ...warboy.utils.process_pipeline import Engine, Image, ImageList, PipeLine
 from ..utils import set_test_engin_configs
 
 
@@ -69,8 +66,8 @@ def _resolve_input_paths(input_path: Path) -> List[str]:
             if p.suffix.lower() in image_extensions
         ]
     else:
-        typer.echo(f"Invalid input path '{str(input_path)}'")
-        raise typer.Exit(1)
+        click.echo(f"Invalid input path '{str(input_path)}'")
+        raise click.Exit(1)
 
 
 def test_warboy_facenet_accuracy_recog(cfg: str, image_dir: str, annotation_file: str):

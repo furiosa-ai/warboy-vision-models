@@ -129,7 +129,9 @@ sudo apt-get update
 sudo apt-get install cmake libeigen3-dev
 ./build.sh
 ```
-Then, install the project using pip.
+Before installing the project, please make sure to check `CHECK` flags and set them to your own paths if you are using your own dataset. If you downloaded the coco2017 dataset with `coco2017.sh`, you can skip this step.
+
+After checking, now install the project using pip. 
 ```sh
 pip install .
 ```
@@ -230,9 +232,9 @@ In the project, vision applications are executed for videos from multiple channe
 - **demo commands**
   
   ```sh
-  warboy-vision web-demo "/path/to/your/demo/cfg.yaml"    # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+  warboy-vision run-demo "/path/to/your/demo/cfg.yaml" --mode web   # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
 
-  warboy-vision make-file "/path/to/your/demo/cfg.yaml"   # outputs will be saved in outputs folder
+  warboy-vision run-demo "/path/to/your/demo/cfg.yaml" --mode file  # outputs will be saved in outputs folder
   ```
 </details>
 
@@ -241,22 +243,14 @@ In the project, vision applications are executed for videos from multiple channe
 <!-- e2e test 설명 -->
 In the project, there are end-to-end performance tests for various vision applications. We can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. Also, we can test NPU performance, too.
 
+*"OpenTelemetry trace error occurred. cannot send span to the batch span processor because the channel is full"* error can occur when running the NPU performance test, but it does not affect the performance test. You can ignore this error.
+
 - **performance test commands**
   
   ```sh
-  warboy-vision performance "/path/to/your/model/cfg.yaml"      # performance test for model with config file
+  warboy-vision model-performance "/path/to/your/model/cfg.yaml"      # performance test for model with config file
 
-  warboy-vision npu-profile "/path/to/your/model/cfg.yaml"      # NPU performance test for model with config file
+  warboy-vision npu-performance "/path/to/your/model/cfg.yaml"      # NPU performance test for model with config file
   ```
 
-- **performance test commands without config files**
-
-    ```sh
-
-    warboy-vision object-detection "model_name" "/path/to/your/quantized/model.onnx"          # object detection performance test
-    warboy-vision pose-estimation "model_name" "/path/to/your/quantized/model.onnx"           # pose estimation performance test
-    warboy-vision instance-segmentation "model_name" "/path/to/your/quantized/model.onnx"     # instance segmentation performance test
-
-    # can check supported models in tests/test_config
-    ```
 </details>

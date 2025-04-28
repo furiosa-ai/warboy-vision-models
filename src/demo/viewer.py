@@ -11,10 +11,10 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from warboy.utils.monitor_npu import WARBOYDevice
-from warboy.utils.process_pipeline import ImageHandler
+from ..warboy.utils.monitor_npu import WARBOYDevice
+from ..warboy.utils.process_pipeline import ImageHandler
 
-TEMPLATES_DIR = resources.files("warboy").joinpath("templates")
+TEMPLATES_DIR = resources.files("src.demo").joinpath("templates")
 STATIC_DIR = TEMPLATES_DIR / "static"
 
 app = FastAPI()
@@ -88,7 +88,7 @@ def spawn_web_viewer(port: str, result_queues):
     app.state.result_queues = result_queues
     viewer_proc = mp.Process(
         target=run_viewer,
-        args=("warboy.viewer:app",),
+        args=("src.demo.viewer:app",),
         kwargs={"host": "0.0.0.0", "port": int(port)},
     )
     viewer_proc.start()
