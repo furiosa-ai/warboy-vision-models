@@ -129,7 +129,7 @@ sudo apt-get update
 sudo apt-get install cmake libeigen3-dev
 ./build.sh
 ```
-Before installing the project, please make sure to check `CHECK` flags and set them to your own paths if you are using your own dataset. If you downloaded the coco2017 dataset with `coco2017.sh`, you can skip this step.
+Before installing the project, please make sure to check `CHECK` flags and set them to your own paths if you are using your own dataset. If you downloaded the coco2017 dataset with `coco2017.sh`, you can skip this step. So for convenience, please use the `coco2017.sh` script to download the dataset.
 
 After checking, now install the project using pip. 
 ```sh
