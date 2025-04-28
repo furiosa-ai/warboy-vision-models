@@ -3,7 +3,6 @@ import os
 import platform
 
 import numpy as np
-import torch
 
 if platform.uname()[0] == "Windows":
     _lib_ext = "dll"

@@ -1,15 +1,13 @@
 import asyncio
 import os
-import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Tuple
+from typing import List
 
 import cv2
 import numpy as np
 import pycocotools.mask as mask_util
 import pytest
 from pycocotools.cocoeval import COCOeval
-from tqdm import tqdm
 
 from src.warboy.cfg import get_model_params_from_cfg
 from src.warboy.yolo.postprocess import InsSegPostProcess
