@@ -202,10 +202,10 @@ class_names:                    # class names
 
 ```yaml
 application: object_detection
-model_config: ./warboy/cfg/model_config/object_detection/yolov8n.yaml          # model config file path
-model_path: ./models/quantized_onnx/object_detection/yolov8n_i8.onnx                                # quantized onnx model path
+model_config: ./warboy/cfg/model_config/object_detection/yolov8n.yaml     # model config file path
+model_path: ./models/quantized_onnx/object_detection/yolov8n_i8.onnx      # quantized onnx model path
 num_workers: 8                                                                                      
-device: warboy(2)*1                                                                                 # device name (warboy(2)*1 | warboy(1)*1 | npu0pe0 | etc.)
+device: warboy(2)*1                                                       # device name (warboy(2)*1 | warboy(1)*1 | npu0pe0 | etc.)
 video_path: 
   - [set your test video file path]
 ```
