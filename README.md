@@ -135,6 +135,15 @@ After verifying the settings, install the project using pip.
 ```sh
 pip install .
 ```
+After installation, you can use the `warboy-vision` command-line interface (CLI).
+You can view all available CLI commands by running:
+```sh
+warboy-vision --help
+```
+For detailed usage information about a specific command, use:
+```sh
+warboy-vision <command> --help
+```
 
 ## Testing
 
@@ -212,13 +221,13 @@ If you already have the model in ONNX format, the next step is the model quantiz
 
 - **model making commands**
   ```sh
-  warboy-vision make-model "/path/to/your/model/cfg.yaml"       # from onnx export to quantize
+  warboy-vision make-model --config_file "/path/to/your/model/cfg.yaml"       # from onnx export to quantize
 
   # if you want to export onnx model
-  warboy-vision export-onnx "/path/to/your/model/cfg.yaml"      # export onnx
+  warboy-vision export-onnx --config_file "/path/to/your/model/cfg.yaml"      # export onnx
 
   # if you want to quantize onnx model
-  warboy-vision quantize "/path/to/your/model/cfg.yaml"         # quantize
+  warboy-vision quantize --config_file "/path/to/your/model/cfg.yaml"         # quantize
   ```
 </details>
 
@@ -232,9 +241,9 @@ In the project, vision applications are executed for videos from multiple channe
 - **demo commands**
   
   ```sh
-  warboy-vision run-demo "/path/to/your/demo/cfg.yaml" --mode web   # see the result on a webpage using FastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+  warboy-vision run-demo --demo-config-file "/path/to/your/demo/cfg.yaml" --mode web   # see the result on a webpage using FastAPI (http://0.0.0.0:20001 or http://localhost:20001)
 
-  warboy-vision run-demo "/path/to/your/demo/cfg.yaml" --mode file  # outputs will be saved in outputs folder
+  warboy-vision run-demo --demo-config-file "/path/to/your/demo/cfg.yaml" --mode file  # outputs will be saved in outputs folder
   ```
 </details>
 
@@ -248,9 +257,9 @@ In the project, there are end-to-end performance tests for various vision applic
 - **performance test commands**
   
   ```sh
-  warboy-vision model-performance "/path/to/your/model/cfg.yaml"      # performance test for model with config file
+  warboy-vision model-performance --config_file "/path/to/your/model/cfg.yaml"      # performance test for model with config file
 
-  warboy-vision npu-performance "/path/to/your/model/cfg.yaml"      # NPU performance test for model with config file
+  warboy-vision npu-performance --config_file "/path/to/your/model/cfg.yaml"      # NPU performance test for model with config file
   ```
 
 </details>

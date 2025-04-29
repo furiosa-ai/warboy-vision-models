@@ -9,7 +9,12 @@ from ...warboy import get_model_params_from_cfg
     help="Run end-to-end performance test for object detection, pose estimation, or instance segmentation models.",
     short_help="Run end-to-end performance test.",
 )
-@click.argument("config_file")
+@click.option(
+    "--config_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="The path to the model configuration file.",
+)
 def run_e2e_test(config_file: str):
     param = get_model_params_from_cfg(config_file)
 
@@ -47,7 +52,12 @@ def run_e2e_test(config_file: str):
     help="Run NPU performance test.",
     short_help="Run NPU performance test.",
 )
-@click.argument("config_file")
+@click.option(
+    "--config_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="The path to the model configuration file.",
+)
 @click.option(
     "--num_device",
     type=int,

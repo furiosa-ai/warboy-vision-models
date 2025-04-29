@@ -8,7 +8,12 @@ from ...demo import demo
     help="Run the demo by web or making output files.",
     short_help="Run demo, mode is web or file.",
 )
-@click.argument("demo_config_file")
+@click.option(
+    "--demo-config-file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="The path to the demo configuration file.",
+)
 @click.option(
     "--mode",
     type=click.Choice(["web", "file"], case_sensitive=False),
