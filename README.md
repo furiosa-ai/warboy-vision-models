@@ -257,7 +257,7 @@ In the project, there are end-to-end performance tests for various vision applic
 - **performance test commands**
   
   ```sh
-  warboy-vision model-performance --config_file "/path/to/your/model/cfg.yaml"      # performance test for model with config file
+  warboy-vision model-performance --config_file "/path/to/your/model/cfg.yaml"    # performance test for model with config file
 
   warboy-vision npu-performance --config_file "/path/to/your/model/cfg.yaml"      # NPU performance test for model with config file
   ```
