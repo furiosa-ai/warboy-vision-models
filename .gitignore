@@ -243,10 +243,6 @@ datasets/
 *.pkl
 outputs/
 
-# Do not commit test config file
-test_config.yaml
-test_demo.yaml
-
 # Do not commit __MACOSX
 __MACOSX
 # Do not commit .DS_Store
