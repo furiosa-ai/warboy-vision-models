@@ -181,10 +181,10 @@ calibration_params:
 
 confidence_threshold: 0.25
 iou_threshold: 0.7
-input_shape: [640, 640]         # model input shape (Height, Width)
-anchors:                        # anchor information
+input_shape: [1, 3, 640, 640]         # model input shape (Height, Width)
+anchors:                              # anchor information
   - 
-class_names:                    # class names
+class_names:                          # class names
   - ...
 ```
 
@@ -197,7 +197,7 @@ model_path: ./models/quantized_onnx/object_detection/yolov8n_i8.onnx      # quan
 num_workers: 8                                                                                      
 device: warboy(2)*1                                                       # device name (warboy(2)*1 | warboy(1)*1 | npu0pe0 | etc.)
 video_path: 
-  - [set your test video file path]
+  - [set your demo video file path]
 ```
 </details>
 
