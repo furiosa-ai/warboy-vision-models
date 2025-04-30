@@ -150,7 +150,7 @@ warboy-vision <command> --help
 <details open>
 <summary> Performance test with pytest </summary>
 
-The project provides pytest for performance testing. You can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. You can also test NPU performance. You can check supported models in tests/test_config.
+The project provides pytest for performance testing. You can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. You can also test NPU performance. You can check supported models in tests/test_config. Before running the tests, please prepare quantized ONNX model files and COCO datasets, then update the paths in `tests/test_config` and `tests/e2e` accordingly.
 
 - **pytest command**
   ```sh
