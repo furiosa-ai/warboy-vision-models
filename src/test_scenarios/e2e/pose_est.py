@@ -74,7 +74,7 @@ def test_warboy_yolo_accuracy_pose(cfg: str, image_dir: str, annotation_file: st
             postprocess_as_img=False,
         )
 
-    task.run(runtime_type="application")
+    task.run()
 
     outputs = task.outputs
     results = _process_output(outputs, data_loader)

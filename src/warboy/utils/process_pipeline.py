@@ -207,10 +207,10 @@ class PipeLine:
         else:
             raise "Error: not implemented type"
 
-    def run(self, runtime_type: str = "queue"):
-        if runtime_type == "queue":
+    def run(self, runtime_type: str = "application"):
+        if runtime_type == "application":
             runtime_process = [
-                WarboyQueueRuntime(
+                WarboyApplication(
                     model=runtime_info["model"],
                     worker_num=runtime_info["worker_num"],
                     device=runtime_info["device"],
@@ -219,9 +219,9 @@ class PipeLine:
                 )
                 for name, runtime_info in self.runtime_info.items()
             ]
-        elif runtime_type == "application":
+        elif runtime_type == "queue":
             runtime_process = [
-                WarboyApplication(
+                WarboyQueueRuntime(
                     model=runtime_info["model"],
                     worker_num=runtime_info["worker_num"],
                     device=runtime_info["device"],

@@ -103,7 +103,7 @@ def test_warboy_yolo_accuracy_seg(cfg: str, image_dir: str, annotation_file: str
             postprocess_as_img=False,
         )
 
-    task.run(runtime_type="application")
+    task.run()
 
     print("Inference done!")
     outputs = task.outputs
