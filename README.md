@@ -123,7 +123,7 @@ Python SDK requires Python 3.8 or above. You can install the required Python pac
 ```sh
 pip install -r requirements.txt
 ```
-and install required packages for post processing utilities using apt.
+and install required packages for post processing utilities using apt. Then, build C++ post processing utilities.
 ```sh
 sudo apt-get update
 sudo apt-get install cmake libeigen3-dev
@@ -160,16 +160,6 @@ The project provides pytest for performance testing. You can test the performanc
 
 
 ## Usage Example
-
-<details open>
-<summary> Download the coco2017 dataset </summary>
-  
-If needed, download the coco2017 dataset. You can skip this step if you have your own dataset.
-  
-```sh
-./coco2017.sh
-```    
-</details>
 
 <details open>
 <summary> Set configuration files for the project </summary>
@@ -249,7 +239,6 @@ In the project, vision applications are executed for videos from multiple channe
 
 <details open>
 <summary> End-to-end performance test </summary>
-<!-- e2e test 설명 -->
 In the project, there are end-to-end performance tests for various vision applications. We can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. Also, we can test NPU performance, too.
 
 *"OpenTelemetry trace error occurred. cannot send span to the batch span processor because the channel is full"* error can occur when running the NPU performance test, but it does not affect the performance test. You can ignore this error.

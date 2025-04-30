@@ -96,8 +96,7 @@ def test_warboy_facenet_accuracy_recog(cfg: str, image_dir: str, annotation_file
             postprocess_as_img=False,
         )
 
-    # task.run(runtime_type="application")
-    task.run()
+    task.run(runtime_type="application")
 
     print("Inference done!")
     outputs = task.outputs

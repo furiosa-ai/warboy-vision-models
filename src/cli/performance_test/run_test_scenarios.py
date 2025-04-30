@@ -16,28 +16,28 @@ from ...warboy import get_model_params_from_cfg
     help="The path to the model configuration file.",
 )
 def run_e2e_test(config_file: str):
+    ANNOTATION_DIR = (
+        "datasets/coco/annotations"  # CHECK you may change this to your own path
+    )
+
+    IMAGE_DIR = "datasets/coco/val2017"  # CHECK you may change this to your own path
+
     param = get_model_params_from_cfg(config_file)
 
     if param["task"] == "object_detection":
         func = object_det.test_warboy_yolo_accuracy_det
-        annotation = "datasets/coco/annotations/instances_val2017.json"  # CHECK you may change this to your own path
-        image_dir = (
-            "datasets/coco/val2017"  # CHECK you may change this to your own path
-        )
+        annotation = f"{ANNOTATION_DIR}/instances_val2017.json"
+        image_dir = IMAGE_DIR
 
     elif param["task"] == "pose_estimation":
         func = pose_est.test_warboy_yolo_accuracy_pose
-        annotation = "datasets/coco/annotations/person_keypoints_val2017.json"  # CHECK you may change this to your own path
-        image_dir = (
-            "datasets/coco/val2017"  # CHECK you may change this to your own path
-        )
+        annotation = f"{ANNOTATION_DIR}/person_keypoints_val2017.json"
+        image_dir = IMAGE_DIR
 
     elif param["task"] == "instance_segmentation":
         func = instance_seg.test_warboy_yolo_accuracy_seg
-        annotation = "datasets/coco/annotations/instances_val2017.json"  # CHECK you may change this to your own path
-        image_dir = (
-            "datasets/coco/val2017"  # CHECK you may change this to your own path
-        )
+        annotation = f"{ANNOTATION_DIR}/instances_val2017.json"
+        image_dir = IMAGE_DIR
 
     else:
         raise ValueError(
