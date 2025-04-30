@@ -1,8 +1,0 @@
-application: object_detection
-model_config: ./cfg/object_detection_model.yaml
-model_path: yolov8n_i8.onnx
-output_path: output_detection
-num_worker: 8
-device: npu1pe0
-video_path:
-  - input_videos/Car_1.mp4

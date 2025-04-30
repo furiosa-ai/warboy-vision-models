@@ -1,0 +1,16 @@
+app_config:
+  - task:
+      - object_detection
+    model_cfg:
+      - ../cfg/yolov8n.yaml
+    model_path:
+      - ../models/quantized_onnx/object_detection/yolov8n_i8.onnx # CHECK you may change this path to your own path
+    num_worker: 32
+    npu_device:
+      - warboy(1)*1
+    video_params: # CHECK you need to set the input video paths
+      - input_path: /your/path/to/your/video.mp4
+        type: file
+        recursive: True
+
+port: 20001

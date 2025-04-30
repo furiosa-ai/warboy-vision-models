@@ -232,3 +232,18 @@ pyrightconfig.json
 *.onnx
 *.pt
 *.pth
+
+# Do not commit models
+models/
+
+# Do not commit datasets
+datasets/
+
+# Do not commit outputs
+*.pkl
+outputs/
+
+# Do not commit __MACOSX
+__MACOSX
+# Do not commit .DS_Store
+.DS_Store
