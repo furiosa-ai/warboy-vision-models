@@ -231,9 +231,9 @@ In the project, vision applications are executed for videos from multiple channe
 - **demo commands**
   
   ```sh
-  warboy-vision run-demo --demo-config-file "/path/to/your/demo/cfg.yaml" --mode web   # see the result on a webpage using FastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+  warboy-vision run-demo --demo_config_file "/path/to/your/demo/cfg.yaml" --mode web   # see the result on a webpage using FastAPI (http://0.0.0.0:20001 or http://localhost:20001)
 
-  warboy-vision run-demo --demo-config-file "/path/to/your/demo/cfg.yaml" --mode file  # outputs will be saved in outputs folder
+  warboy-vision run-demo --demo_config_file "/path/to/your/demo/cfg.yaml" --mode file  # outputs will be saved in outputs/ folder
   ```
 </details>
 
