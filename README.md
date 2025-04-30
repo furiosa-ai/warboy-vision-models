@@ -119,7 +119,7 @@ To use this project, it's essential to install various software components provi
 - **Driver, Firmware and Runtime Installation** ([English](https://furiosa-ai.github.io/docs/latest/en/software/installation.html) | [한국어](https://furiosa-ai.github.io/docs/latest/ko/software/installation.html))
 
 
-Python SDK requires Python 3.8 or above. You can install the required Python packages using pip as follows,
+This project requires Python 3.9 or above. You can install the required Python packages using pip as follows,
 ```sh
 pip install -r requirements.txt
 ```
@@ -150,7 +150,7 @@ warboy-vision <command> --help
 <details open>
 <summary> Performance test with pytest </summary>
 
-The project provides pytest for performance testing. You can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. You can also test NPU performance. You can check supported models in tests/test_config.
+The project provides pytest for performance testing. You can test the performance of object detection, pose estimation, and instance segmentation applications. You can also test NPU performance. You can check supported models in tests/test_config. Before running the tests, please prepare quantized ONNX model files and COCO datasets, then update the paths in `tests/test_config` and `tests/e2e` accordingly.
 
 - **pytest command**
   ```sh
@@ -239,7 +239,7 @@ In the project, vision applications are executed for videos from multiple channe
 
 <details open>
 <summary> End-to-end performance test </summary>
-In the project, there are end-to-end performance tests for various vision applications. We can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. Also, we can test NPU performance, too.
+In the project, there are end-to-end performance tests for various vision applications. We can test the performance of object detection, pose estimation, and instance segmentation applications. Also, we can test NPU performance, too.
 
 *"OpenTelemetry trace error occurred. cannot send span to the batch span processor because the channel is full"* error can occur when running the NPU performance test, but it does not affect the performance test. You can ignore this error.
 

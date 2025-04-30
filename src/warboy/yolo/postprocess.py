@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 
 from ..cfg import COLORS, POSE_LIMB_COLOR, SKELETONS, TASKS
-from ..face_recognition.embedding_process import face_recognition_embedding_decoder
 from .anchor_process import (
     instance_segment_anchor_decoder,
     object_detection_anchor_decoder,
@@ -35,8 +34,6 @@ def get_post_processor(
         return PoseEstPostprocess(model_name, model_cfg, class_names, use_trakcing)
     elif task == "instance_segmentation":
         return InsSegPostProcess(model_name, model_cfg, class_names, use_trakcing)
-    elif task == "face_recognition":
-        return FaceRecPostProcess(model_name, model_cfg, class_names, use_trakcing)
     else:
         raise f"Not supporting {task} task, you have set task among {TASKS}"
 
@@ -125,20 +122,6 @@ class InsSegPostProcess:
         )
         ins_mask_img = draw_bbox(ins_mask_img, bbox, self.class_names)
         return ins_mask_img
-
-
-class FaceRecPostProcess:
-    def __init__(
-        self, model_name: str, model_cfg, class_names, use_traking: bool = False
-    ):
-        model_cfg.update({"use_tracker": use_traking})
-        self.postprocess_func = face_recognition_embedding_decoder()
-        self.class_names = class_names
-
-    def __call__(
-        self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray
-    ) -> np.ndarray:
-        return outputs
 
 
 # Draw Output on an Original Image

@@ -35,10 +35,6 @@ class OnnxTools:
 
         if "yolo" in self.model_name:
             torch_model = self._load_yolo_torch_model().eval()
-        elif "facenet" == self.model_name:
-            from facenet_pytorch import InceptionResnetV1
-
-            torch_model = InceptionResnetV1(pretrained="vggface2").eval()
         else:
             raise NotImplementedError(
                 f"Export ONNX for {self.task} >> {self.model_name} is not implemented yet!"
@@ -167,13 +163,6 @@ class OnnxTools:
             from ..yolo.preprocess import YoloPreProcessor
 
             preprocessor = YoloPreProcessor(new_shape=new_shape, tensor_type="float32")
-
-        elif "face_recognition" == self.task:
-            from ..face_recognition.preprocess import FaceRecogPreProcessor
-
-            preprocessor = FaceRecogPreProcessor(
-                new_shape=new_shape, tensor_type="float32"
-            )
 
         else:
             raise NotImplementedError(
