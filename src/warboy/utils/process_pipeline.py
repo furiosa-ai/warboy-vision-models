@@ -9,7 +9,6 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 
-from ..face_recognition.preprocess import FaceRecogPreProcessor
 from ..runtime.warboy_runtime import WarboyApplication, WarboyQueueRuntime
 from ..yolo.postprocess import get_post_processor
 from ..yolo.preprocess import YoloPreProcessor
@@ -98,10 +97,6 @@ class PipeLine:
             }
             if "yolo" in obj.model:
                 self.preprocess_functions[obj.name] = YoloPreProcessor(
-                    new_shape=obj.input_shape, tensor_type="uint8"
-                )
-            elif "face_recognition" == obj.task:
-                self.preprocess_functions[obj.name] = FaceRecogPreProcessor(
                     new_shape=obj.input_shape, tensor_type="uint8"
                 )
             else:

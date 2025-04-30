@@ -5,7 +5,6 @@ torchvision == 0.14.1
 uvloop
 ultralytics
 scikit-learn
-facenet-pytorch
 jinja2
 pytest
 pycocotools

@@ -28,7 +28,6 @@ def get_onnx_graph_info(
             object_detection=_get_output_to_shape_det,
             pose_estimation=_get_output_to_shape_pose,
             instance_segmentation=_get_output_to_shape_seg,
-            face_detection=_get_output_to_shape_det,
         )
         output_to_shape = {
             tensor_name: [
