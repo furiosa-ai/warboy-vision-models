@@ -87,7 +87,6 @@ class WarboyQueueRuntime:
         self.receiver = None
         self.stream_mux_list = stream_mux_list
         self.output_mux_list = output_mux_list
-        # TEST
         self.pending_tasks = 0
         self.stop_count = 0
         self.total_submitters = len(self.stream_mux_list)
@@ -102,7 +101,6 @@ class WarboyQueueRuntime:
 
     async def run_(self):
         self.submitter, self.receiver = await create_queue(**self.config)
-        # TEST
         self.pending_lock = asyncio.Lock()
         self.done_event = asyncio.Event()
 
@@ -134,7 +132,7 @@ class WarboyQueueRuntime:
                 print(f"Channel - {video_channel} End!")
                 break
             except Exception as e:
-                print("Line 43 - submit:", e)
+                print("[WarboyQueueRuntime] submit_with:", e)
                 break
         return
 
@@ -168,7 +166,7 @@ class WarboyQueueRuntime:
                 print("TimeOut Receiver")
                 break
             except Exception as e:
-                print("Line 61 - recv:", e)
+                print("[WarboyQueueRuntime] recv_with:", e)
                 break
 
         for output_mux in self.output_mux_list:
