@@ -9,24 +9,35 @@ from ...warboy import get_model_params_from_cfg
     help="Run end-to-end performance test for object detection, pose estimation, or instance segmentation models.",
     short_help="Run end-to-end performance test.",
 )
-@click.argument("config_file")
+@click.option(
+    "--config_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="The path to the model configuration file.",
+)
 def run_e2e_test(config_file: str):
+    ANNOTATION_DIR = (
+        "datasets/coco/annotations"  # CHECK you may change this to your own path
+    )
+
+    IMAGE_DIR = "datasets/coco/val2017"  # CHECK you may change this to your own path
+
     param = get_model_params_from_cfg(config_file)
 
     if param["task"] == "object_detection":
         func = object_det.test_warboy_yolo_accuracy_det
-        annotation = "datasets/coco/annotations/instances_val2017.json"  # CHECK
-        image_dir = "datasets/coco/val2017"  # CHECK
+        annotation = f"{ANNOTATION_DIR}/instances_val2017.json"
+        image_dir = IMAGE_DIR
 
     elif param["task"] == "pose_estimation":
         func = pose_est.test_warboy_yolo_accuracy_pose
-        annotation = "datasets/coco/annotations/person_keypoints_val2017.json"  # CHECK
-        image_dir = "datasets/coco/val2017"  # CHECK
+        annotation = f"{ANNOTATION_DIR}/person_keypoints_val2017.json"
+        image_dir = IMAGE_DIR
 
     elif param["task"] == "instance_segmentation":
         func = instance_seg.test_warboy_yolo_accuracy_seg
-        annotation = "datasets/coco/annotations/instances_val2017.json"  # CHECK
-        image_dir = "datasets/coco/val2017"  # CHECK
+        annotation = f"{ANNOTATION_DIR}/instances_val2017.json"
+        image_dir = IMAGE_DIR
 
     else:
         raise ValueError(
@@ -41,7 +52,12 @@ def run_e2e_test(config_file: str):
     help="Run NPU performance test.",
     short_help="Run NPU performance test.",
 )
-@click.argument("config_file")
+@click.option(
+    "--config_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="The path to the model configuration file.",
+)
 @click.option(
     "--num_device",
     type=int,

@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import List
 
 from pycocotools.cocoeval import COCOeval
 
@@ -113,8 +112,7 @@ def test_warboy_yolo_accuracy_det(cfg: str, image_dir: str, annotation_file: str
             postprocess_as_img=False,
         )
 
-    # task.run(runtime_type="application")
-    task.run()
+    task.run(runtime_type="application")
 
     outputs = task.outputs
     results = _process_output(outputs, data_loader)

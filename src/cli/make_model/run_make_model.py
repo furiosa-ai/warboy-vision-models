@@ -8,18 +8,21 @@ from ...warboy.tools.onnx_tools import OnnxTools
     help="Make quantized model from config file.",
     short_help="Make quantized ONNX model",
 )
-@click.argument("config_file")
 @click.option(
-    "--need_edit",
-    is_flag=True,
-    default=True,
-    help="Whether you need to edit the model.",
+    "--config_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="The path to the model configuration file.",
 )
 @click.option(
-    "--need_quantize",
-    is_flag=True,
+    "--need_edit/--no-need-edit",
     default=True,
-    help="Whether you need to quantize the model.",
+    help="Editing is enabled by default. Use '--no-need-edit' to disable it.",
+)
+@click.option(
+    "--need_quantize/--no-need-quantize",
+    default=True,
+    help="Quantization is enabled by default. Use '--no-need-quantize' to disable it.",
 )
 def run_make_model(config_file: str, need_edit: bool, need_quantize: bool):
     onnx_tools = OnnxTools(config_file)
@@ -38,12 +41,16 @@ def run_make_model(config_file: str, need_edit: bool, need_quantize: bool):
 @click.command(
     "export-onnx", help="Export ONNX model from config file.", short_help="Export ONNX"
 )
-@click.argument("config_file")
 @click.option(
-    "--need_edit",
-    is_flag=True,
+    "--config_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="The path to the model configuration file.",
+)
+@click.option(
+    "--need_edit/--no-need-edit",
     default=True,
-    help="Whether you need to edit the model.",
+    help="Editing is enabled by default. Use '--no-need-edit' to disable it.",
 )
 def run_export_onnx(config_file: str, need_edit: bool):
     onnx_tools = OnnxTools(config_file)
@@ -62,7 +69,12 @@ def run_export_onnx(config_file: str, need_edit: bool):
     help="Quantize ONNX model from config file. To run this command, you need to prepare the ONNX model first.",
     short_help="Quantize ONNX, need ONNX model first",
 )
-@click.argument("config_file")
+@click.option(
+    "--config_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="The path to the model configuration file.",
+)
 def run_quantize(config_file: str):
     onnx_tools = OnnxTools(config_file)
     onnx_tools.quantize()

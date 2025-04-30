@@ -103,8 +103,7 @@ def test_warboy_yolo_accuracy_seg(cfg: str, image_dir: str, annotation_file: str
             postprocess_as_img=False,
         )
 
-    # task.run(runtime_type="application")
-    task.run()
+    task.run(runtime_type="application")
 
     print("Inference done!")
     outputs = task.outputs
@@ -136,10 +135,10 @@ def test_warboy_yolo_accuracy_seg(cfg: str, image_dir: str, annotation_file: str
 
     if coco_eval.stats[0] >= (TARGET_BBOX_ACCURACY[param["model_name"]] * 0.9):
         print(
-            f"{param['model_name']} Accuracy (Bbox) check success! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
+            f"{param['model_name']} Accuracy (Bbox) check success! -> mAP: {coco_eval_box.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
         )
 
     else:
         print(
-            f"{param['model_name']} Accuracy (Bbox) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
+            f"{param['model_name']} Accuracy (Bbox) check failed! -> mAP: {coco_eval_box.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
         )

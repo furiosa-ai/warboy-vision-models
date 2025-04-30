@@ -1,6 +1,6 @@
 # Warboy-Vision-Models
 The `warboy-vision-models` project is designed to assist users in running various deep learning vision models on [FuriosaAI](https://furiosa.ai/)’s first generation NPU (Neural Processing Unit), Warboy. 
-Users can follow the outlined steps in the project to execute various vision applications, such as Object Detection, Pose Estimation, Instance Segmentation, etc., alongside Warboy.
+Users can follow the outlined steps in the project to execute various vision applications, such as Object Detection, Pose Estimation, Instance Segmentation, etc., using Warboy.
 
 We hope that the resources here will help you utilize the FuriosaAI Warboy in your applications.
 
@@ -9,7 +9,7 @@ We hope that the resources here will help you utilize the FuriosaAI Warboy in yo
 Currently, the project supports all vision applications provided by YOLO series ([YOLOv9](https://github.com/WongKinYiu/yolov9), [YOLOv8](https://github.com/ultralytics/ultralytics), [YOLOv7](https://github.com/WongKinYiu/yolov7) and [YOLOv5](https://github.com/ultralytics/yolov5)). If you want to explore all available models in the `warboy-vision-models` repository and detailed performance on Warboy, please refer to the following:
 
 ### Object Detection
-Object detection is a computer vision technique used to identify the presence of specific objects in images or videos and determines their locations. It entails classifying objects in videos or photos (classification) and precisely locating them using bounding boxes, thereby detecting objects through this process.
+Object detection is a computer vision technique used to identify the presence of specific objects in images or videos and determine their locations. It entails classifying objects in videos or photos (classification) and precisely locating them using bounding boxes, thereby detecting objects through this process.
 
 <div align="center"><img width="1024" height="360" src="./data/images/object_detection.png"></div>
 
@@ -111,29 +111,38 @@ Instance segmentation is a technology that identifies multiple objects in an ima
 </p>
 
 # <div align="center">Documentation</div>
-Please refer below for a installation and usage example. 
+Please refer to the following for installation and usage examples. 
 
 ## Installation
 To use this project, it's essential to install various software components provided by FuriosaAI. For detailed instructions on installing packages, drivers, and the Furiosa SDK, please see the following:
 
-- **Driver, Firmeware and Runtime Installation** ([English](https://furiosa-ai.github.io/docs/latest/en/software/installation.html) | [한국어](https://furiosa-ai.github.io/docs/latest/ko/software/installation.html))
+- **Driver, Firmware and Runtime Installation** ([English](https://furiosa-ai.github.io/docs/latest/en/software/installation.html) | [한국어](https://furiosa-ai.github.io/docs/latest/ko/software/installation.html))
 
 
-Python SDK requires Python 3.8 or above. pip install required python packages as follows,
+Python SDK requires Python 3.8 or above. You can install the required Python packages using pip as follows,
 ```sh
 pip install -r requirements.txt
 ```
-and apt install required packages for post processing utilites.
+and install required packages for post processing utilities using apt. Then, build C++ post processing utilities.
 ```sh
 sudo apt-get update
 sudo apt-get install cmake libeigen3-dev
 ./build.sh
 ```
-Before installing the project, please make sure to check `CHECK` flags and set them to your own paths if you are using your own dataset. If you downloaded the coco2017 dataset with `coco2017.sh`, you can skip this step.
+Before installing the project, please make sure to check `CHECK` flags and set them to your own paths if you are using your own dataset. If you downloaded the coco2017 dataset with `coco2017.sh`, you can skip this step. So for convenience, please use the `coco2017.sh` script to download the dataset.
 
-After checking, now install the project using pip. 
+After verifying the settings, install the project using pip. 
 ```sh
 pip install .
+```
+After installation, you can use the `warboy-vision` command-line interface (CLI).
+You can view all available CLI commands by running:
+```sh
+warboy-vision --help
+```
+For detailed usage information about a specific command, use:
+```sh
+warboy-vision <command> --help
 ```
 
 ## Testing
@@ -141,7 +150,7 @@ pip install .
 <details open>
 <summary> Performance test with pytest </summary>
 
-The project provides pytest for performance testing. You can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. Also, you can test NPU performance, too. You can check supported models in tests/test_config.
+The project provides pytest for performance testing. You can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. You can also test NPU performance. You can check supported models in tests/test_config.
 
 - **pytest command**
   ```sh
@@ -153,17 +162,7 @@ The project provides pytest for performance testing. You can test the performanc
 ## Usage Example
 
 <details open>
-<summary> Download the coco2017 dataset </summary>
-  
-If needed, download the coco2017 dataset. You can skip this step if you have your own dataset.
-  
-```sh
-./coco2017.sh
-```    
-</details>
-
-<details open>
-<summary> Set config files for project </summary>
+<summary> Set configuration files for the project </summary>
 
 Before running the project, you need to set up configuration files for model and demo. 
 
@@ -189,14 +188,14 @@ class_names:                    # class names
   - ...
 ```
 
-- **Demo config file** : it contains device informations and video paths for the project.
+- **Demo config file** : it contains device information and video paths for the project.
 
 ```yaml
 application: object_detection
-model_config: ./warboy/cfg/model_config/object_detection/yolov8n.yaml          # model config file path
-model_path: ./models/quantized_onnx/object_detection/yolov8n_i8.onnx                                # quantized onnx model path
+model_config: ./warboy/cfg/model_config/object_detection/yolov8n.yaml     # model config file path
+model_path: ./models/quantized_onnx/object_detection/yolov8n_i8.onnx      # quantized onnx model path
 num_workers: 8                                                                                      
-device: warboy(2)*1                                                                                 # device name (warboy(2)*1 | warboy(1)*1 | npu0pe0 | etc.)
+device: warboy(2)*1                                                       # device name (warboy(2)*1 | warboy(1)*1 | npu0pe0 | etc.)
 video_path: 
   - [set your test video file path]
 ```
@@ -208,17 +207,17 @@ video_path:
 <summary> Export ONNX & Quantizing an ONNX model using Furiosa SDK </summary>
 Next, it is necessary to export the model to the ONNX format. 
 
-If you have the model in an ONNX model, the next step is the model quantization process. Since FuriosaAI's Warboy only supports models in 8-bit integer format (int8), it is necessary to quantize the float32-based model into an int8 data type model. 
+If you already have the model in ONNX format, the next step is the model quantization process. Since FuriosaAI's Warboy only supports models in 8-bit integer format (int8), it is necessary to quantize the float32-based model into an int8 data type model. 
 
 - **model making commands**
   ```sh
-  warboy-vision make-model "/path/to/your/model/cfg.yaml"       # from onnx export to quantize
+  warboy-vision make-model --config_file "/path/to/your/model/cfg.yaml"       # from onnx export to quantize
 
   # if you want to export onnx model
-  warboy-vision export-onnx "/path/to/your/model/cfg.yaml"      # export onnx
+  warboy-vision export-onnx --config_file "/path/to/your/model/cfg.yaml"      # export onnx
 
   # if you want to quantize onnx model
-  warboy-vision quantize "/path/to/your/model/cfg.yaml"         # quantize
+  warboy-vision quantize --config_file "/path/to/your/model/cfg.yaml"         # quantize
   ```
 </details>
 
@@ -232,15 +231,14 @@ In the project, vision applications are executed for videos from multiple channe
 - **demo commands**
   
   ```sh
-  warboy-vision run-demo "/path/to/your/demo/cfg.yaml" --mode web   # see the result on webpage using fastAPI (http://0.0.0.0:20001 or http://localhost:20001)
+  warboy-vision run-demo --demo-config-file "/path/to/your/demo/cfg.yaml" --mode web   # see the result on a webpage using FastAPI (http://0.0.0.0:20001 or http://localhost:20001)
 
-  warboy-vision run-demo "/path/to/your/demo/cfg.yaml" --mode file  # outputs will be saved in outputs folder
+  warboy-vision run-demo --demo-config-file "/path/to/your/demo/cfg.yaml" --mode file  # outputs will be saved in outputs folder
   ```
 </details>
 
 <details open>
 <summary> End-to-end performance test </summary>
-<!-- e2e test 설명 -->
 In the project, there are end-to-end performance tests for various vision applications. We can test the performance of object detection, pose estimation, instance segmentation, and face recognition applications. Also, we can test NPU performance, too.
 
 *"OpenTelemetry trace error occurred. cannot send span to the batch span processor because the channel is full"* error can occur when running the NPU performance test, but it does not affect the performance test. You can ignore this error.
@@ -248,9 +246,9 @@ In the project, there are end-to-end performance tests for various vision applic
 - **performance test commands**
   
   ```sh
-  warboy-vision model-performance "/path/to/your/model/cfg.yaml"      # performance test for model with config file
+  warboy-vision model-performance --config_file "/path/to/your/model/cfg.yaml"    # performance test for model with config file
 
-  warboy-vision npu-performance "/path/to/your/model/cfg.yaml"      # NPU performance test for model with config file
+  warboy-vision npu-performance --config_file "/path/to/your/model/cfg.yaml"      # NPU performance test for model with config file
   ```
 
 </details>

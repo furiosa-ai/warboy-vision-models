@@ -1,14 +1,11 @@
 import asyncio
 import os
-import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Tuple
+from typing import List
 
 import cv2
-import numpy as np
 import pytest
 from pycocotools.cocoeval import COCOeval
-from tqdm import tqdm
 
 from src.warboy.cfg import get_model_params_from_cfg
 from src.warboy.yolo.postprocess import PoseEstPostprocess
@@ -104,8 +101,10 @@ def test_warboy_yolo_accuracy_pose(
     ).postprocess_func
 
     data_loader = MSCOCODataLoader(
-        Path("datasets/coco/val2017"),
-        Path("datasets/coco/annotations/person_keypoints_val2017.json"),
+        Path("datasets/coco/val2017"),  # CHECK you may change this to your own path
+        Path(
+            "datasets/coco/annotations/person_keypoints_val2017.json"
+        ),  # CHECK you may change this to your own path
         preprocessor,
         input_shape,
     )
