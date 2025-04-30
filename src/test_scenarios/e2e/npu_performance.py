@@ -7,7 +7,7 @@ from ...warboy import get_model_params_from_cfg
 from ..utils import TRACE_FILE_DIR
 
 
-def test_warboy_performance(cfg, num_device):
+def test_warboy_performance(cfg, num_device, trace_file_dir=TRACE_FILE_DIR):
     """
     model(str): a path to quantized onnx file
     num_device(int): a number of pe to use (1~2)
@@ -18,7 +18,7 @@ def test_warboy_performance(cfg, num_device):
     from furiosa.runtime.profiler import profile
 
     input_shape = param["input_shape"]
-    trace_dir = os.path.join(TRACE_FILE_DIR, param["task"])
+    trace_dir = os.path.join(trace_file_dir, param["task"])
 
     if not os.path.exists(trace_dir):
         os.makedirs(trace_dir)

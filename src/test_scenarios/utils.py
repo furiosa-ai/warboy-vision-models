@@ -4,7 +4,7 @@ from typing import Callable, Dict, Iterator, Tuple
 import numpy as np
 from pycocotools.coco import COCO
 
-TRACE_FILE_DIR = "../models/trace"
+TRACE_FILE_DIR = "models/trace"
 
 CONF_THRES = 0.001
 IOU_THRES = 0.7
@@ -128,6 +128,7 @@ def xyxy2xywh(x: np.ndarray) -> np.ndarray:
     y[:, 2] = x[:, 2] - x[:, 0]
     y[:, 3] = x[:, 3] - x[:, 1]
     return y
+
 
 def set_test_engin_configs(param, num_device):
     engin_configs = []
