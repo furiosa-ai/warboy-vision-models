@@ -1,4 +1,5 @@
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from pycocotools.cocoeval import COCOeval
@@ -17,23 +18,38 @@ TARGET_ACCURACY = {
 }
 
 
-def _process_output(outputs_dict, data_loader):
+def _process_output(img_path, annotation, outputs_dict):
     results = []
-    for img_path, annotation in data_loader:
-        if not len(outputs_dict[str(img_path)]) == 1:
-            print(len(outputs_dict[str(img_path)]))
-        for outputs in outputs_dict[str(img_path)]:
-            for output in outputs:
-                keypoint = output[5:]
-                results.append(
-                    {
-                        "image_id": annotation["id"],
-                        "category_id": 1,
-                        "keypoints": keypoint,
-                        "score": round(output[4], 5),
-                    }
-                )
+    key = str(img_path)
+
+    if not len(outputs_dict[key]) == 1:
+        print(len(outputs_dict[key]))
+
+    for outputs in outputs_dict[str(img_path)]:
+        for output in outputs:
+            keypoint = output[5:]
+            results.append(
+                {
+                    "image_id": annotation["id"],
+                    "category_id": 1,
+                    "keypoints": keypoint,
+                    "score": round(output[4], 5),
+                }
+            )
+
     return results
+
+
+def _process_outputs(outputs_dict, data_loader):
+    all_results = []
+    with ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(_process_output, img_path, annotation, outputs_dict)
+            for img_path, annotation in data_loader
+        ]
+        for future in futures:
+            all_results.extend(future.result())
+    return all_results
 
 
 def test_warboy_yolo_accuracy_pose(cfg: str, image_dir: str, annotation_file: str):
@@ -75,9 +91,11 @@ def test_warboy_yolo_accuracy_pose(cfg: str, image_dir: str, annotation_file: st
         )
 
     task.run()
-
     outputs = task.outputs
-    results = _process_output(outputs, data_loader)
+
+    print("End Inference!")
+
+    results = _process_outputs(outputs, data_loader)
 
     coco_result = data_loader.coco.loadRes(results)
     coco_eval = COCOeval(data_loader.coco, coco_result, "keypoints")
