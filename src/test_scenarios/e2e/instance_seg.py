@@ -1,4 +1,5 @@
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -36,33 +37,46 @@ TARGET_BBOX_ACCURACY = {
 }
 
 
-def _process_output(outputs_dict, data_loader):
+def _process_output(img_path, annotation, outputs_dict):
     results = []
-    for img_path, annotation in data_loader:
-        if not len(outputs_dict[str(img_path)]) == 1:
-            print(len(outputs_dict[str(img_path)]))
-        for outputs, pred_masks in outputs_dict[str(img_path)]:
-            bboxes = xyxy2xywh(outputs[:, :4])
-            bboxes[:, :2] -= bboxes[:, 2:] / 2
+    key = str(img_path)
+    if not len(outputs_dict[key]) == 1:
+        print(len(outputs_dict[key]))
 
-            rles = [
-                mask_util.encode(
-                    np.array(mask[:, :, np.newaxis], dtype=np.uint8, order="F")
-                )[0]
-                for mask in pred_masks
-            ]
+    for outputs, pred_masks in outputs_dict[key]:
+        bboxes = xyxy2xywh(outputs[:, :4])
+        bboxes[:, :2] -= bboxes[:, 2:] / 2
 
-            for output, bbox, rle in zip(outputs, bboxes, rles):
-                results.append(
-                    {
-                        "image_id": annotation["id"],
-                        "category_id": YOLO_CATEGORY_TO_COCO_CATEGORY[int(output[5])],
-                        "bbox": [round(x, 3) for x in bbox],
-                        "segmentation": rle,
-                        "score": round(output[4], 5),
-                    }
-                )
+        rles = [
+            mask_util.encode(
+                np.array(mask[:, :, np.newaxis], dtype=np.uint8, order="F")
+            )[0]
+            for mask in pred_masks
+        ]
+
+        for output, bbox, rle in zip(outputs, bboxes, rles):
+            results.append(
+                {
+                    "image_id": annotation["id"],
+                    "category_id": YOLO_CATEGORY_TO_COCO_CATEGORY[int(output[5])],
+                    "bbox": [round(x, 3) for x in bbox],
+                    "segmentation": rle,
+                    "score": round(output[4], 5),
+                }
+            )
     return results
+
+
+def _process_outputs(outputs_dict, data_loader):
+    all_results = []
+    with ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(_process_output, img_path, annotation, outputs_dict)
+            for img_path, annotation in data_loader
+        ]
+        for future in futures:
+            all_results.extend(future.result())
+    return all_results
 
 
 def test_warboy_yolo_accuracy_seg(cfg: str, image_dir: str, annotation_file: str):
@@ -104,10 +118,11 @@ def test_warboy_yolo_accuracy_seg(cfg: str, image_dir: str, annotation_file: str
         )
 
     task.run()
-
-    print("Inference done!")
     outputs = task.outputs
-    results = _process_output(outputs, data_loader)
+
+    print("End Inference!")
+
+    results = _process_outputs(outputs, data_loader)
 
     coco_result = data_loader.coco.loadRes(results)
     coco_eval = COCOeval(data_loader.coco, coco_result, "segm")
@@ -133,7 +148,7 @@ def test_warboy_yolo_accuracy_seg(cfg: str, image_dir: str, annotation_file: str
             f"{param['model_name']} Accuracy (Mask) check failed! -> mAP: {coco_eval.stats[0]} [Target: {TARGET_MASK_ACCURACY[param['model_name']] * 0.9}]"
         )
 
-    if coco_eval.stats[0] >= (TARGET_BBOX_ACCURACY[param["model_name"]] * 0.9):
+    if coco_eval_box.stats[0] >= (TARGET_BBOX_ACCURACY[param["model_name"]] * 0.9):
         print(
             f"{param['model_name']} Accuracy (Bbox) check success! -> mAP: {coco_eval_box.stats[0]} [Target: {TARGET_BBOX_ACCURACY[param['model_name']] * 0.9}]"
         )
