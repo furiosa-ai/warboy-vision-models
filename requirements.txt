@@ -4,3 +4,7 @@ torch == 1.13.1
 torchvision == 0.14.1
 uvloop
 ultralytics
+scikit-learn
+jinja2
+pytest
+pycocotools
