@@ -29,7 +29,7 @@ def get_post_processor(
         is_trakcing(bool) : whether using tracking algorithm
     """
     if task == "object_detection":
-        return ObjDetPostprocess(model_name, model_cfg, class_names, use_trakcing)
+        return ObjDetPredPostprocess(model_name, model_cfg, class_names, use_trakcing)
     elif task == "pose_estimation":
         return PoseEstPostprocess(model_name, model_cfg, class_names, use_trakcing)
     elif task == "instance_segmentation":
@@ -64,6 +64,29 @@ class ObjDetPostprocess:
         bboxed_img = draw_bbox(img.astype(np.uint8), predictions, self.class_names)
         return bboxed_img
 
+class ObjDetPredPostprocess:
+    def __init__(
+        self, model_name: str, model_cfg, class_names, use_traking: bool = True
+    ):
+        model_cfg.update({"use_tracker": use_traking})
+        self.postprocess_func = object_detection_anchor_decoder(model_name, **model_cfg)
+        self.class_names = class_names
+
+    def __call__(
+        self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray
+    ) -> np.ndarray:
+        ## Consider batch 1
+
+        predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
+        assert len(predictions) == 1, f"{len(predictions)}!=1"
+
+        predictions = predictions[0]
+        num_prediction = predictions.shape[0]
+
+        if num_prediction == 0:
+            return None
+
+        return predictions
 
 # Postprocess for Pose Estimation
 class PoseEstPostprocess:

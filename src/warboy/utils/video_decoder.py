@@ -35,10 +35,11 @@ class VideoDecoder:
                     else:
                         self.reader.release()
                         break
-
-                input_, context = self.preprocessor(frame)
-                self.stream_mux.put((input_, img_idx))
-                self.frame_mux.put((frame, context, img_idx))
+                
+                if img_idx % 2 == 0:
+                    input_, context = self.preprocessor(frame)
+                    self.stream_mux.put((input_, img_idx))
+                    self.frame_mux.put((frame, context, img_idx))
                 img_idx += 1
 
             except Exception as e:

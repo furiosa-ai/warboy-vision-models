@@ -27,9 +27,13 @@ class AppRunner:
         # Warboy Runtime
         if demo_type == "web":
             self.job_handler = PipeLine(num_channels=num_videos)
-        elif demo_type == "file":
+        elif demo_type == "image":
             self.job_handler = PipeLine(
                 num_channels=num_videos, run_fast_api=False, make_image_output=True
+            )
+        elif demo_type == "file":
+            self.job_handler = PipeLine(
+                num_channels=num_videos, run_fast_api=False, make_file_output=True
             )
 
         engin_configs_dict = {}
@@ -57,7 +61,14 @@ class AppRunner:
                 self.job_handler.add(Engine(**engin))
 
                 for video_idx in range(idx, len(videos[task]), len(engin_configs)):
-                    self.job_handler.add(videos[task][video_idx], name=engin["name"])
+                    if demo_type == "file":
+                        self.job_handler.add(
+                            videos[task][video_idx],
+                            name=engin["name"],
+                            postprocess_as_img=False,
+                        )
+                    else:
+                        self.job_handler.add(videos[task][video_idx], name=engin["name"])
 
     def __call__(self):
         self.job_handler.run()
