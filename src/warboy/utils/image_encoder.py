@@ -30,7 +30,7 @@ class ImageEncoder:
                 annotated_img = self.postprocessor(output, context, frame)
                 elapsed_time = time.time() - start_time
                 if elapsed_time > 1.0:
-                    FPS = ((curr_idx - num_comp)*2) / elapsed_time
+                    FPS = ((curr_idx - num_comp)) / elapsed_time
                     start_time = time.time()
                     num_comp = curr_idx
 
@@ -44,6 +44,7 @@ class ImageEncoder:
             except Exception as e:
                 print(f"Error ImageEncoder: {e}")
                 break
+
 
 class PredictionEncoder:
     def __init__(

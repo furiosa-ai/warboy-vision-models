@@ -58,17 +58,16 @@ class AppRunner:
 
         for task, engin_configs in engin_configs_dict.items():
             for idx, engin in enumerate(engin_configs):
-                self.job_handler.add(Engine(**engin))
+                if demo_type == "file":
+                    self.job_handler.add(
+                        Engine(**engin),
+                        postprocess_as_img=False,
+                    )
+                else:
+                    self.job_handler.add(Engine(**engin))
 
                 for video_idx in range(idx, len(videos[task]), len(engin_configs)):
-                    if demo_type == "file":
-                        self.job_handler.add(
-                            videos[task][video_idx],
-                            name=engin["name"],
-                            postprocess_as_img=False,
-                        )
-                    else:
-                        self.job_handler.add(videos[task][video_idx], name=engin["name"])
+                    self.job_handler.add(videos[task][video_idx], name=engin["name"])
 
     def __call__(self):
         self.job_handler.run()

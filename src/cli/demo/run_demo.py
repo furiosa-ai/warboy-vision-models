@@ -16,13 +16,16 @@ from ...demo import demo
 )
 @click.option(
     "--mode",
-    type=click.Choice(["web", "file"], case_sensitive=False),
+    type=click.Choice(["web", "image", "file"], case_sensitive=False),
     default="web",
-    help="Choose the mode to run the demo: 'web' or 'file'. Default is 'web'.",
+    help="Choose the mode to run the demo: 'web' or 'file' or 'image'. Default is 'web'.",
 )
 def run_demo(demo_config_file: str, mode: str):
     if mode == "web":
         demo.run_web_demo(demo_config_file)
+
+    if mode == "image":
+        demo.run_make_image(demo_config_file)
 
     elif mode == "file":
         demo.run_make_file(demo_config_file)

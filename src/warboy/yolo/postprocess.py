@@ -29,11 +29,38 @@ def get_post_processor(
         is_trakcing(bool) : whether using tracking algorithm
     """
     if task == "object_detection":
-        return ObjDetPredPostprocess(model_name, model_cfg, class_names, use_trakcing)
+        return ObjDetPostprocess(model_name, model_cfg, class_names, use_trakcing)
     elif task == "pose_estimation":
         return PoseEstPostprocess(model_name, model_cfg, class_names, use_trakcing)
     elif task == "instance_segmentation":
-        return InsSegPostProcess(model_name, model_cfg, class_names, use_trakcing)
+        return InsSegPostprocess(model_name, model_cfg, class_names, use_trakcing)
+    else:
+        raise f"Not supporting {task} task, you have set task among {TASKS}"
+
+
+def get_pred_processor(
+    task: str,
+    model_name: str,
+    model_cfg: Dict[str, Any],
+    class_names: List[str],
+    use_trakcing: bool = True,
+):
+    """
+    Function for returning postprocess function.
+
+    Args:
+        task (str): task for application
+        model_name (str): base model name of yolo
+        model_cfg (Dict): model configuration
+        class_names (List): list of class names for task
+        is_trakcing(bool) : whether using tracking algorithm
+    """
+    if task == "object_detection":
+        return ObjDetPredProcess(model_name, model_cfg, class_names, use_trakcing)
+    elif task == "pose_estimation":
+        return PoseEstPredProcess(model_name, model_cfg, class_names, use_trakcing)
+    elif task == "instance_segmentation":
+        return InsSegPredProcess(model_name, model_cfg, class_names, use_trakcing)
     else:
         raise f"Not supporting {task} task, you have set task among {TASKS}"
 
@@ -64,7 +91,8 @@ class ObjDetPostprocess:
         bboxed_img = draw_bbox(img.astype(np.uint8), predictions, self.class_names)
         return bboxed_img
 
-class ObjDetPredPostprocess:
+
+class ObjDetPredProcess:
     def __init__(
         self, model_name: str, model_cfg, class_names, use_traking: bool = True
     ):
@@ -87,6 +115,7 @@ class ObjDetPredPostprocess:
             return None
 
         return predictions
+
 
 # Postprocess for Pose Estimation
 class PoseEstPostprocess:
@@ -115,8 +144,33 @@ class PoseEstPostprocess:
         return pose_img
 
 
+class PoseEstPredProcess:
+    def __init__(
+        self, model_name: str, model_cfg, class_names, use_traking: bool = True
+    ):
+        model_cfg.update({"use_tracker": use_traking})
+        self.postprocess_func = pose_estimation_anchor_decoder(model_name, **model_cfg)
+        self.class_names = class_names
+        self.s_idx = 5 if "yolov8" in model_name else 6
+
+    def __call__(
+        self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray
+    ) -> np.ndarray:
+        ## Consider batch 1
+        predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
+        assert len(predictions) == 1, f"{len(predictions)}!=1"
+
+        predictions = predictions[0]
+        num_prediction = predictions.shape[0]
+        if num_prediction == 0:
+            return None
+
+        predictions = predictions[:, self.s_idx :]
+        return predictions
+
+
 # Postprocess for Instance Segmentation
-class InsSegPostProcess:
+class InsSegPostprocess:
     def __init__(
         self, model_name: str, model_cfg, class_names, use_traking: bool = False
     ):
@@ -145,6 +199,32 @@ class InsSegPostProcess:
         )
         ins_mask_img = draw_bbox(ins_mask_img, bbox, self.class_names)
         return ins_mask_img
+
+
+class InsSegPredProcess:
+    def __init__(
+        self, model_name: str, model_cfg, class_names, use_traking: bool = False
+    ):
+        model_cfg.update({"use_tracker": use_traking})
+        self.postprocess_func = instance_segment_anchor_decoder(model_name, **model_cfg)
+        self.class_names = class_names
+
+    def __call__(
+        self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray
+    ) -> np.ndarray:
+        ## Consider batch 1
+
+        predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
+        assert len(predictions) == 1, f"{len(predictions)}!=1"
+
+        predictions = predictions[0]
+        bbox, ins_mask = predictions
+        num_prediction = bbox.shape[0]
+
+        if num_prediction == 0 or ins_mask is None:
+            return None
+
+        return predictions
 
 
 # Draw Output on an Original Image
