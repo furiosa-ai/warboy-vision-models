@@ -14,6 +14,8 @@ def set_demo_engin_config(param, idx):
         "model_type": param["model_name"],
         "input_shape": param["input_shape"],
         "class_names": param["class_name"],
+        "iou_thres": param["model_param"].get("iou_thres", 0.7),
+        "conf_thres": param["model_param"].get("conf_thres", 0.25),
     }
     return engin_config
 
