@@ -30,7 +30,7 @@ class ImageEncoder:
                 annotated_img = self.postprocessor(output, context, frame)
                 elapsed_time = time.time() - start_time
                 if elapsed_time > 1.0:
-                    FPS = (curr_idx - num_comp) / elapsed_time
+                    FPS = ((curr_idx - num_comp)) / elapsed_time
                     start_time = time.time()
                     num_comp = curr_idx
 

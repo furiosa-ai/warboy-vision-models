@@ -14,6 +14,8 @@ def set_demo_engin_config(param, idx):
         "model_type": param["model_name"],
         "input_shape": param["input_shape"],
         "class_names": param["class_name"],
+        "iou_thres": param["model_param"].get("iou_thres", 0.7),
+        "conf_thres": param["model_param"].get("conf_thres", 0.25),
     }
     return engin_config
 
@@ -27,9 +29,13 @@ class AppRunner:
         # Warboy Runtime
         if demo_type == "web":
             self.job_handler = PipeLine(num_channels=num_videos)
-        elif demo_type == "file":
+        elif demo_type == "image":
             self.job_handler = PipeLine(
                 num_channels=num_videos, run_fast_api=False, make_image_output=True
+            )
+        elif demo_type == "file":
+            self.job_handler = PipeLine(
+                num_channels=num_videos, run_fast_api=False, make_file_output=True
             )
 
         engin_configs_dict = {}
@@ -54,7 +60,13 @@ class AppRunner:
 
         for task, engin_configs in engin_configs_dict.items():
             for idx, engin in enumerate(engin_configs):
-                self.job_handler.add(Engine(**engin))
+                if demo_type == "file":
+                    self.job_handler.add(
+                        Engine(**engin),
+                        postprocess_as_img=False,
+                    )
+                else:
+                    self.job_handler.add(Engine(**engin))
 
                 for video_idx in range(idx, len(videos[task]), len(engin_configs)):
                     self.job_handler.add(videos[task][video_idx], name=engin["name"])

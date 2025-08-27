@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from ..warboy.utils.monitor_npu import WARBOYDevice
-from ..warboy.utils.process_pipeline import ImageHandler
+from ..warboy.utils.process_pipeline import OutputHandler
 
 TEMPLATES_DIR = resources.files("src.demo").joinpath("templates")
 STATIC_DIR = TEMPLATES_DIR / "static"
@@ -33,7 +33,7 @@ def getByteFrame():
         for result_queues_ in result_queues_list.values()
         for result_queue in result_queues_
     ]
-    handler = ImageHandler(len(result_queues))
+    handler = OutputHandler(len(result_queues))
     for full_grid_img, fps in handler.output_stream_handler(result_queues):
         app.state.fps = fps
         _, full_grid_img = cv2.imencode(".jpg", full_grid_img)

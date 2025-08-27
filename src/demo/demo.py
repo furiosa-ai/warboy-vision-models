@@ -23,6 +23,12 @@ def run_web_demo(cfg_path):
         continue
 
 
+def run_make_image(cfg_path):
+    demo_params = get_demo_params_from_cfg(cfg_path)
+    warboy_app = WARBOY_APP(demo_params, "image")
+
+    warboy_app()
+
 def run_make_file(cfg_path):
     demo_params = get_demo_params_from_cfg(cfg_path)
     warboy_app = WARBOY_APP(demo_params, "file")
@@ -32,7 +38,7 @@ def run_make_file(cfg_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demo script")
-    parser.add_argument("mode", choices=["web", "file"], help="Choose the mode to run")
+    parser.add_argument("mode", choices=["web", "file", "image"], help="Choose the mode to run")
 
     parser.add_argument(
         "--cfg-path",
@@ -45,6 +51,8 @@ if __name__ == "__main__":
 
     if args.mode == "web":
         run_web_demo(args.cfg_path)
+    elif args.mode == "image":
+        run_make_image(args.cfg_path)
     elif args.mode == "file":
         run_make_file(args.cfg_path)
     else:
